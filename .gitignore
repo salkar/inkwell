@@ -10,7 +10,12 @@ rdoc
 spec/reports
 test/tmp
 test/version_tmp
+test/dummy/db/*.sqlite3
+test/dummy/log/*.log
+test/dummy/tmp/
 tmp
+log
+.idea
 
 # YARD artifacts
 .yardoc
