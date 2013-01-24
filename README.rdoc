@@ -1,4 +1,48 @@
-inkwell
+= Inkwell
 =======
 
 Inkwell adds social networking features – comments, reblogs, favorites, ability to follow other people and view their timeline.
+
+== Requirements
+You should have two classes: User and Post or other identical. Between them should be a one-to-many relationship. For example:
+
+  class User < ActiveRecord::Base
+    has_many :posts
+  end
+
+  class Post < ActiveRecord::Base
+    belongs_to :user
+  end
+
+== Installation
+
+Put in <code>Gemfile</code>:
+
+  gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
+
+Add to your <code>User</code> model <code>acts_as_inkwell_user</code> and to your <code>Post</code> model <code>acts_as_inkwell_post</code>
+
+  class User < ActiveRecord::Base
+    has_many :posts
+    acts_as_inkwell_user
+  end
+  
+  class Post < ActiveRecord::Base
+    belongs_to :user
+    acts_as_inkwell_post
+  end
+
+Create <code>inkwell.rb</code> file in <code>config/initializers</code> and put in it your names of <code>User</code> and <code>Post</code> tables (or other identical):
+
+  module Inkwell
+    class Engine < Rails::Engine
+      config.post_table = :posts
+      config.user_table = :users
+    end
+  end
+
+Next, get gem migrations:
+
+  rake inkwell:install:migrations
+
+and <code>db:migrate</code> it.
