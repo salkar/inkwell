@@ -1,7 +1,7 @@
 = Inkwell
 =======
 
-Inkwell adds social networking features – comments, reblogs, favorites, ability to follow other people and view their timeline.
+Inkwell - gives ability to add social networking features to your rails application – comments, reblogs, favorites, following/followers, timelines.
 
 == Requirements
 You should have two classes: User and Post or other identical. Between them should be a one-to-many relationship. For example:
