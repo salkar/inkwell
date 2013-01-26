@@ -49,6 +49,8 @@ and <code>db:migrate</code> it.
 
 == Usage
 
+=== Favorite features
+
 User is able to favorite posts/comments:
 
   @user.favorite @post
@@ -91,3 +93,5 @@ where
     # For example, fline_for_user_who_reblog_and_favorite_another_user_post.first == @another_user_post
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_reblogged    # => true
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb].
