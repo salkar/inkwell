@@ -147,3 +147,30 @@ where <code>last_shown_comment_id</code> is id of last shown comment from previo
 <code>Limit</code> and <code>for_user</code> mean the same thing as in the favoriteline[https://github.com/salkar/inkwell#favorite-features].
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb]
+
+=== Follow features
+
+User is able to follow another user. It allows him to get followed user's blogline in his timeline.
+
+For follow user you should do:
+
+  @user.follow @another_user
+
+After it last 10 <code>@another_user</code> blogline's items will be transferred to <code>@user</code> timeline. And each new <code>@another_user</code> blogline item will be added to <code>@user</code> timeline
+
+For unfollow user you should do:
+
+  @user.unfollow @another_user
+
+For check that user is follower of another user you should do:
+
+  @user.follow? @another_user
+
+For get followers ids for user and ids of users, which he follow, you should do:
+
+  @user.followers_row
+  @user.followings_row
+
+Both methods return arrays of ids.
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb]
