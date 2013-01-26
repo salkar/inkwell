@@ -1,7 +1,7 @@
 = Inkwell
 =======
 
-Inkwell - gives ability to add social networking features to your rails application – comments, reblogs, favorites, following/followers, timelines.
+Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application
 
 == Requirements
 You should have two classes: User and Post or other identical. Between them should be a one-to-many relationship. For example:
@@ -46,3 +46,48 @@ Next, get gem migrations:
   rake inkwell:install:migrations
 
 and <code>db:migrate</code> it.
+
+== Usage
+
+User is able to favorite posts/comments:
+
+  @user.favorite @post
+  @user.favorite @comment
+
+For delete post/comment from favorites you should do:
+
+  @user.unfavorite @post
+
+For check that post/comment enters in favorites you should do:
+
+  @user.favorite? @post
+
+For return favorite line, consisting of favorited posts and comments, you should do:
+
+  @user.favoriteline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+
+where 
+* <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from <code>item_id_in_line</code> property of item from previous <code>favoriteline</code> calls. This parameter is for pagination and separation of the timeline.
+
+    fline = @user.favoriteline    #get first 10 items from @user favorite line
+    last_shown_obj_id = fline.last.item_id_in_line
+    fline_next_page = @user.favoriteline last_shown_obj_id    #get next 10 items from @user favorite line
+
+* <code>limit</code> - number of returned favorited items
+
+    fline = @user.favoriteline nil, 20    #return first 20 items from @user favorite line
+
+* <code>for_user</code> - <code>User</code>, who looks this favorite line. For him <code>is_reblogged</code> and <code>is_favorited</code> properties will been formed. 
+  
+    @user.favorite @another_user_post
+    @user.reblog @another_user_post
+      
+    fline_for_unknown_user = @another_user.favoriteline nil, 10, nil
+    # For example, fline_for_unknown_user.first == @another_user_post
+    fline_for_unknown_user.first.is_reblogged    # => false
+    fline_for_unknown_user.first.is_favorited    # => false
+        
+    fline_for_user_who_reblog_and_favorite_another_user_post = @another_user.favoriteline nil, 10, @user
+    # For example, fline_for_user_who_reblog_and_favorite_another_user_post.first == @another_user_post
+    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_reblogged    # => true
+    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
