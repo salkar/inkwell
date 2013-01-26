@@ -69,7 +69,7 @@ For return favorite line, consisting of favorited posts and comments, you should
   @user.favoriteline(last_shown_obj_id = nil, limit = 10, for_user = nil)
 
 where 
-* <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from <code>item_id_in_line</code> property of item from previous <code>favoriteline</code> calls. This parameter is for pagination and separation of the timeline.
+* <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from <code>item_id_in_line</code> property of last item from previous <code>favoriteline</code> calls. This parameter is for pagination and separation of the timeline.
 
     fline = @user.favoriteline    #get first 10 items from @user favorite line
     last_shown_obj_id = fline.last.item_id_in_line
@@ -95,3 +95,25 @@ where
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb].
+
+=== Reblog features
+
+Reblog means that reblogged post will be added to user's blogline and to timelines of his followers. Thus, the behavior of reblogged object is similar to the post of the user who made this reblog.
+User is able to reblog posts/comments:
+
+  @user.reblog @post
+  @user.reblog @comment
+
+For delete post/comment from reblogs you should do:
+
+  @user.unreblog @post
+
+For check that post/comment enters in reblogs you should do:
+
+  @user.reblog? @post
+
+Reblogs don't have their own line and are contained in user's blogline.
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb]
+
+
