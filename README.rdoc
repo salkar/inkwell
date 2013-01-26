@@ -116,4 +116,34 @@ Reblogs don't have their own line and are contained in user's blogline.
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb]
 
+=== Comment features
 
+User is able to create comments for post or other comment. If you want to comment the post you should do:
+
+  @user.comments.create :post_id => @post.id, :body => "comment_body"
+
+If you want to comment other comment you should add <code>parent_id</code> of parent comment:
+
+  @user.comments.create :post_id => @parent_post.id, :body => "comment_body", :parent_id => @parent_comment.id
+
+For delete comment you should use <code>destroy</code> method:
+
+  @comment.destroy
+
+You are able to get comment line for post or comment. It consists of comments for this object in reverse chronological order.
+
+<i>Notice: returned array will have back order to simplify the use. Last comment is at the bottom usually.</i>
+
+For get comment line you should do:
+
+  commentline(last_shown_comment_id = nil, limit = 10, for_user = nil)
+
+where <code>last_shown_comment_id</code> is id of last shown comment from previous commentline results. For example:
+
+  cline = @post.commentline    #get last 10 comments for @post
+  last_shown_comment_id = cline.first.id    # First element is taken due to reverse order. In fact, it is the oldest of these comments.
+  cline_next_page = @post.commentline last_shown_comment_id
+
+<code>Limit</code> and <code>for_user</code> mean the same thing as in the favoriteline[https://github.com/salkar/inkwell#favorite-features].
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb]
