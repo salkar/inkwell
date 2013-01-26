@@ -114,7 +114,7 @@ For check that post/comment enters in reblogs you should do:
 
 Reblogs don't have their own line and are contained in user's blogline.
 
-More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb]
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb].
 
 === Comment features
 
@@ -146,7 +146,7 @@ where <code>last_shown_comment_id</code> is id of last shown comment from previo
 
 <code>Limit</code> and <code>for_user</code> mean the same thing as in the favoriteline[https://github.com/salkar/inkwell#favorite-features].
 
-More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb]
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb].
 
 === Follow features
 
@@ -173,4 +173,25 @@ For get followers ids for user and ids of users, which he follow, you should do:
 
 Both methods return arrays of ids.
 
-More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb]
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb].
+
+=== Blogline feature
+
+User blogine is consists of his posts and his reblogs. For get it you should do:
+
+  @user.blogline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+
+where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/blogline_spec.rb].
+
+=== Timeline feature
+
+User timeline is consists of items from bloglines of users, which he follow. For get it you should do:
+
+  @user.timeline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+
+where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb].
+
