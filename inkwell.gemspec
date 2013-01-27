@@ -7,11 +7,11 @@ require "inkwell/version"
 Gem::Specification.new do |s|
   s.name        = "inkwell"
   s.version     = Inkwell::VERSION
-  s.authors     = ["Salkar"]
+  s.authors     = ["Sergey Sokolov"]
   s.email       = ["sokolov.sergey.a@gmail.com"]
-  s.homepage    = "https://github.com/salkar/inkwell"
-  s.summary     = "Inkwell adds social networking features – comments, reblogs, favorites, ability to follow other people and view their timeline."
-  s.description = "Inkwell adds social networking features – comments, reblogs, favorites, ability to follow other people and view their timeline."
+  s.homepage    = "https://github.com/salkar/inkwell#inkwell"
+  s.summary     = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application"
+  s.description = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application"
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["Rakefile"]
   s.test_files = Dir["test/**/*"]
