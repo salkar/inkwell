@@ -164,7 +164,7 @@ module Inkwell
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
 
         timeline_items = ::Inkwell::TimelineItem.where "from_source like '%{\"user_id\":#{user.id}%' and #{user_id_attr} = #{self.id}"
-        timeline_items.destroy_all :has_many_sources => false
+        timeline_items.delete_all :has_many_sources => false
         timeline_items.each do |item|
           from_source = ActiveSupport::JSON.decode item.from_source
           from_source.delete_if { |rec| rec['user_id'] == user.id }

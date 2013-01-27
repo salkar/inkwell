@@ -61,14 +61,14 @@ module Inkwell
       end
 
       def destroy_post_processing
-        ::Inkwell::TimelineItem.destroy_all :item_id => self.id, :is_comment => false
-        ::Inkwell::FavoriteItem.destroy_all :item_id => self.id, :is_comment => false
-        ::Inkwell::BlogItem.destroy_all :item_id => self.id, :is_comment => false
+        ::Inkwell::TimelineItem.delete_all :item_id => self.id, :is_comment => false
+        ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :is_comment => false
+        ::Inkwell::BlogItem.delete_all :item_id => self.id, :is_comment => false
         comments = self.comments
         comments.each do |comment|
-          ::Inkwell::TimelineItem.destroy_all :item_id => comment.id, :is_comment => true
-          ::Inkwell::FavoriteItem.destroy_all :item_id => comment.id, :is_comment => true
-          ::Inkwell::BlogItem.destroy_all :item_id => comment.id, :is_comment => true
+          ::Inkwell::TimelineItem.delete_all :item_id => comment.id, :is_comment => true
+          ::Inkwell::FavoriteItem.delete_all :item_id => comment.id, :is_comment => true
+          ::Inkwell::BlogItem.delete_all :item_id => comment.id, :is_comment => true
           ::Inkwell::Comment.delete comment
         end
       end
