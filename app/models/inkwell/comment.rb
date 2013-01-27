@@ -1,5 +1,6 @@
 module Inkwell
   class Comment < ActiveRecord::Base
+    attr_accessible :body, :post_id, :parent_id
     attr_accessor :is_reblogged
     attr_accessor :is_favorited
     attr_accessor :item_id_in_line
