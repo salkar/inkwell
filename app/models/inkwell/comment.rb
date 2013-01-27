@@ -63,9 +63,9 @@ module Inkwell
       ::Inkwell::Comment.delete child_comments_ids_to_deleted
 
       comment_with_child_comments_ids_to_deleted = child_comments_ids_to_deleted << self.id
-      ::Inkwell::TimelineItem.destroy_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
-      ::Inkwell::FavoriteItem.destroy_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
-      ::Inkwell::BlogItem.destroy_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
+      ::Inkwell::TimelineItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
+      ::Inkwell::FavoriteItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
+      ::Inkwell::BlogItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
 
       user_id = self.send("#{::Inkwell::Engine::config.user_table.to_s.singularize}_id")
       comment_with_child_comments_info = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]
