@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.test_files = Dir["test/**/*"]
 
   s.add_dependency "railties", ">= 3.1.0"
-  s.add_dependency "activemodel", ">= 3.1.0"
+  s.add_dependency "activerecord", ">= 3.1.0"
 
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "database_cleaner"
