@@ -1,4 +1,3 @@
-require "rspec"
 require "spec_helper"
 
 describe "Comments" do
