@@ -16,6 +16,7 @@ test/dummy/tmp/
 tmp
 log
 .idea
+Gemfile.lock
 
 # YARD artifacts
 .yardoc
