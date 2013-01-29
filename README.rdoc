@@ -20,6 +20,9 @@ Put in <code>Gemfile</code>:
 
   gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
 
+
+After it do <code>bundle install</code>
+
 Add to your <code>User</code> model <code>acts_as_inkwell_user</code> and to your <code>Post</code> model <code>acts_as_inkwell_post</code>
 
   class User < ActiveRecord::Base
