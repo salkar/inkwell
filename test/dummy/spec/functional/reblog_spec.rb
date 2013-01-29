@@ -150,4 +150,24 @@ describe "Reblog" do
     item.has_many_sources.should == false
   end
 
+  it "reblog count should been received for post" do
+    @talisman = User.create :nick => "Talisman"
+    @salkar_post.reload
+    @salkar_post.reblog_count.should == 0
+    @morozovm.reblog @salkar_post
+    @talisman.reblog @salkar_post
+    @salkar_post.reload
+    @salkar_post.reblog_count.should == 2
+  end
+
+  it "reblog count should been received for post" do
+    @talisman = User.create :nick => "Talisman"
+    @salkar_comment.reload
+    @salkar_comment.reblog_count.should == 0
+    @morozovm.reblog @salkar_comment
+    @talisman.reblog @salkar_comment
+    @salkar_comment.reload
+    @salkar_comment.reblog_count.should == 2
+  end
+
 end

@@ -233,4 +233,24 @@ describe "Favorites" do
     end
   end
 
+  it "favorite count should been received for post" do
+    @talisman = User.create :nick => "Talisman"
+    @salkar_post.reload
+    @salkar_post.favorite_count.should == 0
+    @morozovm.favorite @salkar_post
+    @talisman.favorite @salkar_post
+    @salkar_post.reload
+    @salkar_post.favorite_count.should == 2
+  end
+
+  it "favorite count should been received for post" do
+    @talisman = User.create :nick => "Talisman"
+    @salkar_comment.reload
+    @salkar_comment.favorite_count.should == 0
+    @morozovm.favorite @salkar_comment
+    @talisman.favorite @salkar_comment
+    @salkar_comment.reload
+    @salkar_comment.favorite_count.should == 2
+  end
+
 end

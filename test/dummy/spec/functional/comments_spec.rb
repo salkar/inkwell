@@ -391,5 +391,26 @@ describe "Comments" do
     commentline[2].is_favorited.should == true
   end
 
+  it "comment count for post should been received" do
+    @salkar_post.comments.size.should == 0
+    @salkar_post.comment_count.should == 0
+    @comment = @salkar.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id)
+    @comment1 = @morozovm.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id, :parent_id => @comment.id)
+    @comment2 = @salkar.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id, :parent_id => @comment.id)
+    @salkar_post.reload
+    @salkar_post.comments.size.should == 3
+    @salkar_post.comment_count.should == 3
+  end
+
+  it "comment count for comment should been received" do
+    @comment = @salkar.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id)
+    @comment.reload
+    @comment.comment_count.should == 0
+    @comment1 = @morozovm.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id, :parent_id => @comment.id)
+    @comment2 = @salkar.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id, :parent_id => @comment.id)
+    @comment.reload
+    @comment.comment_count.should == 2
+  end
+
 
 end

@@ -45,6 +45,21 @@ module Inkwell
         comments.reverse!
       end
 
+      def comment_count
+        users_ids_who_comment_it = ActiveSupport::JSON.decode self.users_ids_who_comment_it
+        users_ids_who_comment_it.size
+      end
+
+      def favorite_count
+        users_ids_who_favorite_it = ActiveSupport::JSON.decode self.users_ids_who_favorite_it
+        users_ids_who_favorite_it.size
+      end
+
+      def reblog_count
+        users_ids_who_reblog_it = ActiveSupport::JSON.decode self.users_ids_who_reblog_it
+        users_ids_who_reblog_it.size
+      end
+
       private
 
       def processing_a_post
