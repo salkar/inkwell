@@ -69,30 +69,30 @@ For check that post/comment enters in favorites you should do:
 
 For return favorite line, consisting of favorited posts and comments, you should do:
 
-  @user.favoriteline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+  @user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
 where 
 * <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from <code>item_id_in_line</code> property of last item from previous <code>favoriteline</code> calls. This parameter is for pagination and separation of the timeline.
 
     fline = @user.favoriteline    #get first 10 items from @user favorite line
     last_shown_obj_id = fline.last.item_id_in_line
-    fline_next_page = @user.favoriteline last_shown_obj_id    #get next 10 items from @user favorite line
+    fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #get next 10 items from @user favorite line
 
 * <code>limit</code> - number of returned favorited items
 
-    fline = @user.favoriteline nil, 20    #return first 20 items from @user favorite line
+    fline = @user.favoriteline :limit => 20    #return first 20 items from @user favorite line
 
 * <code>for_user</code> - <code>User</code>, who looks this favorite line. For him <code>is_reblogged</code> and <code>is_favorited</code> properties will been formed. 
   
     @user.favorite @another_user_post
     @user.reblog @another_user_post
       
-    fline_for_unknown_user = @another_user.favoriteline nil, 10, nil
+    fline_for_unknown_user = @another_user.favoriteline
     # For example, fline_for_unknown_user.first == @another_user_post
     fline_for_unknown_user.first.is_reblogged    # => false
     fline_for_unknown_user.first.is_favorited    # => false
         
-    fline_for_user_who_reblog_and_favorite_another_user_post = @another_user.favoriteline nil, 10, @user
+    fline_for_user_who_reblog_and_favorite_another_user_post = @another_user.favoriteline :for_user => @user
     # For example, fline_for_user_who_reblog_and_favorite_another_user_post.first == @another_user_post
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_reblogged    # => true
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
@@ -139,13 +139,13 @@ You are able to get comment line for post or comment. It consists of comments fo
 
 For get comment line you should do:
 
-  commentline(last_shown_comment_id = nil, limit = 10, for_user = nil)
+  commentline(:last_shown_comment_id => nil, :limit => 10, :for_user => nil)
 
 where <code>last_shown_comment_id</code> is id of last shown comment from previous commentline results. For example:
 
   cline = @post.commentline    #get last 10 comments for @post
   last_shown_comment_id = cline.first.id    # First element is taken due to reverse order. In fact, it is the oldest of these comments.
-  cline_next_page = @post.commentline last_shown_comment_id
+  cline_next_page = @post.commentline :last_shown_comment_id => last_shown_comment_id
 
 <code>Limit</code> and <code>for_user</code> mean the same thing as in the favoriteline[https://github.com/salkar/inkwell#favorite-features].
 
@@ -182,7 +182,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 User blogine is consists of his posts and his reblogs. For get it you should do:
 
-  @user.blogline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+  @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
 where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
@@ -192,7 +192,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 User timeline is consists of items from bloglines of users, which he follow. For get it you should do:
 
-  @user.timeline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+  @user.timeline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
 where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
