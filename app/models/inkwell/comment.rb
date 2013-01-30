@@ -18,9 +18,10 @@ module Inkwell
     belongs_to ::Inkwell::Engine::config.post_table.to_s.singularize
 
     def commentline(options = {})
-      last_shown_comment_id = options[:last_shown_comment_id] || options['last_shown_comment_id']
-      limit = options[:limit] || options['limit'] || 10
-      for_user = options[:for_user] || options['for_user']
+      options.symbolize_keys!
+      last_shown_comment_id = options[:last_shown_comment_id]
+      limit = options[:limit] || 10
+      for_user = options[:for_user]
 
       if for_user
         user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize

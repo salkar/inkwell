@@ -27,9 +27,10 @@ module Inkwell
 
     module InstanceMethods
       def commentline(options = {})
-        last_shown_comment_id = options[:last_shown_comment_id] || options['last_shown_comment_id']
-        limit = options[:limit] || options['limit'] || 10
-        for_user = options[:for_user] || options['for_user']
+        options.symbolize_keys!
+        last_shown_comment_id = options[:last_shown_comment_id]
+        limit = options[:limit] || 10
+        for_user = options[:for_user]
 
         if last_shown_comment_id
           comments = self.comments.where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
