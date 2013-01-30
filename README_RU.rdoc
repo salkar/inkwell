@@ -1,4 +1,102 @@
 = Inkwell
 =======
 
-Inkwell добавляет в Ваше приложение возможности социальных сетей - комментарии, избранное, реблоги (репост/share), систему подписок на блоги юзеров (followers) и ленты пользователей (ленты блогов, избранного и агрегированную ленту с постами и реблогами юзеров, на которых подписан пользователь).
+Inkwell добавляет в ваше приложение возможности социальных сетей - комментарии, избранное, реблоги (репост/share), систему подписок на блоги юзеров (followers) и ленты пользователей (ленты блогов, избранного и агрегированную ленту с постами и реблогами юзеров, на которых подписан пользователь).
+
+== Требования
+У вас должны быть два класса: <code>User</code> и <code>Post</code> или похожие на них по назначению. Они должны быть связаны один-ко-многим. Пример:
+
+  class User < ActiveRecord::Base
+    has_many :posts
+  end
+
+  class Post < ActiveRecord::Base
+    belongs_to :user
+  end
+
+== Установка и настройка
+
+Добавьте в <code>Gemfile</code>:
+
+  gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
+
+
+После этого сделайте <code>bundle install</code>
+
+Добавьте в вашу <code>User</code> модель <code>acts_as_inkwell_user</code> и в <code>Post</code> модель <code>acts_as_inkwell_post</code>
+
+  class User < ActiveRecord::Base
+    has_many :posts
+    acts_as_inkwell_user
+  end
+  
+  class Post < ActiveRecord::Base
+    belongs_to :user
+    acts_as_inkwell_post
+  end
+
+Создайте <code>inkwell.rb</code> файл в <code>config/initializers</code> и добавьте туда следующий код с названиями таблиц <code>User</code> и <code>Post</code> (или соответствующих им):
+
+  module Inkwell
+    class Engine < Rails::Engine
+      config.post_table = :posts
+      config.user_table = :users
+    end
+  end
+
+Далее, сделайте
+
+  rake inkwell:install:migrations
+
+и <code>db:migrate</code>.
+
+== Использование
+
+=== Избранное
+
+Юзер может добавлять в избранное как посты, так и комментарии:
+
+  @user.favorite @post
+  @user.favorite @comment
+
+Удаление из избранного:
+
+  @user.unfavorite @post
+
+Проверка на нахождение в избранном:
+
+  @user.favorite? @post
+
+Вы можете получить ленту избранного для пользователя, состоящую из добавленных им в избранное постов и комментариев (последние добавленные сверху):
+
+  @user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
+
+где
+* <code>last_shown_obj_id</code> - id последнего элемента уже показанной юзеру ленты. Взять его можно из <code>item_id_in_line</code> свойства последнего объекта из предыдущей ленты избранного. Этот параметр нужен для того, чтобы забрать часть ленты, начиная со следующего поста за указанным. Например:
+
+    fline = @user.favoriteline    #забрать первые 10 элементов ленты избранного юзера @user
+    last_shown_obj_id = fline.last.item_id_in_line
+    fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #забрать следующие 10 элементов его ленты
+
+* <code>limit</code> - количество элементов возвращаемой ленты, по дефолту - 10
+
+    fline = @user.favoriteline :limit => 20    #забрать первые 20 элементов ленты избранного юзера @user
+
+* <code>for_user</code> - <code>User</code>, для которого показывается эта лента. Для него формируются свойства <code>is_reblogged</code> и <code>is_favorited</code>, которые обозначают, добавлял ли этот юзер в избранное этот элемент или делал ли его реблог. 
+  
+    @user.favorite @another_user_post
+    @user.reblog @another_user_post
+      
+    fline_for_unknown_user = @another_user.favoriteline
+    # Для примера предположим, что fline_for_unknown_user.first == @another_user_post
+    fline_for_unknown_user.first.is_reblogged    # => false
+    fline_for_unknown_user.first.is_favorited    # => false
+        
+    fline_for_user_who_reblog_and_favorite_another_user_post = @another_user.favoriteline :for_user => @user
+    # Для примера предположим, что fline_for_user_who_reblog_and_favorite_another_user_post.first == @another_user_post
+    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_reblogged    # => true
+    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
+
+Больше примеров можно найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb].
+
+
