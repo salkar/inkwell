@@ -21,9 +21,10 @@ module Inkwell
 
     module InstanceMethods
       def blogline(options = {})
-        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
-        limit = options[:limit] || options['limit'] || 10
-        for_user = options[:for_user] || options['for_user']
+        options.symbolize_keys!
+        last_shown_obj_id = options[:last_shown_obj_id]
+        limit = options[:limit] || 10
+        for_user = options[:for_user]
 
         if last_shown_obj_id
           blog_items = self.blog_items.where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
@@ -83,9 +84,10 @@ module Inkwell
       end
 
       def favoriteline(options = {})
-        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
-        limit = options[:limit] || options['limit'] || 10
-        for_user = options[:for_user] || options['for_user']
+        options.symbolize_keys!
+        last_shown_obj_id = options[:last_shown_obj_id]
+        limit = options[:limit] || 10
+        for_user = options[:for_user]
 
         if last_shown_obj_id
           favorites = self.favorite_items.where("created_at < ?", Inkwell::FavoriteItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
@@ -260,9 +262,10 @@ module Inkwell
       end
 
       def timeline(options = {})
-        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
-        limit = options[:limit] || options['limit'] || 10
-        for_user = options[:for_user] || options['for_user']
+        options.symbolize_keys!
+        last_shown_obj_id = options[:last_shown_obj_id]
+        limit = options[:limit] || 10
+        for_user = options[:for_user]
 
         if last_shown_obj_id
           timeline_items = self.timeline_items.where("created_at < ?", Inkwell::TimelineItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
