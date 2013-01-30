@@ -26,7 +26,11 @@ module Inkwell
     end
 
     module InstanceMethods
-      def commentline(last_shown_comment_id = nil, limit = 10, for_user = nil)
+      def commentline(options = {})
+        last_shown_comment_id = options[:last_shown_comment_id] || options['last_shown_comment_id']
+        limit = options[:limit] || options['limit'] || 10
+        for_user = options[:for_user] || options['for_user']
+
         if last_shown_comment_id
           comments = self.comments.where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
         else
@@ -37,8 +41,8 @@ module Inkwell
           user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
           raise "for_user param should be a #{user_class.to_s} but it is #{for_user.class.to_s}" unless for_user.class == user_class
           comments.each do |comment|
-            comment.is_reblogged = (for_user.reblog? comment) ? true : false
-            comment.is_favorited = (for_user.favorite? comment) ? true : false
+            comment.is_reblogged = for_user.reblog? comment
+            comment.is_favorited = for_user.favorite? comment
           end
         end
 

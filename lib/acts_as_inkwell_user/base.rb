@@ -20,7 +20,11 @@ module Inkwell
     end
 
     module InstanceMethods
-      def blogline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+      def blogline(options = {})
+        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
+        limit = options[:limit] || options['limit'] || 10
+        for_user = options[:for_user] || options['for_user']
+
         if last_shown_obj_id
           blog_items = self.blog_items.where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
@@ -40,8 +44,8 @@ module Inkwell
           blog_obj.is_reblog_in_blogline = item.is_reblog
 
           if for_user
-            blog_obj.is_reblogged = (for_user.reblog? blog_obj) ? true : false
-            blog_obj.is_favorited = (for_user.favorite? blog_obj) ? true : false
+            blog_obj.is_reblogged = for_user.reblog? blog_obj
+            blog_obj.is_favorited = for_user.favorite? blog_obj
           end
 
           result << blog_obj
@@ -78,7 +82,11 @@ module Inkwell
         obj.save
       end
 
-      def favoriteline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+      def favoriteline(options = {})
+        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
+        limit = options[:limit] || options['limit'] || 10
+        for_user = options[:for_user] || options['for_user']
+
         if last_shown_obj_id
           favorites = self.favorite_items.where("created_at < ?", Inkwell::FavoriteItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
@@ -97,8 +105,8 @@ module Inkwell
           favorited_obj.item_id_in_line = item.id
 
           if for_user
-            favorited_obj.is_reblogged = (for_user.reblog? favorited_obj) ? true : false
-            favorited_obj.is_favorited = (for_user.favorite? favorited_obj) ? true : false
+            favorited_obj.is_reblogged = for_user.reblog? favorited_obj
+            favorited_obj.is_favorited = for_user.favorite? favorited_obj
           end
 
           result << favorited_obj
@@ -251,7 +259,11 @@ module Inkwell
         end
       end
 
-      def timeline(last_shown_obj_id = nil, limit = 10, for_user = nil)
+      def timeline(options = {})
+        last_shown_obj_id = options[:last_shown_obj_id] || options['last_shown_obj_id']
+        limit = options[:limit] || options['limit'] || 10
+        for_user = options[:for_user] || options['for_user']
+
         if last_shown_obj_id
           timeline_items = self.timeline_items.where("created_at < ?", Inkwell::TimelineItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
@@ -271,8 +283,8 @@ module Inkwell
           timeline_obj.from_sources_in_timeline = item.from_source
 
           if for_user
-            timeline_obj.is_reblogged = (for_user.reblog? timeline_obj) ? true : false
-            timeline_obj.is_favorited = (for_user.favorite? timeline_obj) ? true : false
+            timeline_obj.is_reblogged = for_user.reblog? timeline_obj
+            timeline_obj.is_favorited = for_user.favorite? timeline_obj
           end
 
           result << timeline_obj

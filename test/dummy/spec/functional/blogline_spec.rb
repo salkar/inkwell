@@ -47,7 +47,7 @@ describe "BlogLine" do
     @morozovm.reblog @salkar_post9
     @morozovm.favorite @salkar_post9
 
-    bline = @salkar.blogline(nil, 10, @morozovm)
+    bline = @salkar.blogline :for_user => @morozovm
     bline.size.should == 10
     bline[0].should == @morozovm_post2
     bline[0].is_reblog_in_blogline.should == true

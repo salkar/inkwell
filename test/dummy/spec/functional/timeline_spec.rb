@@ -32,7 +32,7 @@ describe "Timeline" do
     @talisman.follow @morozovm
     @talisman.reload
 
-    tline = @talisman.timeline(nil, 10, @salkar)
+    tline = @talisman.timeline(:for_user => @salkar)
     tline.size.should == 10
     tline[0].should == @morozovm_post2
     tline[1].should == @morozovm_post1
@@ -58,7 +58,7 @@ describe "Timeline" do
     @morozovm.reblog @salkar_comment
     @morozovm.favorite @salkar_comment
     @talisman.reload
-    tline = @talisman.timeline(nil, 10, @morozovm)
+    tline = @talisman.timeline(:last_shown_obj_id => nil, :limit => 10,:for_user => @morozovm)
     tline.size.should == 1
     tline[0].should == @salkar_comment
     tline[0].is_reblogged.should == true

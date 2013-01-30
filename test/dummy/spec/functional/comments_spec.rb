@@ -59,7 +59,7 @@ describe "Comments" do
     commentline[0].id.should == @comment2.id
     commentline[9].id.should == @comment11.id
 
-    commentline = @salkar_post.commentline @comment10.id
+    commentline = @salkar_post.commentline :last_shown_comment_id => @comment10.id
     commentline.size.should == 10
     commentline[0].id.should == @comment.id
     commentline[9].id.should == @comment9.id
@@ -80,17 +80,17 @@ describe "Comments" do
     @comment10 = @salkar.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id)
     @comment11 = @morozovm.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id)
 
-    commentline = @salkar_post.commentline nil, 5
+    commentline = @salkar_post.commentline :limit => 5
     commentline.size.should == 5
     commentline[0].id.should == @comment7.id
     commentline[4].id.should == @comment11.id
 
-    commentline = @salkar_post.commentline @comment10.id, 5
+    commentline = @salkar_post.commentline :last_shown_comment_id => @comment10.id, :limit => 5
     commentline.size.should == 5
     commentline[0].id.should == @comment5.id
     commentline[4].id.should == @comment9.id
 
-    commentline = @salkar_post.commentline @comment5.id, 7
+    commentline = @salkar_post.commentline :last_shown_comment_id => @comment5.id, :limit => 7
     commentline.size.should == 5
     commentline[0].id.should == @comment.id
     commentline[4].id.should == @comment4.id
@@ -284,7 +284,7 @@ describe "Comments" do
     commentline[0].id.should == @comment2.id
     commentline[9].id.should == @comment11.id
 
-    commentline = @salkar_post.commentline @comment10.id
+    commentline = @salkar_post.commentline :last_shown_comment_id => @comment10.id
     commentline.size.should == 10
     commentline[0].id.should == @comment.id
     commentline[9].id.should == @comment9.id
@@ -310,7 +310,7 @@ describe "Comments" do
     commentline[0].id.should == @comment2.id
     commentline[9].id.should == @comment11.id
 
-    commentline = @salkar_post.commentline @comment10.id
+    commentline = @salkar_post.commentline :last_shown_comment_id => @comment10.id
     commentline.size.should == 10
     commentline[0].id.should == @comment.id
     commentline[9].id.should == @comment9.id
@@ -331,19 +331,19 @@ describe "Comments" do
     @comment11 = @morozovm.comments.create(:body => 'Lets You Party Like a Facebook User', :post_id => @salkar_post.id, :parent_id => @comment.id)
 
     @comment.reload
-    commentline = @comment.commentline nil, 5
+    commentline = @comment.commentline :limit => 5
     commentline.size.should == 5
     commentline[0].id.should == @comment7.id
     commentline[4].id.should == @comment11.id
 
     @comment.reload
-    commentline = @comment.commentline @comment10.id, 5
+    commentline = @comment.commentline :last_shown_comment_id => @comment10.id, :limit => 5
     commentline.size.should == 5
     commentline[0].id.should == @comment5.id
     commentline[4].id.should == @comment9.id
 
     @comment.reload
-    commentline = @comment.commentline @comment5.id, 7
+    commentline = @comment.commentline :last_shown_comment_id => @comment5.id, :limit => 7
     commentline.size.should == 4
     commentline[0].id.should == @comment1.id
     commentline[3].id.should == @comment4.id
@@ -357,13 +357,13 @@ describe "Comments" do
     @morozovm.favorite @comment2
 
     @comment.reload
-    commentline = @comment.commentline nil, 10, @salkar
+    commentline = @comment.commentline :for_user => @salkar
     commentline[0].id.should == @comment1.id
     commentline[0].is_favorited.should == true
     commentline[1].id.should == @comment2.id
     commentline[1].is_favorited.should == false
 
-    commentline = @comment.commentline nil, 10, @morozovm
+    commentline = @comment.commentline :for_user => @morozovm
     commentline[0].id.should == @comment1.id
     commentline[0].is_favorited.should == false
     commentline[1].id.should == @comment2.id
@@ -378,13 +378,13 @@ describe "Comments" do
     @morozovm.favorite @comment2
 
     @salkar_post.reload
-    commentline = @salkar_post.commentline nil, 10, @salkar
+    commentline = @salkar_post.commentline :for_user => @salkar
     commentline[1].id.should == @comment1.id
     commentline[1].is_favorited.should == true
     commentline[2].id.should == @comment2.id
     commentline[2].is_favorited.should == false
 
-    commentline = @salkar_post.commentline nil, 10, @morozovm
+    commentline = @salkar_post.commentline :for_user => @morozovm
     commentline[1].id.should == @comment1.id
     commentline[1].is_favorited.should == false
     commentline[2].id.should == @comment2.id

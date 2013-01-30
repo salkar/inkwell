@@ -159,8 +159,11 @@ describe "Favorites" do
     fline[9].class.to_s.should == 'Inkwell::Comment'
     fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment.id, true).id
 
+    fline_same = @salkar.favoriteline :last_shown_obj_id => nil, :limit => 10, :for_user => nil
+    fline_same.should == fline
+
     from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment2.id, true).id
-    fline = @salkar.favoriteline(from_favorite_item_id)
+    fline = @salkar.favoriteline(:last_shown_obj_id => from_favorite_item_id)
     fline.size.should == 10
     fline[0].id.should == @salkar_comment4.id
     fline[0].class.to_s.should == 'Inkwell::Comment'
@@ -170,7 +173,7 @@ describe "Favorites" do
     fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_comment.id, true).id
 
     from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment2.id, true).id
-    fline = @salkar.favoriteline(from_favorite_item_id, 5)
+    fline = @salkar.favoriteline(:last_shown_obj_id => from_favorite_item_id, :limit => 5)
     fline.size.should == 5
     fline[0].id.should == @salkar_comment4.id
     fline[0].class.to_s.should == 'Inkwell::Comment'
@@ -214,7 +217,7 @@ describe "Favorites" do
     @morozovm.reblog @salkar_post1
 
 
-    fline = @salkar.favoriteline(nil,10,@morozovm)
+    fline = @salkar.favoriteline(:for_user => @morozovm)
     fline.size.should == 10
     fline[0].id.should == @salkar_post1.id
     fline[0].class.to_s.should == 'Post'
