@@ -1,7 +1,7 @@
 = Inkwell
 =======
 
-Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application
+Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application.
 
 Russian readme here[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc]
 
