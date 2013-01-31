@@ -180,7 +180,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Blogline feature
 
-User blogine is consists of his posts and his reblogs. For get it you should do:
+User blogline is consists of his posts and his reblogs. For get it you should do:
 
   @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
