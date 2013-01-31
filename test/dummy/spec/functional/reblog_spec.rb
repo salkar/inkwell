@@ -108,15 +108,18 @@ describe "Reblog" do
   it "timeline items should delete for followers when user unreblog post" do
     @talisman = User.create :nick => "Talisman"
     @talisman.follow @morozovm
+    @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm.reblog @salkar_post
 
+    @talisman.timeline_items.size.should == 2
     @talisman.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 1
-    item = @talisman.timeline_items.first
+    item = @talisman.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
     item.has_many_sources.should == false
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'}])
 
     @morozovm.unreblog @salkar_post
     @talisman.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 0
+    @talisman.timeline_items.size.should == 1
   end
 
   it "timeline items should delete for followers when user unreblog comment" do
@@ -138,6 +141,8 @@ describe "Reblog" do
     @talisman.reblog @salkar_post
     @morozovm.follow @talisman
     @morozovm.follow @salkar
+    @talisman_post = @talisman.posts.create :body => "talisman_post_test_body"
+    @morozovm.timeline_items.size == 2
     @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 1
     item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}, {'user_id' => @salkar.id, 'type' => 'following'}])
@@ -148,6 +153,7 @@ describe "Reblog" do
     item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == false
+    @morozovm.timeline_items.size == 2
   end
 
   it "reblog count should been received for post" do

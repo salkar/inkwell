@@ -247,17 +247,13 @@ module Inkwell
         blog_item = BlogItem.send "find_by_item_id_and_is_reblog_and_#{user_id_attr}_and_is_comment", obj.id, true, self.id, is_comment
         blog_item.destroy
 
-        self.followers_row.each do |user_id|
-          item = TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_is_comment", obj.id, user_id, is_comment
-          if item.has_many_sources
+        TimelineItem.delete_all :user_id => self.followers_row, :has_many_sources => false, :item_id => obj.id, :is_comment => is_comment
+        TimelineItem.where(:user_id => self.followers_row, :item_id => obj.id, :is_comment => is_comment).each do |item|
             sources = ActiveSupport::JSON.decode item.from_source
             sources.delete Hash['user_id' => self.id, 'type' => 'reblog']
             item.has_many_sources = false if sources.size < 2
             item.from_source = ActiveSupport::JSON.encode sources
             item.save
-          else
-            item.destroy
-          end
         end
       end
 
