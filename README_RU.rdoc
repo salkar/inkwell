@@ -99,4 +99,102 @@ Inkwell добавляет в ваше приложение возможност
 
 Больше примеров можно найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb].
 
+=== Реблоги (репосты)
+
+Реблог подразумевает под собой, что элемент попадет в блог самого юзера и в ленты новостей его подписчиков. Таким образом, его поведение будет аналогично поведению поста самого юзера, за исключением того, что это не его пост.
+Юзер может сделать реблог как поста, так и комментария:
+
+  @user.reblog @post
+  @user.reblog @comment
+
+Отмена реблога:
+
+  @user.unreblog @post
+
+Проверка на наличие реблога элемента:
+
+  @user.reblog? @post
+
+У реблогов нет своей ленты, они показываются в самом блоге пользователя (ленте с его постами).
+
+Больше примеров можно нати в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb].
+
+=== Комментарии
+
+Юзер может комментировать пост или другой комментарий. Комментарий для поста создается так:
+
+  @user.comments.create :post_id => @post.id, :body => "comment_body"
+
+Если вы хотите создать комментарий для другого комментария, необходимо добавить <code>parent_id</code> родительского комментария:
+
+  @user.comments.create :post_id => @parent_post.id, :body => "comment_body", :parent_id => @parent_comment.id
+
+Для удаления комментария используйте <code>destroy</code> метод:
+
+  @comment.destroy
+
+Вы можете получить ленту комментариев как для поста, так и для комментария. Она состоит из комментариев данного объекта, возвращаемых в обратном хронологическом порядке.
+
+<i>Примечание: возвращаемый массив для простоты использования будет иметь обратную сортировку. Это связано с тем, что обычно в соц. сетях последний комментарий находится внизу, а более старые комментарии располагаются выше.</i>
+
+Для того, чтобы получить ленту комментариев, необходимо:
+
+  commentline(:last_shown_comment_id => nil, :limit => 10, :for_user => nil)
+
+где <code>last_shown_comment_id</code> - id последнего комментария для этого объекта из предыдущего вызова ленты комментариев. Например:
+
+  cline = @post.commentline    #забираем первые 10 комментариев для @post
+  last_shown_comment_id = cline.first.id    # Первый элемент берется из-за обратного порядка. По факту, это самый старый комментарий в <code>cline</code>.
+  cline_next_page = @post.commentline :last_shown_comment_id => last_shown_comment_id    #забираем следующие 10 комментариев для @post
+
+<code>Limit</code> и <code>for_user</code> обозначают тоже самое, что и одноименные параметры в favoriteline[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc#%D0%98%D0%B7%D0%B1%D1%80%D0%B0%D0%BD%D0%BD%D0%BE%D0%B5].
+
+Больше примеров вы можете найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb].
+
+=== Подписки
+
+Юзер может подписаться на другого юзера. При этом он будет видеть все его элементы блога (посты и реблоги) на своей новостной ленте.
+
+Добавление в подписки:
+
+  @user.follow @another_user
+
+После этого последние 10 элементов блога <code>@another_user</code> появятся в новостной ленте у <code>@user</code>. Каждый новый элемент блога <code>@another_user</code> также будет добавляться в новостную ленту <code>@user</code>.
+
+Удаление из подписок:
+
+  @user.unfollow @another_user
+
+Так можно проверить, подписан ли юзер на другого юзера:
+
+  @user.follow? @another_user
+
+Для получения id юзеров, на которых подписан пользователь, и которые подписаны на него, надо сделать так:
+
+  @user.followers_row
+  @user.followings_row
+
+Оба метода возвращают массивы id.
+
+Больше примеров вы можете найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb].
+
+=== Блог юзера
+
+Блог юзера состоит из его постов и реблогов. Он реализован лентой, идентичной <code>favoriteline</code>. Получить его можно так:
+
+  @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
+
+где параметры идентичны описанным ранее <code>favoriteline</code> параметрам[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc#%D0%98%D0%B7%D0%B1%D1%80%D0%B0%D0%BD%D0%BD%D0%BE%D0%B5].
+
+Больше примеров вы можете найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/blogline_spec.rb].
+
+=== Timeline feature
+
+Новостная лента юзера состоит из элементов блогов юзеров, на которых этот юзер подписан. Получить ее можно так:
+
+  @user.timeline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
+
+где параметры идентичные описанным ранее <code>favoriteline</code> параметрам[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc#%D0%98%D0%B7%D0%B1%D1%80%D0%B0%D0%BD%D0%BD%D0%BE%D0%B5].
+
+Больше примеров вы можете найти в этом спеке[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb].
 
