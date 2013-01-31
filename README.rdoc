@@ -3,6 +3,8 @@
 
 Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application
 
+Russian readme here[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc]
+
 == Requirements
 You should have two classes: User and Post or other identical. Between them should be a one-to-many relationship. For example:
 
@@ -197,7 +199,3 @@ User timeline is consists of items from bloglines of users, which he follow. For
 where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb].
-
-==Notes
-
-Russian readme here[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc]
