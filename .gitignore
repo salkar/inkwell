@@ -13,6 +13,9 @@ test/version_tmp
 test/dummy/db/*.sqlite3
 test/dummy/log/*.log
 test/dummy/tmp/
+test/dummy_without_community/db/*.sqlite3
+test/dummy_without_community/log/*.log
+test/dummy_without_community/tmp/
 tmp
 log
 .idea
