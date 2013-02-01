@@ -12,7 +12,6 @@ module Inkwell
       def acts_as_inkwell_user
         has_many :comments, :class_name => 'Inkwell::Comment'
         has_many :favorite_items, :class_name => 'Inkwell::FavoriteItem'
-        has_many :blog_items, :class_name => 'Inkwell::BlogItem'
         has_many :timeline_items, :class_name => 'Inkwell::TimelineItem'
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
         include ::Inkwell::Common
@@ -27,9 +26,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_obj_id
-          blog_items = self.blog_items.where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => true).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
-          blog_items = self.blog_items.order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => true).order("created_at DESC").limit(limit)
         end
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
@@ -130,9 +129,14 @@ module Inkwell
         self.followings_ids = ActiveSupport::JSON.encode followings
         self.save
 
+        post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        user.blog_items.order("created_at DESC").limit(10).each do |blog_item|
-          next if blog_item.send(user_id_attr) == self.id
+        ::Inkwell::BlogItem.where(:owner_id => user.id, :is_owner_user => true).order("created_at DESC").limit(10).each do |blog_item|
+          if blog_item.is_reblog
+            item_class = blog_item.is_comment? ? ::Inkwell::Comment : post_class
+            next if item_class.find(blog_item.item_id).send(user_id_attr) == self.id
+          end
+
           item = ::Inkwell::TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_is_comment", blog_item.item_id, self.id, blog_item.is_comment
           if item
             item.has_many_sources = true unless item.has_many_sources
@@ -204,7 +208,7 @@ module Inkwell
         is_comment = is_comment(obj)
 
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        BlogItem.create :item_id => obj.id, :is_reblog => true, user_id_attr => self.id, :is_comment => is_comment
+        BlogItem.create :item_id => obj.id, :is_reblog => true, :owner_id => self.id, :is_owner_user => true, :is_comment => is_comment
 
         users_ids_who_reblog_it = ActiveSupport::JSON.decode obj.users_ids_who_reblog_it
         users_ids_who_reblog_it << self.id
@@ -228,8 +232,7 @@ module Inkwell
       end
 
       def reblog?(obj)
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        BlogItem.exists? :item_id => obj.id, user_id_attr => self.id, :is_reblog => true, :is_comment => is_comment(obj)
+        BlogItem.exists? :item_id => obj.id, :owner_id => self.id, :is_owner_user => true, :is_reblog => true, :is_comment => is_comment(obj)
       end
 
       def unreblog(obj)
@@ -243,9 +246,7 @@ module Inkwell
         obj.users_ids_who_reblog_it = ActiveSupport::JSON.encode users_ids_who_reblog_it
         obj.save
 
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        blog_item = BlogItem.send "find_by_item_id_and_is_reblog_and_#{user_id_attr}_and_is_comment", obj.id, true, self.id, is_comment
-        blog_item.destroy
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => true, :item_id => obj.id, :is_reblog => true, :is_comment => is_comment
 
         TimelineItem.delete_all :user_id => self.followers_row, :has_many_sources => false, :item_id => obj.id, :is_comment => is_comment
         TimelineItem.where(:user_id => self.followers_row, :item_id => obj.id, :is_comment => is_comment).each do |item|

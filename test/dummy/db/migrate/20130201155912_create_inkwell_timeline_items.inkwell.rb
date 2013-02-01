@@ -1,3 +1,4 @@
+# This migration comes from inkwell (originally 20121202140510)
 class CreateInkwellTimelineItems < ActiveRecord::Migration
   def change
     create_table :inkwell_timeline_items do |t|

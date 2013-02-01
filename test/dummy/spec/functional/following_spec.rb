@@ -116,5 +116,15 @@ describe "Following" do
     item.has_many_sources.should == false
   end
 
+  it "self reblogs after follow should not transferred to timeline" do
+    @talisman = User.create :nick => "Talisman"
+    @talisman.reblog @salkar_post
+    @salkar.follow @talisman
+    @salkar.reload
+    @salkar.timeline.size.should == 0
+  end
+
+
+
 
 end

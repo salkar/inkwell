@@ -71,7 +71,7 @@ module Inkwell
         user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
         user = user_class.find self.send(user_id_attr)
-        ::Inkwell::BlogItem.create :item_id => self.id, :is_reblog => false, user_id_attr => self.send(user_id_attr), :is_comment => false
+        ::Inkwell::BlogItem.create :item_id => self.id, :is_reblog => false, :owner_id => self.send(user_id_attr), :is_owner_user => true, :is_comment => false
 
         user.followers_row.each do |user_id|
           encode_sources = [ Hash['user_id' => user.id, 'type' => 'following'] ]
