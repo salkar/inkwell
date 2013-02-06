@@ -102,11 +102,6 @@ module Inkwell
     end
 
     def processing_a_comment
-      self.users_ids_who_favorite_it = "[]"
-      self.users_ids_who_comment_it = "[]"
-      self.users_ids_who_reblog_it = "[]"
-      self.save
-
       post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
       post_id_attr = "#{::Inkwell::Engine::config.post_table.to_s.singularize}_id"
       parent_post = post_class.find self.send post_id_attr

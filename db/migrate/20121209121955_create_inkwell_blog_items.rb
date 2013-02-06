@@ -2,8 +2,7 @@ class CreateInkwellBlogItems < ActiveRecord::Migration
   def change
       create_table :inkwell_blog_items do |t|
         t.integer :item_id
-        t.integer :owner_id
-        t.boolean :is_owner_user
+        t.integer "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
         t.boolean :is_reblog
         t.boolean :is_comment
 

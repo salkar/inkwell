@@ -12,5 +12,10 @@ module Inkwell
       end
       is_comment
     end
+
+    def check_user(obj)
+      user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+      raise "user should be a #{user_class.to_s}" unless obj.is_a? user_class
+    end
   end
 end
