@@ -295,6 +295,52 @@ module Inkwell
         end
         result
       end
+
+      #wrappers for community methods
+
+      def join(open_community)
+        open_community.add_user :user => self
+      end
+
+      def leave(community)
+        community.remove_user :user => self
+      end
+
+      def kick(options = {})
+        options.symbolize_keys!
+        from_community = options[:from_community]
+        user = options[:user]
+        from_community.remove_user :user => user, :admin => self
+      end
+
+      def send_post_to_community(options = {})
+        options.symbolize_keys!
+        to_community = options[:to_community]
+        post = options[:post]
+        to_community.add_post :post => post, :user => self
+      end
+
+      def remove_post_from_community(options = {})
+        options.symbolize_keys!
+        from_community = options[:from_community]
+        post = options[:post]
+        from_community.remove_post :post => post, :user => self
+      end
+
+      def grant_admin_permissions(options = {})
+        options.symbolize_keys!
+        to_user = options[:to_user]
+        in_community = options[:in_community]
+        in_community.add_admin(:user => to_user, :admin => self)
+      end
+
+      def revoke_admin_permissions(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        in_community = options[:in_community]
+        in_community.remove_admin(:user => user, :admin => self)
+      end
+
     end
   end
 end

@@ -558,4 +558,133 @@ describe "Community" do
     expect { @community_1.remove_post :post => @salkar_post, :user => @morozovm }.to raise_error
   end
 
+  it "user should join community" do
+    users_ids = ActiveSupport::JSON.decode @community_1.users_ids
+    users_ids.size.should == 1
+    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
+    communities_ids.size.should == 0
+    @salkar.join @community_1
+    @community_1.reload
+    @salkar.reload
+    users_ids = ActiveSupport::JSON.decode @community_1.users_ids
+    users_ids.size.should == 2
+    users_ids[1].should == @salkar.id
+    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
+    communities_ids.size.should == 1
+    communities_ids[0].should == @community_1.id
+  end
+
+  it "user should leave community" do
+    @community_1.add_user :user => @salkar
+    @community_1.reload
+    @salkar.reload
+    @community_1.include_user?(@salkar).should be
+    @salkar.leave @community_1
+    @community_1.reload
+    @salkar.reload
+    @community_1.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
+    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 0
+  end
+
+  it "user should be kicked from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.reload
+    @salkar.reload
+    @community_1.include_user?(@salkar).should be
+    @talisman.reload
+    @talisman.kick :user => @salkar, :from_community => @community_1
+    @community_1.reload
+    @salkar.reload
+    @community_1.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
+    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 0
+  end
+
+  it "post should be sended to community" do
+    @community_1.add_user :user => @salkar
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @salkar.timeline_items.size.should == 0
+    @talisman.timeline_items.size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
+
+    @salkar_post.reload
+    ActiveSupport::JSON.decode(@salkar_post.communities_ids).should == [@community_1.id]
+  end
+
+  it "post should be removed from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    @talisman.follow @salkar
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id], Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == true
+    @morozovm.timeline_items.size.should == 1
+    item = @morozovm.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
+
+    @salkar.remove_post_from_community :post => @salkar_post, :from_community => @community_1
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == false
+
+    @morozovm.reload
+    @morozovm.timeline_items.size.should == 0
+
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    @salkar_post.reload
+    ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
+  end
+
+  it "admin permissions should be granted" do
+    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
+    @salkar.save
+    @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
+    @community_1.save
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.reload
+    @salkar.reload
+    @morozovm.reload
+    @salkar.grant_admin_permissions :to_user => @morozovm, :in_community => @community_1
+    @community_1.reload
+    @salkar.reload
+    @community_1.include_admin?(@morozovm).should == true
+    @community_1.admin_level_of(@morozovm).should == 1
+  end
+
+  it "admin permissions should be revoked" do
+    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
+    @salkar.save
+    @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
+    @community_1.save
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.reload
+    @salkar.reload
+    @morozovm.reload
+    @community_1.add_admin :admin => @salkar, :user => @morozovm
+    @community_1.reload
+    @morozovm.reload
+    @community_1.include_admin?(@morozovm).should == true
+    @salkar.revoke_admin_permissions :user => @morozovm, :in_community => @community_1
+    @community_1.reload
+    @morozovm.reload
+    @community_1.include_admin?(@salkar).should == true
+    @community_1.include_admin?(@morozovm).should == false
+    ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
+    ActiveSupport::JSON.decode(@morozovm.admin_of).size.should == 0
+  end
+
 end
