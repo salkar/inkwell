@@ -461,18 +461,101 @@ describe "Community" do
   end
 
   it "post should not be added to community blogline and user's timeline" do
-    expect { @community_1.remove_admin :user => @salkar, :post => @salkar_post }.to raise_error
-    expect { @community_1.remove_admin :user => @talisman, :post => @salkar_post }.to raise_error
-    expect { @community_1.remove_admin :user => @talisman, :post => "@salkar_post" }.to raise_error
-    expect { @community_1.remove_admin :user => "@talisman", :post => @salkar_post }.to raise_error
-    expect { @community_1.remove_admin :user => @talisman }.to raise_error
-    expect { @community_1.remove_admin :post => @salkar_post }.to raise_error
+    expect { @community_1.add_post :user => @salkar, :post => @salkar_post }.to raise_error
+    expect { @community_1.add_post :user => @talisman, :post => @salkar_post }.to raise_error
+    expect { @community_1.add_post :user => @talisman, :post => "@salkar_post" }.to raise_error
+    expect { @community_1.add_post :user => "@talisman", :post => @salkar_post }.to raise_error
+    expect { @community_1.add_post :user => @talisman }.to raise_error
+    expect { @community_1.add_post :post => @salkar_post }.to raise_error
 
     @community_1.add_user :user => @salkar
     @community_1.add_post :post => @salkar_post, :user => @salkar
     expect { @community_1.add_post :post => @salkar_post, :user => @salkar }.to raise_error
   end
 
+  it "post should be removed by owner from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    @talisman.follow @salkar
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id], Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == true
+    @morozovm.timeline_items.size.should == 1
+    item = @morozovm.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
 
+    @community_1.remove_post :post => @salkar_post, :user => @salkar
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == false
+
+    @morozovm.reload
+    @morozovm.timeline_items.size.should == 0
+
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    @salkar_post.reload
+    ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
+  end
+
+  it "post should be removed by admin from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    @talisman.follow @salkar
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id], Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == true
+    @morozovm.timeline_items.size.should == 1
+    item = @morozovm.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
+
+    @salkar.reload
+    @talisman.reload
+    @community_1.remove_post :post => @salkar_post, :user => @talisman
+    @talisman.reload
+    @talisman.timeline_items.size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following']]
+    item.has_many_sources.should == false
+
+    @morozovm.reload
+    @morozovm.timeline_items.size.should == 0
+
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    @salkar_post.reload
+    ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
+  end
+
+  it "post should not be removed from community" do
+    expect { @community_1.remove_post :user => @salkar, :post => @salkar_post }.to raise_error
+    @community_1.add_user :user => @salkar
+    expect { @community_1.remove_post :user => @salkar, :post => @salkar_post }.to raise_error
+    expect { @community_1.remove_post :user => @talisman, :post => @salkar_post }.to raise_error
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+
+    expect { @community_1.remove_post :user => @talisman, :post => "@salkar_post" }.to raise_error
+    expect { @community_1.remove_post :user => "@talisman", :post => @salkar_post }.to raise_error
+    expect { @community_1.remove_post :user => @talisman }.to raise_error
+    expect { @community_1.remove_post :post => @salkar_post }.to raise_error
+
+    @community_1.add_user :user => @morozovm
+    expect { @community_1.remove_post :post => @salkar_post, :user => @morozovm }.to raise_error
+
+    @talisman.reload
+    @community_1.add_admin :admin => @talisman, :user => @salkar
+    @community_1.add_admin :admin => @salkar, :user => @morozovm
+    @salkar.reload
+    @morozovm.reload
+    expect { @community_1.remove_post :post => @salkar_post, :user => @morozovm }.to raise_error
+  end
 
 end

@@ -187,7 +187,42 @@ module Inkwell
           ::Inkwell::TimelineItem.create :item_id => post.id, user_id_attr => user_id, :is_comment => false,
                                          :from_source => ActiveSupport::JSON.encode([Hash['community_id' => self.id]])
         end
+      end
 
+      def remove_post(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        post = options[:post]
+        raise "user should be passed in params" unless user
+        raise "user should be a member of community" unless self.include_user?(user)
+        raise "post should be passed in params" unless post
+        check_post post
+        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        if self.include_admin?(user)
+          post_owner = user_class.find post.send(user_id_attr)
+          raise "admin tries to remove post of another admin. not enough permissions" if
+              (self.include_admin? post_owner) && (self.admin_level_of(user) > self.admin_level_of(post_owner))
+        else
+          raise "user tried to remove post of another user" unless post.send(user_id_attr) == user.id
+        end
+        raise "post isn't in community" unless post.communities_row.include? self.id
+
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :is_comment => false
+        communities_ids = ActiveSupport::JSON.decode post.communities_ids
+        communities_ids.delete self.id
+        post.communities_ids = ActiveSupport::JSON.encode communities_ids
+        post.save
+
+        items = ::Inkwell::TimelineItem.where(:item_id => post.id, :is_comment => false).where("from_source like '%{\"community_id\":#{self.id}%'")
+        items.where(:has_many_sources => false).delete_all
+        items.where(:has_many_sources => true).each do |item|
+          from_source = ActiveSupport::JSON.decode item.from_source
+          from_source.delete Hash['community_id' => self.id]
+          item.from_source = ActiveSupport::JSON.encode from_source
+          item.has_many_sources = false if from_source.size < 2
+          item.save
+        end
       end
 
       def blogline(options = {})
