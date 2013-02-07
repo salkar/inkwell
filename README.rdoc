@@ -1,7 +1,7 @@
 = Inkwell
 =======
 
-Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, timelines to your Ruby on Rails application.
+Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities and timelines to your Ruby on Rails application.
 
 Russian translation of README file available here[https://github.com/salkar/inkwell/blob/master/README_RU.rdoc].
 
@@ -14,6 +14,11 @@ You should have two classes: User and Post or other identical. Between them shou
 
   class Post < ActiveRecord::Base
     belongs_to :user
+  end
+
+If you want to use communities, then you need to have <code>Community</code> class, too:
+
+  class Community < ActiveRecord::Base
   end
 
 == Installation
@@ -37,12 +42,20 @@ Add to your <code>User</code> model <code>acts_as_inkwell_user</code> and to you
     acts_as_inkwell_post
   end
 
-Create <code>inkwell.rb</code> file in <code>config/initializers</code> and put in it your names of <code>User</code> and <code>Post</code> tables (or other identical):
+If you want to use communities, then add to your <code>Community</code> model <code>acts_as_inkwell_community</code>:
+  
+  class Community < ActiveRecord::Base
+    acts_as_inkwell_community
+  end
+
+Create <code>inkwell.rb</code> file in <code>config/initializers</code> and put in it your names of <code>User</code> and <code>Post</code> tables (or other identical). 
+Put in it name of <code>Community</code> table if you want to use it:
 
   module Inkwell
     class Engine < Rails::Engine
       config.post_table = :posts
       config.user_table = :users
+      config.community_table = :communities #if you want to use communities
     end
   end
 
@@ -199,3 +212,9 @@ User timeline is consists of items from bloglines of users, which he follow. For
 where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb].
+
+=== Community feature
+
+Community is association of users. It has own blogline, consisting of posts of its members. Community member can send his post to the community blogline.
+Then this post is added to the timelines of other community users.
+
