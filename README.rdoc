@@ -93,7 +93,7 @@ where
     last_shown_obj_id = fline.last.item_id_in_line
     fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #get next 10 items from @user favorite line
 
-* <code>limit</code> - defines the count of favorite items to return.
+* <code>limit</code> - defines the count of favorited items to return.
 
     fline = @user.favoriteline :limit => 20    #return first 20 items from @user favorite line
 
