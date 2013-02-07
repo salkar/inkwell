@@ -372,7 +372,107 @@ describe "Community" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    @community_1.add_post :post => @salkar_post1, :user => @salkar
+    @community_1.add_post :post => @salkar_post2, :user => @salkar
+    @community_1.add_post :post => @salkar_post3, :user => @salkar
+    @community_1.add_post :post => @salkar_post4, :user => @salkar
+    @community_1.add_post :post => @salkar_post5, :user => @salkar
+    @community_1.add_post :post => @salkar_post6, :user => @salkar
+    @community_1.add_post :post => @salkar_post7, :user => @salkar
+    @community_1.add_post :post => @salkar_post8, :user => @salkar
+    @community_1.add_post :post => @morozovm_post, :user => @morozovm
+    @community_1.add_post :post => @morozovm_post1, :user => @morozovm
+    @community_1.add_post :post => @morozovm_post2, :user => @morozovm
+    @talisman.follow @morozovm
+    @salkar.follow @morozovm
+    ::Inkwell::BlogItem.all.size.should == 24
+    @salkar.timeline_items.size.should == 3
+    @talisman.timeline_items.size.should == 12
+    @morozovm.timeline_items.size.should == 9
+    id = @community_1.id
+
+    @community_1.reload
+    @community_1.destroy
+    ::Inkwell::BlogItem.all.size.should == 12
+    ::Inkwell::BlogItem.where(:owner_id => id, :is_owner_user => false).size.should == 0
+    @salkar.timeline_items.size.should == 3
+    @talisman.timeline_items.size.should == 3
+    @morozovm.timeline_items.size.should == 0
+    @salkar.timeline_items.each do |item|
+      item.has_many_sources.should == false
+      ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @morozovm.id, 'type' => 'following']]
+    end
+    @talisman.timeline_items.each do |item|
+      item.has_many_sources.should == false
+      ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @morozovm.id, 'type' => 'following']]
+    end
+    @salkar.reload
+    @talisman.reload
+    @morozovm.reload
+    @salkar.communities_row.size.should == 0
+    @talisman.communities_row.size.should == 0
+    @morozovm.communities_row.size.should == 0
+    ActiveSupport::JSON.decode(@talisman.admin_of).size.should == 0
   end
+
+  it "post should be added to community blogline and user's timeline" do
+    @community_1.add_user :user => @salkar
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @salkar.timeline_items.size.should == 0
+    @talisman.timeline_items.size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
+
+    @salkar_post.reload
+    ActiveSupport::JSON.decode(@salkar_post.communities_ids).should == [@community_1.id]
+  end
+
+  it "post info should be added to existing user's timeline items" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_user :user => @morozovm
+    @community_1.reload
+    @morozovm.reload
+    @talisman.follow @salkar
+    @talisman.timeline_items.size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @morozovm.timeline_items.size.should == 0
+    @salkar.timeline_items.size.should == 0
+
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    @talisman.timeline_items.size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    item = @talisman.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following'], Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == true
+
+    @salkar.timeline_items.size.should == 0
+
+    @morozovm.reload
+    @morozovm.timeline_items.size.should == 1
+    @morozovm.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    item = @morozovm.timeline_items.first
+    ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
+    item.has_many_sources.should == false
+  end
+
+  it "post should not be added to community blogline and user's timeline" do
+    expect { @community_1.remove_admin :user => @salkar, :post => @salkar_post }.to raise_error
+    expect { @community_1.remove_admin :user => @talisman, :post => @salkar_post }.to raise_error
+    expect { @community_1.remove_admin :user => @talisman, :post => "@salkar_post" }.to raise_error
+    expect { @community_1.remove_admin :user => "@talisman", :post => @salkar_post }.to raise_error
+    expect { @community_1.remove_admin :user => @talisman }.to raise_error
+    expect { @community_1.remove_admin :post => @salkar_post }.to raise_error
+
+    @community_1.add_user :user => @salkar
+    @community_1.add_post :post => @salkar_post, :user => @salkar
+    expect { @community_1.add_post :post => @salkar_post, :user => @salkar }.to raise_error
+  end
+
 
 
 end

@@ -65,6 +65,10 @@ module Inkwell
         users_ids_who_reblog_it.size
       end
 
+      def communities_row
+        ActiveSupport::JSON.decode self.communities_ids
+      end
+
       private
 
       def processing_a_post

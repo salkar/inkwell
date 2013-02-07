@@ -17,5 +17,10 @@ module Inkwell
       user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
       raise "user should be a #{user_class.to_s}" unless obj.is_a? user_class
     end
+
+    def check_post(obj)
+      post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
+      raise "post should be a #{user_class.to_s}" unless obj.is_a? post_class
+    end
   end
 end

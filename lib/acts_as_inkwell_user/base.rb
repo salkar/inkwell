@@ -53,6 +53,10 @@ module Inkwell
         result
       end
 
+      def communities_row
+        ActiveSupport::JSON.decode self.communities_ids
+      end
+
       def favorite(obj)
         return if self.favorite? obj
 

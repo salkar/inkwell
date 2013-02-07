@@ -123,6 +123,7 @@ module Inkwell
         options.symbolize_keys!
         user = options[:user]
         admin = options[:admin]
+        raise "user should be passed in params" unless user
         raise "admin should be passed in params" unless admin
         raise "user is not admin" unless self.include_admin?(user)
         raise "admin is not admin" unless self.include_admin?(admin)
@@ -151,6 +152,42 @@ module Inkwell
         check_user user
         admin_positions = ActiveSupport::JSON.decode user.admin_of
         (admin_positions.index{|item| item['community_id'] == self.id} == nil) ? false : true
+      end
+
+      def add_post(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        post = options[:post]
+        raise "user should be passed in params" unless user
+        raise "user should be a member of community" unless self.include_user?(user)
+        raise "post should be passed in params" unless post
+        check_post post
+        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        raise "user tried to add post of another user" unless post.send(user_id_attr) == user.id
+        raise "post is already added to this community" if post.communities_row.include? self.id
+
+        ::Inkwell::BlogItem.create :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :is_comment => false
+        communities_ids = ActiveSupport::JSON.decode post.communities_ids
+        communities_ids << self.id
+        post.communities_ids = ActiveSupport::JSON.encode communities_ids
+        post.save
+
+        users_with_existing_items = [user.id]
+        ::Inkwell::TimelineItem.where(:item_id => post.id, :is_comment => false).each do |item|
+          users_with_existing_items << item.send(user_id_attr)
+          item.has_many_sources = true
+          from_source = ActiveSupport::JSON.decode item.from_source
+          from_source << Hash['community_id' => self.id]
+          item.from_source = ActiveSupport::JSON.encode from_source
+          item.save
+        end
+
+        self.users_row.each do |user_id|
+          next if users_with_existing_items.include? user_id
+          ::Inkwell::TimelineItem.create :item_id => post.id, user_id_attr => user_id, :is_comment => false,
+                                         :from_source => ActiveSupport::JSON.encode([Hash['community_id' => self.id]])
+        end
+
       end
 
       def blogline(options = {})
@@ -185,6 +222,10 @@ module Inkwell
           result << blog_obj
         end
         result
+      end
+
+      def users_row
+        ActiveSupport::JSON.decode self.users_ids
       end
 
       private

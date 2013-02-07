@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130206112231) do
+ActiveRecord::Schema.define(:version => 20130207112455) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -72,6 +72,7 @@ ActiveRecord::Schema.define(:version => 20130206112231) do
     t.text     "users_ids_who_favorite_it", :default => "[]"
     t.text     "users_ids_who_comment_it",  :default => "[]"
     t.text     "users_ids_who_reblog_it",   :default => "[]"
+    t.text     "communities_ids",           :default => "[]"
   end
 
   create_table "users", :force => true do |t|
