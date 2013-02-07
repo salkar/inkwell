@@ -74,15 +74,15 @@ User is able to favorite posts/comments:
   @user.favorite @post
   @user.favorite @comment
 
-For delete post/comment from favorites you should do:
+To delete post/comment from favorites you should do:
 
   @user.unfavorite @post
 
-For check that post/comment enters in favorites you should do:
+To check that post/comment enters in favorites you should do:
 
   @user.favorite? @post
 
-For return favorite line, consisting of favorited posts and comments, you should do:
+To return favorite line, consisting of favorited posts and comments, you should do:
 
   @user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
@@ -122,11 +122,11 @@ User is able to reblog posts/comments:
   @user.reblog @post
   @user.reblog @comment
 
-For delete post/comment from reblogs you should do:
+To delete post/comment from reblogs you should do:
 
   @user.unreblog @post
 
-For check that post/comment enters in reblogs you should do:
+To check that post/comment enters in reblogs you should do:
 
   @user.reblog? @post
 
@@ -144,7 +144,7 @@ If you want to comment other comment you should add <code>parent_id</code> of pa
 
   @user.comments.create :post_id => @parent_post.id, :body => "comment_body", :parent_id => @parent_comment.id
 
-For delete comment you should use <code>destroy</code> method:
+To delete comment you should use <code>destroy</code> method:
 
   @comment.destroy
 
@@ -152,7 +152,7 @@ You are able to get comment line for post or comment. It consists of comments fo
 
 <i>Notice: returned array will have back order to simplify the use. Last comment is at the bottom usually.</i>
 
-For get comment line you should do:
+To get comment line you should do:
 
   commentline(:last_shown_comment_id => nil, :limit => 10, :for_user => nil)
 
@@ -170,21 +170,21 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 User is able to follow another user. It allows him to get followed user's blogline in his timeline.
 
-For follow user you should do:
+To follow user you should do:
 
   @user.follow @another_user
 
-After it last 10 <code>@another_user</code> blogline's items will be transferred to <code>@user</code> timeline. And each new <code>@another_user</code> blogline item will be added to <code>@user</code> timeline
+After it last 10 <code>@another_user</code> blogline's items will be transferred to <code>@user</code> timeline. And each new <code>@another_user</code> blogline item will be added to <code>@user</code> timeline.
 
-For unfollow user you should do:
+To unfollow user you should do:
 
   @user.unfollow @another_user
 
-For check that user is follower of another user you should do:
+To check that user is follower of another user you should do:
 
   @user.follow? @another_user
 
-For get followers ids for user and ids of users, which he follow, you should do:
+To get followers ids for user and ids of users, which he follow, you should do:
 
   @user.followers_row
   @user.followings_row
@@ -218,3 +218,43 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 Community is association of users. It has own blogline, consisting of posts of its members. Community member can send his post to the community blogline.
 Then this post is added to the timelines of other community users.
 
+When you create community you need to pass <code>owner_id</code>:
+
+   @community = Community.create :name => "Community", :owner_id => @user.id 
+
+User with the passed id will be the first administrator of created community and will be added to it.
+
+To add a user to the open community:
+
+  @user.join @community
+
+After it last 10 <code>@community</code> blogline's items will be transferred to <code>@user</code> timeline. And each new <code>@community</code> blogline item will be added to <code>@user</code> timeline.
+Moreover <code>@user</code> will be able to add their posts in community blogline.
+
+To remove a user from community:
+
+  @admin.kick :user => @user, :from_community => @community
+
+where <code>admin</code> is community administrator and <code>@user</code> is deleted user.
+
+If user leave community:
+
+  @user.leave @community
+
+After leaving the community (both methods) its blogline items will be removed from the user timeline.
+
+To send post to the community blogline:
+
+  @user.send_post_to_community :post => @user_post, :to_community => @community
+
+Sent post will be added to timelines of community members. A post can be sent to the community only by its owner.
+
+To remove post from community blogline:
+
+  @user.remove_post_from_community :post => @user_post, :from_community => @community
+
+or 
+
+  @admin.remove_post_from_community :post => @user_post, :from_community => @community
+
+Only post owner or administrator of community can remove the post from the community blogline.
