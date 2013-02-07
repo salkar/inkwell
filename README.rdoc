@@ -74,26 +74,26 @@ User is able to favorite posts/comments:
   @user.favorite @post
   @user.favorite @comment
 
-To delete post/comment from favorites you should do:
+To delete post/comment from favorites:
 
   @user.unfavorite @post
 
-To check that post/comment enters in favorites you should do:
+To check that post/comment enters in favorites:
 
   @user.favorite? @post
 
-To return favorite line, consisting of favorited posts and comments, you should do:
+To return favorite line, consisting of favorited posts and comments:
 
   @user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
 where 
-* <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from <code>item_id_in_line</code> property of last item from previous <code>favoriteline</code> calls. This parameter is for pagination and separation of the timeline.
+* <code>last_shown_obj_id</code> - id of the last item in favorite line shown to the user. Get it from the <code>item_id_in_line</code> property of last item from previous <code>favoriteline</code> calls. This parameter is used for pagination and separation of the timeline.
 
     fline = @user.favoriteline    #get first 10 items from @user favorite line
     last_shown_obj_id = fline.last.item_id_in_line
     fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #get next 10 items from @user favorite line
 
-* <code>limit</code> - number of returned favorited items
+* <code>limit</code> - defines the count of favorite items to return.
 
     fline = @user.favoriteline :limit => 20    #return first 20 items from @user favorite line
 
@@ -122,11 +122,11 @@ User is able to reblog posts/comments:
   @user.reblog @post
   @user.reblog @comment
 
-To delete post/comment from reblogs you should do:
+To delete post/comment from reblogs:
 
   @user.unreblog @post
 
-To check that post/comment enters in reblogs you should do:
+To check that post/comment enters in reblogs:
 
   @user.reblog? @post
 
@@ -136,7 +136,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Comment features
 
-User is able to create comments for post or other comment. If you want to comment the post you should do:
+User is able to create comments for post or other comment. If you want to comment the post:
 
   @user.comments.create :post_id => @post.id, :body => "comment_body"
 
@@ -152,7 +152,7 @@ You are able to get comment line for post or comment. It consists of comments fo
 
 <i>Notice: returned array will have back order to simplify the use. Last comment is at the bottom usually.</i>
 
-To get comment line you should do:
+To get comment line:
 
   commentline(:last_shown_comment_id => nil, :limit => 10, :for_user => nil)
 
@@ -168,23 +168,23 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Follow features
 
-User is able to follow another user. It allows him to get followed user's blogline in his timeline.
+User is able to follow another users. It allows him to get followed user's blogline in his timeline.
 
-To follow user you should do:
+To follow user:
 
   @user.follow @another_user
 
 After it last 10 <code>@another_user</code> blogline's items will be transferred to <code>@user</code> timeline. And each new <code>@another_user</code> blogline item will be added to <code>@user</code> timeline.
 
-To unfollow user you should do:
+To unfollow user:
 
   @user.unfollow @another_user
 
-To check that user is follower of another user you should do:
+To check that user is follower of another user:
 
   @user.follow? @another_user
 
-To get followers ids for user and ids of users, which he follow, you should do:
+To get followers ids for user and ids of users, which he follow:
 
   @user.followers_row
   @user.followings_row
@@ -195,7 +195,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Blogline feature
 
-User blogline is consists of his posts and his reblogs. For get it you should do:
+User blogline is consists of his posts and his reblogs. For get it:
 
   @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
@@ -205,7 +205,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Timeline feature
 
-User timeline is consists of items from bloglines of users, which he follow. For get it you should do:
+User timeline is consists of items from bloglines of users he follows. For get it:
 
   @user.timeline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
