@@ -16,7 +16,7 @@ You should have two classes: User and Post or other identical. Between them shou
     belongs_to :user
   end
 
-If you want to use communities, then you need to have <code>Community</code> class, too:
+If you want to use communities[https://github.com/salkar/inkwell#community-feature], then you need to have <code>Community</code> class, too:
 
   class Community < ActiveRecord::Base
   end
@@ -258,3 +258,40 @@ or
   @admin.remove_post_from_community :post => @user_post, :from_community => @community
 
 Only post owner or administrator of community can remove the post from the community blogline.
+
+To check that the user is a member of the community:
+
+  @community.include_user? @user
+
+To check that the user is an admin of the community:
+
+  @community.include_admin? @user
+
+Each administrator has the access level. Community owner has access level 0. Administrators, to whom he granted admin permissions, have access level 1 and so on.
+Thus the lower the access level, the more permissions. For example, admin with access level 0 can delete admin with access level 1 but not vice versa.
+
+To grant admin permissions:
+
+  @admin.grant_admin_permissions :to_user => @new_admin, :in_community => @community
+
+To revoke admin permissions:
+
+   @admin.revoke_admin_permissions :user => @admin_who_is_removed, :in_community => @community
+
+To get admin's access level:
+
+  @community.admin_level_of @admin 
+
+To get communities ids in which there is this post:
+
+  @post.communities_row
+
+To get ids of community members:
+
+  @community.users_row
+
+To get ids of communities to which the user has joined:
+
+  @user.communities_row
+
+More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb]
