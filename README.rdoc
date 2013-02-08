@@ -195,7 +195,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Blogline feature
 
-User blogline is consists of his posts and his reblogs. For get it:
+User blogline is consists of his posts and his reblogs. To get it:
 
   @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
@@ -205,7 +205,7 @@ More examples you can find in this spec[https://github.com/salkar/inkwell/blob/m
 
 === Timeline feature
 
-User timeline is consists of items from bloglines of users he follows. For get it:
+User timeline is consists of items from bloglines of users he follows. To get it:
 
   @user.timeline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
 
@@ -293,5 +293,11 @@ To get ids of community members:
 To get ids of communities to which the user has joined:
 
   @user.communities_row
+
+Community blogline is consists of the posts of members that have added to it. To get it:
+
+  @community.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
+
+where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb]
