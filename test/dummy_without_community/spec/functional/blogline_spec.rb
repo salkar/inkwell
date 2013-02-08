@@ -9,9 +9,10 @@ describe "BlogLine" do
   end
 
   it "blogitem record should been created for new post" do
-    @salkar.blog_items.size.should == 1
-    item = @salkar.blog_items.first
-    item.user_id.should == @salkar.id
+    ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :is_owner_user => true).size.should == 1
+    item = ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :is_owner_user => true).first
+    item.owner_id.should == @salkar.id
+    item.is_owner_user.should be
     item.item_id.should == @salkar_post.id
     item.is_reblog.should == false
     item.is_comment.should == false

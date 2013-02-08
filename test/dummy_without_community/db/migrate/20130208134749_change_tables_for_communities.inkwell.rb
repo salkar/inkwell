@@ -1,3 +1,4 @@
+# This migration comes from inkwell (originally 20130202130010)
 class ChangeTablesForCommunities < ActiveRecord::Migration
   def change
     change_column :inkwell_comments, :users_ids_who_favorite_it, :text, :default => '[]'

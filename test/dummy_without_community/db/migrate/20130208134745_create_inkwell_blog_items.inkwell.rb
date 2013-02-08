@@ -1,3 +1,4 @@
+# This migration comes from inkwell (originally 20121209121955)
 class CreateInkwellBlogItems < ActiveRecord::Migration
   def change
       create_table :inkwell_blog_items do |t|

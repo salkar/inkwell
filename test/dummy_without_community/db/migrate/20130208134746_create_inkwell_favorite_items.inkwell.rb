@@ -1,3 +1,4 @@
+# This migration comes from inkwell (originally 20121209123557)
 class CreateInkwellFavoriteItems < ActiveRecord::Migration
   def change
       create_table :inkwell_favorite_items do |t|

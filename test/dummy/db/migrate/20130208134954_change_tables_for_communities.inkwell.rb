@@ -9,7 +9,7 @@ class ChangeTablesForCommunities < ActiveRecord::Migration
     add_column :inkwell_blog_items, :is_owner_user, :boolean
     change_column :inkwell_timeline_items, :from_source, :text, :default => '[]', :limit => nil
 
-    if ::Inkwell::Engine::config.community_table
+    if ::Inkwell::Engine::config.respond_to?('community_table')
       add_column ::Inkwell::Engine::config.community_table, :users_ids, :text, :default => '[]'
       add_column ::Inkwell::Engine::config.community_table, :admins_info, :text, :default => '[]'
       add_column ::Inkwell::Engine::config.user_table, :communities_ids, :text, :default => '[]'

@@ -1,3 +1,4 @@
+# This migration comes from inkwell (originally 20121209124743)
 class CreateInkwellComments < ActiveRecord::Migration
   def change
     create_table :inkwell_comments do |t|

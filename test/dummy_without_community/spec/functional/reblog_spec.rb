@@ -13,14 +13,14 @@ describe "Reblog" do
   it "user should reblog post" do
     @morozovm.reblog @salkar_post
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 2
-    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false, :user_id => @morozovm.id, :is_reblog => true).size.should == 1
+    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 1
     @salkar_post.reload
     @salkar_post.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
   end
 
   it "user should reblog comment" do
     @morozovm.reblog @salkar_comment
-    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :is_comment => true, :user_id => @morozovm.id, :is_reblog => true).size.should == 1
+    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :is_comment => true, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 1
     @salkar_comment.reload
     @salkar_comment.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
   end
@@ -92,7 +92,7 @@ describe "Reblog" do
     @morozovm.reblog @salkar_post
     @morozovm.unreblog @salkar_post
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
-    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false, :user_id => @morozovm.id, :is_reblog => true).size.should == 0
+    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :is_comment => false, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 0
     @salkar_post.reload
     @salkar_post.users_ids_who_reblog_it.should == "[]"
   end
@@ -100,7 +100,7 @@ describe "Reblog" do
   it "user should unreblog comment" do
     @morozovm.reblog @salkar_comment
     @morozovm.unreblog @salkar_comment
-    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :is_comment => true, :user_id => @morozovm.id, :is_reblog => true).size.should == 0
+    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :is_comment => true, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 0
     @salkar_comment.reload
     @salkar_comment.users_ids_who_reblog_it.should == "[]"
   end

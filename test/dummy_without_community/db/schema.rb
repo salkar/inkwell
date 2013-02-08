@@ -11,15 +11,16 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130120124015) do
+ActiveRecord::Schema.define(:version => 20130208134750) do
 
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"
-    t.integer  "user_id"
     t.boolean  "is_reblog"
     t.boolean  "is_comment"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+    t.integer  "owner_id"
+    t.boolean  "is_owner_user"
   end
 
   create_table "inkwell_comments", :force => true do |t|
@@ -28,37 +29,37 @@ ActiveRecord::Schema.define(:version => 20130120124015) do
     t.integer  "parent_id"
     t.integer  "post_id"
     t.text     "upper_comments_tree"
-    t.text     "users_ids_who_favorite_it"
-    t.text     "users_ids_who_comment_it"
-    t.text     "users_ids_who_reblog_it"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.text     "users_ids_who_favorite_it", :default => "[]"
+    t.text     "users_ids_who_comment_it",  :default => "[]"
+    t.text     "users_ids_who_reblog_it",   :default => "[]"
+    t.datetime "created_at",                                  :null => false
+    t.datetime "updated_at",                                  :null => false
   end
 
   create_table "inkwell_favorite_items", :force => true do |t|
     t.integer  "item_id"
     t.integer  "user_id"
     t.boolean  "is_comment"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "inkwell_timeline_items", :force => true do |t|
     t.integer  "item_id"
     t.integer  "user_id"
-    t.string   "from_source"
+    t.text     "from_source",      :default => "[]"
     t.boolean  "has_many_sources", :default => false
     t.boolean  "is_comment"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                          :null => false
+    t.datetime "updated_at",                          :null => false
   end
 
   create_table "posts", :force => true do |t|
     t.string   "title"
     t.text     "body"
     t.integer  "user_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                                  :null => false
+    t.datetime "updated_at",                                  :null => false
     t.text     "users_ids_who_favorite_it", :default => "[]"
     t.text     "users_ids_who_comment_it",  :default => "[]"
     t.text     "users_ids_who_reblog_it",   :default => "[]"
@@ -66,8 +67,8 @@ ActiveRecord::Schema.define(:version => 20130120124015) do
 
   create_table "users", :force => true do |t|
     t.string   "nick"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                       :null => false
+    t.datetime "updated_at",                       :null => false
     t.text     "followers_ids",  :default => "[]"
     t.text     "followings_ids", :default => "[]"
   end
