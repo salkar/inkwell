@@ -1,7 +1,4 @@
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ca9e83bea0d6c79d5909780eb805e944 "githalytics.com")](http://githalytics.com/salkar/inkwell)
-
 # Inkwell
-
 
 Inkwell provides simple way to add social networking features like comments,
 reblogs, favorites, following/followers, communities and timelines to your
@@ -363,3 +360,6 @@ nity/base.rb)
 ## License
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
 redistributed under the terms specified in the MIT-LICENSE file.
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ca9e83bea0d6c79d5909780eb805e944 "githalytics.com")](http://githalytics.com/salkar/inkwell)
+
