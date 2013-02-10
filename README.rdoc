@@ -301,3 +301,6 @@ Community blogline is consists of the posts of members that have added to it. To
 where parameters are similar with described above[https://github.com/salkar/inkwell#favorite-features] favoriteline parameters.
 
 More examples you can find in this spec[https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb]
+
+== License
+Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
