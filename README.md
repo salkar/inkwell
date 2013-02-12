@@ -361,4 +361,4 @@ nity/base.rb)
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
 redistributed under the terms specified in the MIT-LICENSE file.
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/b3481bd3012db25dfe197bebbdfa282a "githalytics.com")](http://githalytics.com/salkar/inkwell)
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ca9e83bea0d6c79d5909780eb805e944 "githalytics.com")](http://githalytics.com/salkar/inkwell)
