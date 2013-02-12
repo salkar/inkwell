@@ -16,11 +16,13 @@ module Inkwell
         before_destroy :destroy_community_processing
 
         include ::Inkwell::ActsAsInkwellCommunity::InstanceMethods
-        include ::Inkwell::Common
       end
     end
 
     module InstanceMethods
+      require_relative '../common/base.rb'
+      include ::Inkwell::Constants
+      include ::Inkwell::Common
 
       def add_user(options = {})
         options.symbolize_keys!
@@ -42,7 +44,7 @@ module Inkwell
         ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => false).order("created_at DESC").limit(10).each do |blog_item|
           next if post_class.find(blog_item.item_id).send(user_id_attr) == user.id
 
-          item = ::Inkwell::TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_is_comment", blog_item.item_id, user.id, blog_item.is_comment
+          item = ::Inkwell::TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_item_type", blog_item.item_id, user.id, blog_item.item_type
           if item
             item.has_many_sources = true unless item.has_many_sources
             sources = ActiveSupport::JSON.decode item.from_source
@@ -51,7 +53,7 @@ module Inkwell
             item.save
           else
             sources = [Hash['community_id' => self.id]]
-            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :is_comment => blog_item.is_comment, :user_id => user.id,
+            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :item_type => blog_item.item_type, :user_id => user.id,
                                            :from_source => ActiveSupport::JSON.encode(sources), :created_at => blog_item.created_at
           end
         end
@@ -166,14 +168,14 @@ module Inkwell
         raise "user tried to add post of another user" unless post.send(user_id_attr) == user.id
         raise "post is already added to this community" if post.communities_row.include? self.id
 
-        ::Inkwell::BlogItem.create :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :is_comment => false
+        ::Inkwell::BlogItem.create :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :item_type => ItemTypes::POST
         communities_ids = ActiveSupport::JSON.decode post.communities_ids
         communities_ids << self.id
         post.communities_ids = ActiveSupport::JSON.encode communities_ids
         post.save
 
         users_with_existing_items = [user.id]
-        ::Inkwell::TimelineItem.where(:item_id => post.id, :is_comment => false).each do |item|
+        ::Inkwell::TimelineItem.where(:item_id => post.id, :item_type => ItemTypes::POST).each do |item|
           users_with_existing_items << item.send(user_id_attr)
           item.has_many_sources = true
           from_source = ActiveSupport::JSON.decode item.from_source
@@ -184,7 +186,7 @@ module Inkwell
 
         self.users_row.each do |user_id|
           next if users_with_existing_items.include? user_id
-          ::Inkwell::TimelineItem.create :item_id => post.id, user_id_attr => user_id, :is_comment => false,
+          ::Inkwell::TimelineItem.create :item_id => post.id, user_id_attr => user_id, :item_type => ItemTypes::POST,
                                          :from_source => ActiveSupport::JSON.encode([Hash['community_id' => self.id]])
         end
       end
@@ -208,13 +210,13 @@ module Inkwell
         end
         raise "post isn't in community" unless post.communities_row.include? self.id
 
-        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :is_comment => false
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :item_type => ItemTypes::POST
         communities_ids = ActiveSupport::JSON.decode post.communities_ids
         communities_ids.delete self.id
         post.communities_ids = ActiveSupport::JSON.encode communities_ids
         post.save
 
-        items = ::Inkwell::TimelineItem.where(:item_id => post.id, :is_comment => false).where("from_source like '%{\"community_id\":#{self.id}%'")
+        items = ::Inkwell::TimelineItem.where(:item_id => post.id, :item_type => ItemTypes::POST).where("from_source like '%{\"community_id\":#{self.id}%'")
         items.where(:has_many_sources => false).delete_all
         items.where(:has_many_sources => true).each do |item|
           from_source = ActiveSupport::JSON.decode item.from_source

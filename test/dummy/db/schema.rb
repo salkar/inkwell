@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130208134955) do
+ActiveRecord::Schema.define(:version => 20130210231424) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -25,11 +25,11 @@ ActiveRecord::Schema.define(:version => 20130208134955) do
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"
     t.boolean  "is_reblog"
-    t.boolean  "is_comment"
     t.datetime "created_at",    :null => false
     t.datetime "updated_at",    :null => false
     t.integer  "owner_id"
     t.boolean  "is_owner_user"
+    t.string   "item_type"
   end
 
   create_table "inkwell_comments", :force => true do |t|
@@ -48,9 +48,9 @@ ActiveRecord::Schema.define(:version => 20130208134955) do
   create_table "inkwell_favorite_items", :force => true do |t|
     t.integer  "item_id"
     t.integer  "user_id"
-    t.boolean  "is_comment"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+    t.string   "item_type"
   end
 
   create_table "inkwell_timeline_items", :force => true do |t|
@@ -58,9 +58,9 @@ ActiveRecord::Schema.define(:version => 20130208134955) do
     t.integer  "user_id"
     t.text     "from_source",      :default => "[]"
     t.boolean  "has_many_sources", :default => false
-    t.boolean  "is_comment"
     t.datetime "created_at",                          :null => false
     t.datetime "updated_at",                          :null => false
+    t.string   "item_type"
   end
 
   create_table "posts", :force => true do |t|

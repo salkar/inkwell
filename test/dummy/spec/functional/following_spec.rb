@@ -27,11 +27,11 @@ describe "Following" do
     @salkar.followers_row.should == []
 
     @salkar.timeline_items.size.should == 4
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post.id, false).should be
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post1.id, false).should be
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post2.id, false).should be
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post3.id, false).should be
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_comment.id, true).should == nil
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).should == nil
     @salkar.timeline_items.each do |item|
       item.has_many_sources.should == false
       ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @morozovm.id, 'type' => 'following']]
@@ -46,10 +46,10 @@ describe "Following" do
 
   it "created_at from blog_item should transferred to timeline_item for follower when he follow this user" do
     @salkar.follow @morozovm
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post.id, false).created_at.to_s.should == @morozovm_post.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post1.id, false).created_at.to_s.should == @morozovm_post1.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post2.id, false).created_at.to_s.should == @morozovm_post2.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_is_comment(@morozovm_post3.id, false).created_at.to_s.should == @morozovm_post3.created_at.to_s
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post.created_at.to_s
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post1.created_at.to_s
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post2.created_at.to_s
+    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post3.created_at.to_s
   end
 
   it "user should follow another user (follow?)" do
@@ -85,7 +85,7 @@ describe "Following" do
     item = @morozovm.timeline_items.first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}])
     item.item_id.should == @salkar_post.id
-    item.is_comment.should == false
+    item.item_type.should == ::Inkwell::Constants::ItemTypes::POST
   end
 
   it "timeline item should not delete if has many sources when unfollow" do
@@ -93,25 +93,25 @@ describe "Following" do
     @talisman.reblog @salkar_post
     @morozovm.follow @talisman
     @morozovm.follow @salkar
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
+    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'},{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == true
 
     @morozovm.unfollow @salkar
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
+    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}])
     item.has_many_sources.should == false
 
     @morozovm.follow @salkar
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
+    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'},{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == true
 
     @morozovm.unfollow @talisman
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :is_comment => false).first
+    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == false
   end

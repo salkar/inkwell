@@ -1,5 +1,8 @@
 module Inkwell
   class Comment < ActiveRecord::Base
+    require_relative '../../../lib/common/base.rb'
+    include ::Inkwell::Constants
+
     attr_accessible :body, :post_id, :parent_id
     attr_accessor :is_reblogged
     attr_accessor :is_favorited
@@ -84,9 +87,9 @@ module Inkwell
       ::Inkwell::Comment.delete child_comments_ids_to_deleted
 
       comment_with_child_comments_ids_to_deleted = child_comments_ids_to_deleted << self.id
-      ::Inkwell::TimelineItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
-      ::Inkwell::FavoriteItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
-      ::Inkwell::BlogItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :is_comment => true
+      ::Inkwell::TimelineItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
+      ::Inkwell::FavoriteItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
+      ::Inkwell::BlogItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
 
       user_id = self.send("#{::Inkwell::Engine::config.user_table.to_s.singularize}_id")
       comment_with_child_comments_info = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]

@@ -154,10 +154,10 @@ describe "Comments" do
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.should == [{"user_id"=>@salkar.id, "comment_id"=>@comment.id}]
-    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @morozovm.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
+    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @morozovm.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
     ::Inkwell::FavoriteItem.all.size.should == 1
     ::Inkwell::TimelineItem.all.size.should == 1
     ::Inkwell::BlogItem.all.size.should == 3
@@ -179,13 +179,13 @@ describe "Comments" do
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.should == [{"user_id" => @salkar.id, "comment_id" => @comment.id}, {"user_id" => @morozovm.id, "comment_id" => @comment_to_delete.id}]
-    ::Inkwell::TimelineItem.create :item_id => @comment_to_delete.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment_to_delete.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment_to_delete.id, :owner_id => @morozovm.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment_to_delete.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
+    ::Inkwell::TimelineItem.create :item_id => @comment_to_delete.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment_to_delete.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment_to_delete.id, :owner_id => @morozovm.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment_to_delete.id, :owner_id => @salkar.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
     ::Inkwell::FavoriteItem.all.size.should == 2
     ::Inkwell::TimelineItem.all.size.should == 2
     ::Inkwell::BlogItem.all.size.should == 4
@@ -210,13 +210,13 @@ describe "Comments" do
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.should == [{"user_id" => @salkar.id, "comment_id" => @comment.id}, {"user_id" => @morozovm.id, "comment_id" => @comment2.id}]
-    ::Inkwell::TimelineItem.create :item_id => @comment2.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment2.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @morozovm.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
+    ::Inkwell::TimelineItem.create :item_id => @comment2.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment2.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
     ::Inkwell::FavoriteItem.all.size.should == 2
     ::Inkwell::TimelineItem.all.size.should == 2
     ::Inkwell::BlogItem.all.size.should == 4
@@ -241,13 +241,13 @@ describe "Comments" do
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.size.should == 4
-    ::Inkwell::TimelineItem.create :item_id => @comment2.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment2.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :is_comment => true
-    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @morozovm.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
-    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :is_comment => true
+    ::Inkwell::TimelineItem.create :item_id => @comment2.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment2.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::TimelineItem.create :item_id => @comment.id, :user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @comment.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @morozovm.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment2.id, :owner_id => @salkar.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::BlogItem.create :item_id => @comment.id, :owner_id => @salkar.id, :is_owner_user => true, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
     ::Inkwell::FavoriteItem.all.size.should == 2
     ::Inkwell::TimelineItem.all.size.should == 2
     ::Inkwell::BlogItem.all.size.should == 4

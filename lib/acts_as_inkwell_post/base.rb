@@ -20,12 +20,15 @@ module Inkwell
         before_destroy :destroy_post_processing
 
         has_many :comments, :class_name => 'Inkwell::Comment'
-
         include ::Inkwell::ActsAsInkwellPost::InstanceMethods
+
       end
     end
 
     module InstanceMethods
+      require_relative '../common/base.rb'
+      include ::Inkwell::Constants
+
       def commentline(options = {})
         options.symbolize_keys!
         last_shown_comment_id = options[:last_shown_comment_id]
@@ -75,24 +78,23 @@ module Inkwell
         user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
         user = user_class.find self.send(user_id_attr)
-        ::Inkwell::BlogItem.create :item_id => self.id, :is_reblog => false, :owner_id => self.send(user_id_attr), :is_owner_user => true, :is_comment => false
-
+        ::Inkwell::BlogItem.create :item_id => self.id, :is_reblog => false, :owner_id => self.send(user_id_attr), :is_owner_user => true, :item_type => ItemTypes::POST
         user.followers_row.each do |user_id|
           encode_sources = [ Hash['user_id' => user.id, 'type' => 'following'] ]
-          ::Inkwell::TimelineItem.create :item_id => self.id, user_id_attr => user_id, :is_comment => false,
+          ::Inkwell::TimelineItem.create :item_id => self.id, user_id_attr => user_id, :item_type => ItemTypes::POST,
                               :from_source => ActiveSupport::JSON.encode(encode_sources)
         end
       end
 
       def destroy_post_processing
-        ::Inkwell::TimelineItem.delete_all :item_id => self.id, :is_comment => false
-        ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :is_comment => false
-        ::Inkwell::BlogItem.delete_all :item_id => self.id, :is_comment => false
+        ::Inkwell::TimelineItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
+        ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
+        ::Inkwell::BlogItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         comments = self.comments
         comments.each do |comment|
-          ::Inkwell::TimelineItem.delete_all :item_id => comment.id, :is_comment => true
-          ::Inkwell::FavoriteItem.delete_all :item_id => comment.id, :is_comment => true
-          ::Inkwell::BlogItem.delete_all :item_id => comment.id, :is_comment => true
+          ::Inkwell::TimelineItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
+          ::Inkwell::FavoriteItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
+          ::Inkwell::BlogItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
           ::Inkwell::Comment.delete comment
         end
       end

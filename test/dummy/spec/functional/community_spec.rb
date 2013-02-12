@@ -1,7 +1,6 @@
 require "spec_helper"
 
 describe "Community" do
-
   before(:each) do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
@@ -38,28 +37,28 @@ describe "Community" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
-    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
     @talisman = User.create :nick => "Talisman"
     @community_1.add_user :user => @talisman
     @talisman.reload
     tline = @talisman.timeline_items
     tline.size.should == 10
     tline[0].item_id.should == @morozovm_post2.id
-    tline[0].is_comment.should == false
+    tline[0].item_type.should == ::Inkwell::Constants::ItemTypes::POST
     ActiveSupport::JSON.decode(tline[0].from_source).should == [Hash['community_id' => @community_1.id]]
     tline[9].item_id.should == @salkar_post2.id
-    tline[9].is_comment.should == false
+    tline[9].item_type.should == ::Inkwell::Constants::ItemTypes::POST
     ActiveSupport::JSON.decode(tline[9].from_source).should == [Hash['community_id' => @community_1.id]]
   end
 
@@ -77,26 +76,26 @@ describe "Community" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
-    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
     @community_1.add_user :user => @talisman
     @talisman.reload
     tline = @talisman.timeline_items
     tline.size.should == 12
-    item = tline.where(:item_id => @morozovm_post2.id, :is_comment => false).first
+    item = tline.where(:item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.should be
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
-    item = tline.where(:item_id => @salkar_post2.id, :is_comment => false).first
+    item = tline.where(:item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.should be
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following'], Hash['community_id' => @community_1.id]]
   end
@@ -115,26 +114,26 @@ describe "Community" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
-    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
     @community_1.add_user :user => @salkar
     @salkar.reload
     tline = @salkar.timeline_items
     tline.size.should == 3
-    item = tline.where(:item_id => @morozovm_post2.id, :is_comment => false).first
+    item = tline.where(:item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.should be
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
-    item = tline.where(:item_id => @salkar_post2.id, :is_comment => false).first
+    item = tline.where(:item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.should == nil
   end
 
@@ -217,18 +216,18 @@ describe "Community" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
-    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
-    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :is_comment => false, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post3.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post4.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post5.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post6.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post7.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @salkar_post8.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
+    ::Inkwell::BlogItem.create :item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @community_1.id, :is_owner_user => false
     @community_1.add_user :user => @talisman
     @talisman.reload
     @community_1.reload
@@ -239,10 +238,10 @@ describe "Community" do
     @talisman.reload
     tline = @talisman.timeline_items
     tline.size.should == 9
-    tline.where(:item_id => @morozovm_post.id, :is_comment => false).first.should == nil
-    tline.where(:item_id => @morozovm_post1.id, :is_comment => false).first.should == nil
-    tline.where(:item_id => @morozovm_post2.id, :is_comment => false).first.should == nil
-    ActiveSupport::JSON.decode(tline.where(:item_id => @salkar_post8.id, :is_comment => false).first.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following']]
+    tline.where(:item_id => @morozovm_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first.should == nil
+    tline.where(:item_id => @morozovm_post1.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first.should == nil
+    tline.where(:item_id => @morozovm_post2.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first.should == nil
+    ActiveSupport::JSON.decode(tline.where(:item_id => @salkar_post8.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following']]
   end
 
   it "admin level of user should be returned" do
@@ -418,12 +417,12 @@ describe "Community" do
 
   it "post should be added to community blogline and user's timeline" do
     @community_1.add_user :user => @salkar
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @community_1.add_post :post => @salkar_post, :user => @salkar
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     @salkar.timeline_items.size.should == 0
     @talisman.timeline_items.size.should == 1
-    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     item = @talisman.timeline_items.first
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
     item.has_many_sources.should == false
@@ -439,13 +438,13 @@ describe "Community" do
     @morozovm.reload
     @talisman.follow @salkar
     @talisman.timeline_items.size.should == 1
-    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     @morozovm.timeline_items.size.should == 0
     @salkar.timeline_items.size.should == 0
 
     @community_1.add_post :post => @salkar_post, :user => @salkar
     @talisman.timeline_items.size.should == 1
-    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     item = @talisman.timeline_items.first
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @salkar.id, 'type' => 'following'], Hash['community_id' => @community_1.id]]
     item.has_many_sources.should == true
@@ -454,7 +453,7 @@ describe "Community" do
 
     @morozovm.reload
     @morozovm.timeline_items.size.should == 1
-    @morozovm.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @morozovm.timeline_items.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     item = @morozovm.timeline_items.first
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
     item.has_many_sources.should == false
@@ -498,7 +497,7 @@ describe "Community" do
     @morozovm.reload
     @morozovm.timeline_items.size.should == 0
 
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @salkar_post.reload
     ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
   end
@@ -530,7 +529,7 @@ describe "Community" do
     @morozovm.reload
     @morozovm.timeline_items.size.should == 0
 
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @salkar_post.reload
     ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
   end
@@ -603,12 +602,12 @@ describe "Community" do
 
   it "post should be sended to community" do
     @community_1.add_user :user => @salkar
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     @salkar.timeline_items.size.should == 0
     @talisman.timeline_items.size.should == 1
-    @talisman.timeline_items.where(:item_id => @salkar_post.id, :is_comment => false).size.should == 1
+    @talisman.timeline_items.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
     item = @talisman.timeline_items.first
     ActiveSupport::JSON.decode(item.from_source).should == [Hash['community_id' => @community_1.id]]
     item.has_many_sources.should == false
@@ -642,7 +641,7 @@ describe "Community" do
     @morozovm.reload
     @morozovm.timeline_items.size.should == 0
 
-    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :is_comment => false).size.should == 0
+    ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :is_owner_user => false, :item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @salkar_post.reload
     ActiveSupport::JSON.decode(@salkar_post.communities_ids).size.should == 0
   end

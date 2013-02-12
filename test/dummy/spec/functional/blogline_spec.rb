@@ -15,7 +15,7 @@ describe "BlogLine" do
     item.is_owner_user.should be
     item.item_id.should == @salkar_post.id
     item.is_reblog.should == false
-    item.is_comment.should == false
+    item.item_type.should == ::Inkwell::Constants::ItemTypes::POST
   end
 
   it "timeline items should been created for followers for new post" do
@@ -23,8 +23,8 @@ describe "BlogLine" do
     @morozovm.follow @salkar
     @talisman.follow @salkar
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
-    ::Inkwell::TimelineItem.where(:user_id => @morozovm.id, :is_comment => false, :item_id => @salkar_post1.id).size.should == 1
-    ::Inkwell::TimelineItem.where(:user_id => @talisman.id, :is_comment => false, :item_id => @salkar_post1.id).size.should == 1
+    ::Inkwell::TimelineItem.where(:user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
+    ::Inkwell::TimelineItem.where(:user_id => @talisman.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
   end
 
   it "user should have blogline with reblogs and his posts" do
@@ -58,7 +58,7 @@ describe "BlogLine" do
     bline[2].is_reblogged.should == true
     bline[2].is_favorited.should == true
     bline[2].is_reblog_in_blogline.should == false
-    bline[2].item_id_in_line.should == ::Inkwell::BlogItem.where(:item_id => @salkar_post9.id, :is_comment => false).first.id
+    bline[2].item_id_in_line.should == ::Inkwell::BlogItem.where(:item_id => @salkar_post9.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).first.id
     bline[3].should == @salkar_post8
     bline[4].should == @salkar_post7
     bline[5].should == @salkar_post6

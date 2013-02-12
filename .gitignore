@@ -19,7 +19,7 @@ test/dummy_without_community/tmp/
 tmp
 log
 .idea
-Gemfile.lock
+*.lock
 
 # YARD artifacts
 .yardoc
