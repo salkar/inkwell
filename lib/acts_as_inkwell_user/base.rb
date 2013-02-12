@@ -29,9 +29,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_obj_id
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => true).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => true).order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(limit)
         end
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
@@ -63,7 +63,7 @@ module Inkwell
       def favorite(obj)
         return if self.favorite? obj
 
-        FavoriteItem.create :item_id => obj.id, :user_id => self.id, :item_type => get_item_type(obj)
+        FavoriteItem.create :item_id => obj.id, :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_type => get_item_type(obj)
 
         users_ids_who_favorite_it = ActiveSupport::JSON.decode obj.users_ids_who_favorite_it
         users_ids_who_favorite_it << self.id
@@ -72,16 +72,13 @@ module Inkwell
       end
 
       def favorite?(obj)
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        (FavoriteItem.send("find_by_item_id_and_item_type_and_#{user_id_attr}", obj.id, get_item_type(obj), self.id)) ? true : false
+        FavoriteItem.where(:item_id => obj.id, :item_type => get_item_type(obj), :owner_id => self.id, :owner_type => OwnerTypes::USER).first ? true : false
       end
 
       def unfavorite(obj)
         return unless self.favorite? obj
 
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        record = FavoriteItem.send "find_by_item_id_and_item_type_and_#{user_id_attr}", obj.id, get_item_type(obj), self.id
-        record.destroy
+        ::Inkwell::FavoriteItem.where(:item_id => obj.id, :item_type => get_item_type(obj), :owner_id => self.id, :owner_type => OwnerTypes::USER).destroy_all
 
         users_ids_who_favorite_it = ActiveSupport::JSON.decode obj.users_ids_who_favorite_it
         users_ids_who_favorite_it.delete self.id
@@ -96,9 +93,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_obj_id
-          favorites = self.favorite_items.where("created_at < ?", Inkwell::FavoriteItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          favorites = ::Inkwell::FavoriteItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where("created_at < ?", Inkwell::FavoriteItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
-          favorites = self.favorite_items.order("created_at DESC").limit(limit)
+          favorites = ::Inkwell::FavoriteItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(limit)
         end
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
@@ -138,13 +135,13 @@ module Inkwell
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        ::Inkwell::BlogItem.where(:owner_id => user.id, :is_owner_user => true).order("created_at DESC").limit(10).each do |blog_item|
+        ::Inkwell::BlogItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(10).each do |blog_item|
           if blog_item.is_reblog
             item_class = blog_item.item_type == ItemTypes::COMMENT ? ::Inkwell::Comment : post_class
             next if item_class.find(blog_item.item_id).send(user_id_attr) == self.id
           end
 
-          item = ::Inkwell::TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_item_type", blog_item.item_id, self.id, blog_item.item_type
+          item = TimelineItem.where(:item_id => blog_item.item_id, :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_type => blog_item.item_type).first
           if item
             item.has_many_sources = true unless item.has_many_sources
             sources = ActiveSupport::JSON.decode item.from_source
@@ -162,7 +159,7 @@ module Inkwell
             else
               sources << Hash['user_id' => user.id, 'type' => 'following']
             end
-            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :item_type => blog_item.item_type, :user_id => self.id,
+            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :item_type => blog_item.item_type, :owner_id => self.id, :owner_type => OwnerTypes::USER,
                                            :from_source => ActiveSupport::JSON.encode(sources), :created_at => blog_item.created_at
           end
         end
@@ -182,9 +179,7 @@ module Inkwell
         self.followings_ids = ActiveSupport::JSON.encode followings
         self.save
 
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-
-        timeline_items = ::Inkwell::TimelineItem.where "from_source like '%{\"user_id\":#{user.id}%' and #{user_id_attr} = #{self.id}"
+        timeline_items = ::Inkwell::TimelineItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"user_id\":#{user.id}%'"
         timeline_items.delete_all :has_many_sources => false
         timeline_items.each do |item|
           from_source = ActiveSupport::JSON.decode item.from_source
@@ -215,7 +210,7 @@ module Inkwell
         item_type = get_item_type(obj)
 
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        BlogItem.create :item_id => obj.id, :is_reblog => true, :owner_id => self.id, :is_owner_user => true, :item_type => item_type
+        BlogItem.create :item_id => obj.id, :is_reblog => true, :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_type => item_type
 
         users_ids_who_reblog_it = ActiveSupport::JSON.decode obj.users_ids_who_reblog_it
         users_ids_who_reblog_it << self.id
@@ -224,7 +219,7 @@ module Inkwell
 
         self.followers_row.each do |user_id|
           next if obj.send(user_id_attr) == user_id
-          item = TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_item_type", obj.id, user_id, item_type
+          item = TimelineItem.where(:item_id => obj.id, :owner_id => user_id, :owner_type => OwnerTypes::USER, :item_type => item_type).first
           if item
             item.has_many_sources = true unless item.has_many_sources
             sources = ActiveSupport::JSON.decode item.from_source
@@ -233,13 +228,13 @@ module Inkwell
             item.save
           else
             encode_sources = ActiveSupport::JSON.encode [Hash['user_id' => self.id, 'type' => 'reblog']]
-            TimelineItem.create :item_id => obj.id, :created_at => obj.created_at, user_id_attr => user_id, :from_source => encode_sources, :item_type => item_type
+            TimelineItem.create :item_id => obj.id, :created_at => obj.created_at, :owner_id => user_id, :owner_type => OwnerTypes::USER, :from_source => encode_sources, :item_type => item_type
           end
         end
       end
 
       def reblog?(obj)
-        BlogItem.exists? :item_id => obj.id, :owner_id => self.id, :is_owner_user => true, :is_reblog => true, :item_type => get_item_type(obj)
+        BlogItem.exists? :item_id => obj.id, :owner_id => self.id, :owner_type => OwnerTypes::USER, :is_reblog => true, :item_type => get_item_type(obj)
       end
 
       def unreblog(obj)
@@ -253,10 +248,10 @@ module Inkwell
         obj.users_ids_who_reblog_it = ActiveSupport::JSON.encode users_ids_who_reblog_it
         obj.save
 
-        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => true, :item_id => obj.id, :is_reblog => true, :item_type => item_type
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_id => obj.id, :is_reblog => true, :item_type => item_type
 
-        TimelineItem.delete_all :user_id => self.followers_row, :has_many_sources => false, :item_id => obj.id, :item_type => item_type
-        TimelineItem.where(:user_id => self.followers_row, :item_id => obj.id, :item_type => item_type).each do |item|
+        TimelineItem.delete_all :owner_id => self.followers_row, :owner_type => OwnerTypes::USER, :has_many_sources => false, :item_id => obj.id, :item_type => item_type
+        TimelineItem.where(:owner_id => self.followers_row, :owner_type => OwnerTypes::USER, :item_id => obj.id, :item_type => item_type).each do |item|
             sources = ActiveSupport::JSON.decode item.from_source
             sources.delete Hash['user_id' => self.id, 'type' => 'reblog']
             item.has_many_sources = false if sources.size < 2
@@ -272,9 +267,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_obj_id
-          timeline_items = self.timeline_items.where("created_at < ?", Inkwell::TimelineItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          timeline_items = ::Inkwell::TimelineItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where("created_at < ?", Inkwell::TimelineItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
-          timeline_items = self.timeline_items.order("created_at DESC").limit(limit)
+          timeline_items = ::Inkwell::TimelineItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(limit)
         end
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize

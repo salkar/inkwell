@@ -29,5 +29,10 @@ module Inkwell
       POST = 'p'
       COMMENT = 'c'
     end
+
+    module OwnerTypes
+      USER = 'u'
+      COMMUNITY = 'c'
+    end
   end
 end

@@ -9,10 +9,10 @@ describe "BlogLine" do
   end
 
   it "blogitem record should been created for new post" do
-    ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :is_owner_user => true).size.should == 1
-    item = ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :is_owner_user => true).first
+    ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 1
+    item = ::Inkwell::BlogItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.owner_id.should == @salkar.id
-    item.is_owner_user.should be
+    item.owner_type.should == ::Inkwell::Constants::OwnerTypes::USER
     item.item_id.should == @salkar_post.id
     item.is_reblog.should == false
     item.item_type.should == ::Inkwell::Constants::ItemTypes::POST
@@ -23,8 +23,8 @@ describe "BlogLine" do
     @morozovm.follow @salkar
     @talisman.follow @salkar
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
-    ::Inkwell::TimelineItem.where(:user_id => @morozovm.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
-    ::Inkwell::TimelineItem.where(:user_id => @talisman.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :item_type => ::Inkwell::Constants::ItemTypes::POST, :item_id => @salkar_post1.id).size.should == 1
   end
 
   it "user should have blogline with reblogs and his posts" do

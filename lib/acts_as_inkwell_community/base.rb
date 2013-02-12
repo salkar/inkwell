@@ -41,10 +41,10 @@ module Inkwell
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-        ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => false).order("created_at DESC").limit(10).each do |blog_item|
+        ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(10).each do |blog_item|
           next if post_class.find(blog_item.item_id).send(user_id_attr) == user.id
 
-          item = ::Inkwell::TimelineItem.send "find_by_item_id_and_#{user_id_attr}_and_item_type", blog_item.item_id, user.id, blog_item.item_type
+          item = ::Inkwell::TimelineItem.where(:item_id => blog_item.item_id, :item_type => blog_item.item_type, :owner_id => user.id, :owner_type => OwnerTypes::USER).first
           if item
             item.has_many_sources = true unless item.has_many_sources
             sources = ActiveSupport::JSON.decode item.from_source
@@ -53,7 +53,7 @@ module Inkwell
             item.save
           else
             sources = [Hash['community_id' => self.id]]
-            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :item_type => blog_item.item_type, :user_id => user.id,
+            ::Inkwell::TimelineItem.create :item_id => blog_item.item_id, :item_type => blog_item.item_type, :owner_id => user.id, :owner_type => OwnerTypes::USER,
                                            :from_source => ActiveSupport::JSON.encode(sources), :created_at => blog_item.created_at
           end
         end
@@ -80,9 +80,7 @@ module Inkwell
         user.communities_ids = ActiveSupport::JSON.encode communities_ids
         user.save
 
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-
-        timeline_items = ::Inkwell::TimelineItem.where "from_source like '%{\"community_id\":#{self.id}%' and #{user_id_attr} = #{user.id}"
+        timeline_items = ::Inkwell::TimelineItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"community_id\":#{self.id}%'"
         timeline_items.delete_all :has_many_sources => false
         timeline_items.each do |item|
           from_source = ActiveSupport::JSON.decode item.from_source
@@ -168,7 +166,7 @@ module Inkwell
         raise "user tried to add post of another user" unless post.send(user_id_attr) == user.id
         raise "post is already added to this community" if post.communities_row.include? self.id
 
-        ::Inkwell::BlogItem.create :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :item_type => ItemTypes::POST
+        ::Inkwell::BlogItem.create :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY, :item_id => post.id, :item_type => ItemTypes::POST
         communities_ids = ActiveSupport::JSON.decode post.communities_ids
         communities_ids << self.id
         post.communities_ids = ActiveSupport::JSON.encode communities_ids
@@ -176,7 +174,7 @@ module Inkwell
 
         users_with_existing_items = [user.id]
         ::Inkwell::TimelineItem.where(:item_id => post.id, :item_type => ItemTypes::POST).each do |item|
-          users_with_existing_items << item.send(user_id_attr)
+          users_with_existing_items << item.owner_id
           item.has_many_sources = true
           from_source = ActiveSupport::JSON.decode item.from_source
           from_source << Hash['community_id' => self.id]
@@ -186,7 +184,7 @@ module Inkwell
 
         self.users_row.each do |user_id|
           next if users_with_existing_items.include? user_id
-          ::Inkwell::TimelineItem.create :item_id => post.id, user_id_attr => user_id, :item_type => ItemTypes::POST,
+          ::Inkwell::TimelineItem.create :item_id => post.id, :owner_id => user_id, :owner_type => OwnerTypes::USER, :item_type => ItemTypes::POST,
                                          :from_source => ActiveSupport::JSON.encode([Hash['community_id' => self.id]])
         end
       end
@@ -210,7 +208,7 @@ module Inkwell
         end
         raise "post isn't in community" unless post.communities_row.include? self.id
 
-        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => false, :item_id => post.id, :item_type => ItemTypes::POST
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY, :item_id => post.id, :item_type => ItemTypes::POST
         communities_ids = ActiveSupport::JSON.decode post.communities_ids
         communities_ids.delete self.id
         post.communities_ids = ActiveSupport::JSON.encode communities_ids
@@ -234,9 +232,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_obj_id
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => false).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
         else
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :is_owner_user => false).order("created_at DESC").limit(limit)
+          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(limit)
         end
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
@@ -308,7 +306,7 @@ module Inkwell
           item.save
         end
 
-        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :is_owner_user => false
+        ::Inkwell::BlogItem.delete_all :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY
 
       end
     end

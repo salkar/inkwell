@@ -22,7 +22,7 @@ describe "Favorites" do
   end
 
   it "Post should been favorited" do
-    ::Inkwell::FavoriteItem.create :item_id => @salkar_post.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::POST
+    ::Inkwell::FavoriteItem.create :item_id => @salkar_post.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_type => ::Inkwell::Constants::OwnerTypes::USER
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar.favorite?(@salkar_post).should == true
   end
@@ -33,7 +33,7 @@ describe "Favorites" do
   end
 
   it "Comment should been favorited" do
-    ::Inkwell::FavoriteItem.create :item_id => @salkar_comment.id, :user_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT
+    ::Inkwell::FavoriteItem.create :item_id => @salkar_comment.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_type => ::Inkwell::Constants::OwnerTypes::USER
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar.favorite?(@salkar_comment).should == true
   end

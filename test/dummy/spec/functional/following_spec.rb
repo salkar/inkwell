@@ -26,18 +26,18 @@ describe "Following" do
     @salkar.followers_ids.should == "[]"
     @salkar.followers_row.should == []
 
-    @salkar.timeline_items.size.should == 4
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).should be
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).should be
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).should be
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).should be
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).should == nil
-    @salkar.timeline_items.each do |item|
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 4
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).should be
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).should == nil
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).each do |item|
       item.has_many_sources.should == false
       ActiveSupport::JSON.decode(item.from_source).should == [Hash['user_id' => @morozovm.id, 'type' => 'following']]
     end
 
-    @morozovm.timeline_items.size.should == 0
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 0
     @morozovm.followers_ids.should == "[#{@salkar.id}]"
     @morozovm.followers_row.should == [@salkar.id]
     @morozovm.followings_ids.should == "[]"
@@ -46,10 +46,10 @@ describe "Following" do
 
   it "created_at from blog_item should transferred to timeline_item for follower when he follow this user" do
     @salkar.follow @morozovm
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post1.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post2.created_at.to_s
-    @salkar.timeline_items.find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post3.created_at.to_s
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post.created_at.to_s
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post1.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post1.created_at.to_s
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post2.created_at.to_s
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post3.id, ::Inkwell::Constants::ItemTypes::POST).created_at.to_s.should == @morozovm_post3.created_at.to_s
   end
 
   it "user should follow another user (follow?)" do
@@ -70,10 +70,10 @@ describe "Following" do
   it "user should unfollow another user" do
     @salkar.follow @morozovm
     @salkar.reload
-    @salkar.timeline_items.size.should == 4
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 4
     @salkar.unfollow @morozovm
     @salkar.reload
-    @salkar.timeline_items.size.should == 0
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 0
 
   end
 
@@ -81,8 +81,8 @@ describe "Following" do
     @talisman = User.create :nick => "Talisman"
     @talisman.reblog @salkar_post
     @morozovm.follow @talisman
-    @morozovm.timeline_items.size.should == 1
-    item = @morozovm.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}])
     item.item_id.should == @salkar_post.id
     item.item_type.should == ::Inkwell::Constants::ItemTypes::POST
@@ -93,25 +93,25 @@ describe "Following" do
     @talisman.reblog @salkar_post
     @morozovm.follow @talisman
     @morozovm.follow @salkar
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'},{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == true
 
     @morozovm.unfollow @salkar
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}])
     item.has_many_sources.should == false
 
     @morozovm.follow @salkar
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'},{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == true
 
     @morozovm.unfollow @talisman
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == false
   end

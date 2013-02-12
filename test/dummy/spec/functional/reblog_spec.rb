@@ -13,14 +13,14 @@ describe "Reblog" do
   it "user should reblog post" do
     @morozovm.reblog @salkar_post
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 2
-    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 1
+    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 1
     @salkar_post.reload
     @salkar_post.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
   end
 
   it "user should reblog comment" do
     @morozovm.reblog @salkar_comment
-    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 1
+    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 1
     @salkar_comment.reload
     @salkar_comment.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
   end
@@ -28,8 +28,8 @@ describe "Reblog" do
   it "timeline item should been created for followers when user reblog post" do
     @talisman.follow @morozovm
     @morozovm.reblog @salkar_post
-    @talisman.timeline_items.size.should == 1
-    item = @talisman.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.item_id.should == @salkar_post.id
     item.created_at.to_i.should == @salkar_post.created_at.to_i
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'}])
@@ -39,8 +39,8 @@ describe "Reblog" do
   it "timeline item should been created for followers when user reblog comment" do
     @talisman.follow @morozovm
     @morozovm.reblog @salkar_comment
-    @talisman.timeline_items.size.should == 1
-    item = @talisman.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.item_id.should == @salkar_comment.id
     item.created_at.to_i.should == @salkar_comment.created_at.to_i
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'}])
@@ -51,15 +51,15 @@ describe "Reblog" do
     @salkar.follow @morozovm
     @morozovm.reblog @salkar_post
     @morozovm.reblog @salkar_comment
-    @salkar.timeline_items.size.should == 0
+    ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 0
   end
 
   it "one timeline item should created for one post with two sources" do
     @talisman.follow @morozovm
     @morozovm.reblog @salkar_post
     @talisman.follow @salkar
-    @talisman.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @talisman.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.has_many_sources.should == true
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'},{'user_id' => @salkar.id, 'type' => 'following'}])
   end
@@ -68,8 +68,8 @@ describe "Reblog" do
     @talisman.follow @morozovm
     @talisman.follow @salkar
     @morozovm.reblog @salkar_post
-    @talisman.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @talisman.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.has_many_sources.should == true
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @salkar.id, 'type' => 'following'}, {'user_id' => @morozovm.id, 'type' => 'reblog'}])
   end
@@ -92,7 +92,7 @@ describe "Reblog" do
     @morozovm.reblog @salkar_post
     @morozovm.unreblog @salkar_post
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 0
+    ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 0
     @salkar_post.reload
     @salkar_post.users_ids_who_reblog_it.should == "[]"
   end
@@ -100,7 +100,7 @@ describe "Reblog" do
   it "user should unreblog comment" do
     @morozovm.reblog @salkar_comment
     @morozovm.unreblog @salkar_comment
-    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :is_owner_user => true, :is_reblog => true).size.should == 0
+    ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 0
     @salkar_comment.reload
     @salkar_comment.users_ids_who_reblog_it.should == "[]"
   end
@@ -111,15 +111,15 @@ describe "Reblog" do
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm.reblog @salkar_post
 
-    @talisman.timeline_items.size.should == 2
-    @talisman.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @talisman.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 2
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.has_many_sources.should == false
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'}])
 
     @morozovm.unreblog @salkar_post
-    @talisman.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
-    @talisman.timeline_items.size.should == 1
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 1
   end
 
   it "timeline items should delete for followers when user unreblog comment" do
@@ -127,13 +127,13 @@ describe "Reblog" do
     @talisman.follow @morozovm
     @morozovm.reblog @salkar_comment
 
-    @talisman.timeline_items.where(:item_id => @salkar_comment, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT).size.should == 1
-    item = @talisman.timeline_items.first
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_comment, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).first
     item.has_many_sources.should == false
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @morozovm.id, 'type' => 'reblog'}])
 
     @morozovm.unreblog @salkar_comment
-    @talisman.timeline_items.where(:item_id => @salkar_comment, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT).size.should == 0
+    ::Inkwell::TimelineItem.where(:owner_id => @talisman.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_comment, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT).size.should == 0
   end
 
   it "timeline item should not been delete if post has many sources and unreblogged by following" do
@@ -142,18 +142,18 @@ describe "Reblog" do
     @morozovm.follow @talisman
     @morozovm.follow @salkar
     @talisman_post = @talisman.posts.create :body => "talisman_post_test_body"
-    @morozovm.timeline_items.size == 2
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size == 2
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @talisman.id, 'type' => 'reblog'}, {'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == true
 
     @talisman.unreblog @salkar_post
-    @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
-    item = @morozovm.timeline_items.where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 1
+    item = ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).where(:item_id => @salkar_post, :item_type => ::Inkwell::Constants::ItemTypes::POST).first
     item.from_source.should == ActiveSupport::JSON.encode([{'user_id' => @salkar.id, 'type' => 'following'}])
     item.has_many_sources.should == false
-    @morozovm.timeline_items.size == 2
+    ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size == 2
   end
 
   it "reblog count should been received for post" do
