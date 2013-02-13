@@ -164,7 +164,7 @@ comment the post:
 If you want to comment other comment you should add `parent_id` of parent
 comment:
 
-    @user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_id => @parent_comment.id
+    @user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_comment_id => @parent_comment.id
 
 To delete comment you should use `destroy` method:
 
