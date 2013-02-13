@@ -11,8 +11,6 @@ module Inkwell
     module Config
       def acts_as_inkwell_user
         has_many :comments, :class_name => 'Inkwell::Comment'
-        has_many :favorite_items, :class_name => 'Inkwell::FavoriteItem'
-        has_many :timeline_items, :class_name => 'Inkwell::TimelineItem'
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
       end
     end

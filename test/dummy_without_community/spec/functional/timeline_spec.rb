@@ -53,7 +53,7 @@ describe "Timeline" do
   end
 
   it "comment should been in timeline" do
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @talisman.follow @morozovm
     @morozovm.reblog @salkar_comment
     @morozovm.favorite @salkar_comment

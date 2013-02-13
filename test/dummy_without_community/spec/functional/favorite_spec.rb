@@ -6,7 +6,7 @@ describe "Favorites" do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
   end
 
   it "Post should been favorited" do
@@ -22,7 +22,7 @@ describe "Favorites" do
   end
 
   it "Post should been favorited" do
-    ::Inkwell::FavoriteItem.create :item_id => @salkar_post.id, :user_id => @salkar.id, :is_comment => false
+    ::Inkwell::FavoriteItem.create :item_id => @salkar_post.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_type => ::Inkwell::Constants::OwnerTypes::USER
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar.favorite?(@salkar_post).should == true
   end
@@ -33,7 +33,7 @@ describe "Favorites" do
   end
 
   it "Comment should been favorited" do
-    ::Inkwell::FavoriteItem.create :item_id => @salkar_comment.id, :user_id => @salkar.id, :is_comment => true
+    ::Inkwell::FavoriteItem.create :item_id => @salkar_comment.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_type => ::Inkwell::Constants::OwnerTypes::USER
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar.favorite?(@salkar_comment).should == true
   end
@@ -123,17 +123,17 @@ describe "Favorites" do
 
   it "Favoriteline should been return" do
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @morozovm_post = @morozovm.posts.create :body => "salkar_post_test_body"
-    @morozovm_comment = @morozovm.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
-    @salkar_comment1 = @salkar.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
+    @morozovm_comment = @morozovm.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
+    @salkar_comment1 = @salkar.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
     @morozovm_post1 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post2 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post3 = @morozovm.posts.create :body => "salkar_post_test_body"
-    @salkar_comment2 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment3 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment4 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @morozovm_comment2 = @morozovm.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
+    @salkar_comment2 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment3 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment4 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @morozovm_comment2 = @morozovm.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
 
     @salkar.favorite @salkar_post
@@ -154,48 +154,48 @@ describe "Favorites" do
     fline.size.should == 10
     fline[0].id.should == @salkar_post1.id
     fline[0].class.to_s.should == 'Post'
-    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_post1.id, false).id
+    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@salkar_post1.id, ::Inkwell::Constants::ItemTypes::POST).id
     fline[9].id.should == @morozovm_comment.id
     fline[9].class.to_s.should == 'Inkwell::Comment'
-    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment.id, true).id
+    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@morozovm_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
 
     fline_same = @salkar.favoriteline :last_shown_obj_id => nil, :limit => 10, :for_user => nil
     fline_same.should == fline
 
-    from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment2.id, true).id
+    from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@morozovm_comment2.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
     fline = @salkar.favoriteline(:last_shown_obj_id => from_favorite_item_id)
     fline.size.should == 10
     fline[0].id.should == @salkar_comment4.id
     fline[0].class.to_s.should == 'Inkwell::Comment'
-    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_comment4.id, true).id
+    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@salkar_comment4.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
     fline[9].id.should == @salkar_comment.id
     fline[9].class.to_s.should == 'Inkwell::Comment'
-    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_comment.id, true).id
+    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@salkar_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
 
-    from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment2.id, true).id
+    from_favorite_item_id = ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@morozovm_comment2.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
     fline = @salkar.favoriteline(:last_shown_obj_id => from_favorite_item_id, :limit => 5)
     fline.size.should == 5
     fline[0].id.should == @salkar_comment4.id
     fline[0].class.to_s.should == 'Inkwell::Comment'
-    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_comment4.id, true).id
+    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@salkar_comment4.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
     fline[4].id.should == @morozovm_post2.id
     fline[4].class.to_s.should == 'Post'
-    fline[4].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_post2.id, false).id
+    fline[4].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@morozovm_post2.id, ::Inkwell::Constants::ItemTypes::POST).id
   end
 
   it "Favoriteline should been return for for_user" do
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @morozovm_post = @morozovm.posts.create :body => "salkar_post_test_body"
-    @morozovm_comment = @morozovm.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
-    @salkar_comment1 = @salkar.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
+    @morozovm_comment = @morozovm.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
+    @salkar_comment1 = @salkar.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
     @morozovm_post1 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post2 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post3 = @morozovm.posts.create :body => "salkar_post_test_body"
-    @salkar_comment2 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment3 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment4 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @morozovm_comment2 = @morozovm.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
+    @salkar_comment2 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment3 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment4 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @morozovm_comment2 = @morozovm.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
 
     @salkar.favorite @salkar_post
@@ -221,7 +221,7 @@ describe "Favorites" do
     fline.size.should == 10
     fline[0].id.should == @salkar_post1.id
     fline[0].class.to_s.should == 'Post'
-    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@salkar_post1.id, false).id
+    fline[0].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@salkar_post1.id, ::Inkwell::Constants::ItemTypes::POST).id
     fline[0].is_favorited.should == true
     fline[0].is_reblogged.should == true
     fline[2].id.should == @salkar_comment4.id
@@ -229,7 +229,7 @@ describe "Favorites" do
     fline[2].is_reblogged.should == true
     fline[9].id.should == @morozovm_comment.id
     fline[9].class.to_s.should == 'Inkwell::Comment'
-    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_is_comment(@morozovm_comment.id, true).id
+    fline[9].item_id_in_line.should == ::Inkwell::FavoriteItem.find_by_item_id_and_item_type(@morozovm_comment.id, ::Inkwell::Constants::ItemTypes::COMMENT).id
     fline[9].is_favorited.should == true
     for i in 1..8
       fline[i].is_favorited.should == false

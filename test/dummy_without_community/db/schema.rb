@@ -11,47 +11,50 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130208134750) do
+ActiveRecord::Schema.define(:version => 20130213115835) do
 
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"
     t.boolean  "is_reblog"
-    t.boolean  "is_comment"
-    t.datetime "created_at",    :null => false
-    t.datetime "updated_at",    :null => false
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
     t.integer  "owner_id"
-    t.boolean  "is_owner_user"
+    t.string   "item_type"
+    t.string   "owner_type"
   end
 
   create_table "inkwell_comments", :force => true do |t|
     t.integer  "user_id"
     t.text     "body"
     t.integer  "parent_id"
-    t.integer  "post_id"
+    t.integer  "topmost_obj_id"
     t.text     "upper_comments_tree"
     t.text     "users_ids_who_favorite_it", :default => "[]"
     t.text     "users_ids_who_comment_it",  :default => "[]"
     t.text     "users_ids_who_reblog_it",   :default => "[]"
     t.datetime "created_at",                                  :null => false
     t.datetime "updated_at",                                  :null => false
+    t.string   "topmost_obj_type"
   end
 
   create_table "inkwell_favorite_items", :force => true do |t|
     t.integer  "item_id"
-    t.integer  "user_id"
-    t.boolean  "is_comment"
+    t.integer  "owner_id"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+    t.string   "item_type"
+    t.string   "owner_type"
   end
 
   create_table "inkwell_timeline_items", :force => true do |t|
     t.integer  "item_id"
-    t.integer  "user_id"
+    t.integer  "owner_id"
     t.text     "from_source",      :default => "[]"
     t.boolean  "has_many_sources", :default => false
-    t.boolean  "is_comment"
     t.datetime "created_at",                          :null => false
     t.datetime "updated_at",                          :null => false
+    t.string   "item_type"
+    t.string   "owner_type"
   end
 
   create_table "posts", :force => true do |t|
