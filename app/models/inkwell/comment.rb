@@ -4,7 +4,7 @@ module Inkwell
     include ::Inkwell::Constants
     include ::Inkwell::Common
 
-    attr_accessible :body, :parent_id, :topmost_obj_id, :topmost_obj_type
+    attr_accessible :body, :parent_comment_id, :topmost_obj_id, :topmost_obj_type
     attr_accessor :is_reblogged
     attr_accessor :is_favorited
     attr_accessor :item_id_in_line
@@ -65,9 +65,9 @@ module Inkwell
     protected
 
     def remove_info_from_upper_comments(comments_info)
-      return unless self.parent_id
-      parent_comment = ::Inkwell::Comment.find self.parent_id
-      raise "There is no comment with id = #{self.parent_id}" unless parent_comment
+      return unless self.parent_comment_id
+      parent_comment = ::Inkwell::Comment.find self.parent_comment_id
+      raise "There is no comment with id = #{self.parent_comment_id}" unless parent_comment
       users_ids_who_comment_it = ActiveSupport::JSON.decode parent_comment.users_ids_who_comment_it
       users_ids_who_comment_it -= comments_info
       parent_comment.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
@@ -113,9 +113,9 @@ module Inkwell
     end
 
     def add_user_info_to_upper_comments
-      if self.parent_id
-        parent_comment = ::Inkwell::Comment.find self.parent_id
-        raise "Comment with id #{comment.parent_id} is not found" unless parent_comment
+      if self.parent_comment_id
+        parent_comment = ::Inkwell::Comment.find self.parent_comment_id
+        raise "Comment with id #{comment.parent_comment_id} is not found" unless parent_comment
         parent_upper_comments_tree = ActiveSupport::JSON.decode parent_comment.upper_comments_tree
         self_upper_comments_tree = parent_upper_comments_tree << parent_comment.id
         self.upper_comments_tree = ActiveSupport::JSON.encode self_upper_comments_tree
