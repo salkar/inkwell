@@ -123,11 +123,11 @@ Inkwell добавляет в ваше приложение возможност
 
 Юзер может комментировать пост или другой комментарий. Комментарий для поста создается так:
 
-  @user.comments.create :post_id => @post.id, :body => "comment_body"
+  @user.create_comment :for_object => @post, :body => "comment_body"
 
-Если вы хотите создать комментарий для другого комментария, необходимо добавить <code>parent_id</code> родительского комментария:
+Если вы хотите создать комментарий для другого комментария, необходимо добавить <code>parent_comment_id</code> родительского комментария:
 
-  @user.comments.create :post_id => @parent_post.id, :body => "comment_body", :parent_id => @parent_comment.id
+  @user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_comment_id => @parent_comment.id
 
 Для удаления комментария используйте <code>destroy</code> метод:
 
