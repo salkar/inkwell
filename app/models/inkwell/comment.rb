@@ -2,15 +2,15 @@ module Inkwell
   class Comment < ActiveRecord::Base
     require_relative '../../../lib/common/base.rb'
     include ::Inkwell::Constants
+    include ::Inkwell::Common
 
-    attr_accessible :body, :post_id, :parent_id
+    attr_accessible :body, :parent_id, :topmost_obj_id, :topmost_obj_type
     attr_accessor :is_reblogged
     attr_accessor :is_favorited
     attr_accessor :item_id_in_line
     attr_accessor :is_reblog_in_blogline
     attr_accessor :from_sources_in_timeline
 
-    validates :"#{::Inkwell::Engine::config.post_table.to_s.singularize}_id", :presence => true
     validates :"#{::Inkwell::Engine::config.user_table.to_s.singularize}_id", :presence => true
     validates :body, :presence => true
 
@@ -18,7 +18,6 @@ module Inkwell
     before_destroy :destroy_comment_processing
 
     belongs_to ::Inkwell::Engine::config.user_table.to_s.singularize
-    belongs_to ::Inkwell::Engine::config.post_table.to_s.singularize
 
     def commentline(options = {})
       options.symbolize_keys!
@@ -95,24 +94,20 @@ module Inkwell
       comment_with_child_comments_info = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]
       remove_info_from_upper_comments comment_with_child_comments_info
 
-      post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
-      post_id_attr = "#{::Inkwell::Engine::config.post_table.to_s.singularize}_id"
-      parent_post = post_class.find self.send post_id_attr
-      users_ids_who_comment_it = ActiveSupport::JSON.decode parent_post.users_ids_who_comment_it
+      parent_obj = get_class_for_item_type(self.topmost_obj_type).find self.topmost_obj_id
+      users_ids_who_comment_it = ActiveSupport::JSON.decode parent_obj.users_ids_who_comment_it
       users_ids_who_comment_it -= comment_with_child_comments_info
-      parent_post.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
-      parent_post.save
+      parent_obj.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
+      parent_obj.save
     end
 
     def processing_a_comment
-      post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
-      post_id_attr = "#{::Inkwell::Engine::config.post_table.to_s.singularize}_id"
-      parent_post = post_class.find self.send post_id_attr
+      parent_obj = get_class_for_item_type(self.topmost_obj_type).find self.topmost_obj_id
       user_id = self.send "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
-      users_ids_who_comment_it = ActiveSupport::JSON.decode parent_post.users_ids_who_comment_it
+      users_ids_who_comment_it = ActiveSupport::JSON.decode parent_obj.users_ids_who_comment_it
       users_ids_who_comment_it << Hash['user_id' => user_id, 'comment_id' => self.id]
-      parent_post.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
-      parent_post.save
+      parent_obj.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
+      parent_obj.save
 
       add_user_info_to_upper_comments
     end

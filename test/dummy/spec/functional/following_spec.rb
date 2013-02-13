@@ -6,7 +6,7 @@ describe "Following" do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
     @salkar_post2 = @salkar.posts.create :body => "salkar_post_test_body"
     @salkar_post3 = @salkar.posts.create :body => "salkar_post_test_body"
@@ -14,7 +14,7 @@ describe "Following" do
     @morozovm_post1 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post2 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post3 = @morozovm.posts.create :body => "salkar_post_test_body"
-    @morozovm_comment = @morozovm.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @morozovm_comment = @morozovm.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
   end
 
   it "user should follow another user" do

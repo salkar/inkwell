@@ -19,7 +19,6 @@ module Inkwell
         after_create :processing_a_post
         before_destroy :destroy_post_processing
 
-        has_many :comments, :class_name => 'Inkwell::Comment'
         include ::Inkwell::ActsAsInkwellPost::InstanceMethods
 
       end
@@ -36,9 +35,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_comment_id
-          comments = self.comments.where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
+          comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST).where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
         else
-          comments = self.comments.order("created_at DESC").limit(limit)
+          comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST).order("created_at DESC").limit(limit)
         end
 
         if for_user
@@ -90,7 +89,7 @@ module Inkwell
         ::Inkwell::TimelineItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::BlogItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
-        comments = self.comments
+        comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST)
         comments.each do |comment|
           ::Inkwell::TimelineItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
           ::Inkwell::FavoriteItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT

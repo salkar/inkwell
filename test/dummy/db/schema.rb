@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130212130848) do
+ActiveRecord::Schema.define(:version => 20130213101736) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -36,13 +36,14 @@ ActiveRecord::Schema.define(:version => 20130212130848) do
     t.integer  "user_id"
     t.text     "body"
     t.integer  "parent_id"
-    t.integer  "post_id"
+    t.integer  "topmost_obj_id"
     t.text     "upper_comments_tree"
     t.text     "users_ids_who_favorite_it", :default => "[]"
     t.text     "users_ids_who_comment_it",  :default => "[]"
     t.text     "users_ids_who_reblog_it",   :default => "[]"
     t.datetime "created_at",                                  :null => false
     t.datetime "updated_at",                                  :null => false
+    t.string   "topmost_obj_type"
   end
 
   create_table "inkwell_favorite_items", :force => true do |t|

@@ -7,7 +7,7 @@ describe "Reblog" do
     @morozovm = User.create :nick => "Morozovm"
     @talisman = User.create :nick => "Talisman"
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
   end
 
   it "user should reblog post" do

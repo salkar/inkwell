@@ -56,6 +56,17 @@ module Inkwell
         result
       end
 
+      def create_comment(options={})
+        options.symbolize_keys!
+        raise "for_object should be passed" unless options[:for_object]
+        raise "comment body should be passed" unless options[:body]
+        for_object = options[:for_object]
+        options[:topmost_obj_id] = for_object.id
+        options[:topmost_obj_type] = get_item_type for_object
+        options.delete :for_object
+        self.comments.create options
+      end
+
       def communities_row
         ActiveSupport::JSON.decode self.communities_ids
       end

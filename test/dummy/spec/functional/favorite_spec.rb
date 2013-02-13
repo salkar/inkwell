@@ -6,7 +6,7 @@ describe "Favorites" do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
   end
 
   it "Post should been favorited" do
@@ -123,17 +123,17 @@ describe "Favorites" do
 
   it "Favoriteline should been return" do
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @morozovm_post = @morozovm.posts.create :body => "salkar_post_test_body"
-    @morozovm_comment = @morozovm.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
-    @salkar_comment1 = @salkar.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
+    @morozovm_comment = @morozovm.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
+    @salkar_comment1 = @salkar.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
     @morozovm_post1 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post2 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post3 = @morozovm.posts.create :body => "salkar_post_test_body"
-    @salkar_comment2 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment3 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment4 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @morozovm_comment2 = @morozovm.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
+    @salkar_comment2 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment3 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment4 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @morozovm_comment2 = @morozovm.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
 
     @salkar.favorite @salkar_post
@@ -185,17 +185,17 @@ describe "Favorites" do
 
   it "Favoriteline should been return for for_user" do
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @salkar_comment = @salkar.comments.create :post_id => @salkar_post.id, :body => "salkar_comment_body"
+    @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @morozovm_post = @morozovm.posts.create :body => "salkar_post_test_body"
-    @morozovm_comment = @morozovm.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
-    @salkar_comment1 = @salkar.comments.create :post_id => @morozovm_post.id, :body => "salkar_comment_body"
+    @morozovm_comment = @morozovm.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
+    @salkar_comment1 = @salkar.create_comment :for_object => @morozovm_post, :body => "salkar_comment_body"
     @morozovm_post1 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post2 = @morozovm.posts.create :body => "salkar_post_test_body"
     @morozovm_post3 = @morozovm.posts.create :body => "salkar_post_test_body"
-    @salkar_comment2 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment3 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @salkar_comment4 = @salkar.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
-    @morozovm_comment2 = @morozovm.comments.create :post_id => @morozovm_post3.id, :body => "salkar_comment_body"
+    @salkar_comment2 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment3 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @salkar_comment4 = @salkar.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
+    @morozovm_comment2 = @morozovm.create_comment :for_object => @morozovm_post3, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
 
     @salkar.favorite @salkar_post
