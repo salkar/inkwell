@@ -4,6 +4,8 @@ Inkwell provides simple way to add social networking features like comments,
 reblogs, favorites, following/followers, communities and timelines to your
 Ruby on Rails application.
 
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NYTZGSJD3H3BC)
+
 Russian translation of README file available
 [here](https://github.com/salkar/inkwell/blob/master/README_RU.rdoc).
 
@@ -361,4 +363,4 @@ nity/base.rb)
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
 redistributed under the terms specified in the MIT-LICENSE file.
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/b3481bd3012db25dfe197bebbdfa282a "githalytics.com")](http://githalytics.com/salkar/inkwell)
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ca9e83bea0d6c79d5909780eb805e944 "githalytics.com")](http://githalytics.com/salkar/inkwell)
