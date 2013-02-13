@@ -159,12 +159,12 @@ l/reblog_spec.rb).
 User is able to create comments for post or other comment. If you want to
 comment the post:
 
-    @user.comments.create :post_id => @post.id, :body => "comment_body"
+    @user.create_comment :for_object => @post, :body => "comment_body"
 
 If you want to comment other comment you should add `parent_id` of parent
 comment:
 
-    @user.comments.create :post_id => @parent_post.id, :body => "comment_body", :parent_id => @parent_comment.id
+    @user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_id => @parent_comment.id
 
 To delete comment you should use `destroy` method:
 
