@@ -54,7 +54,7 @@ module Inkwell
         result
       end
 
-      def create_comment(options={})
+      def create_comment(options = {})
         options.symbolize_keys!
         raise "for_object should be passed" unless options[:for_object]
         raise "comment body should be passed" unless options[:body]
@@ -66,7 +66,12 @@ module Inkwell
       end
 
       def communities_row
-        ActiveSupport::JSON.decode self.communities_ids
+        communities_info = ActiveSupport::JSON.decode self.communities_info
+        result = []
+        communities_info.each do |item|
+          result << item[HashParams::COMMUNITY_ID]
+        end
+        result
       end
 
       def favorite(obj)

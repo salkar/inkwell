@@ -5,24 +5,30 @@ describe "Community" do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
     @talisman = User.create :nick => "Talisman"
+    @spy = User.create :nick => "Spy"
     @community_1 = Community.create :name => "Community_1", :owner_id => @talisman.id
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
+    @private_community = Community.create :name => "Private Community", :owner_id => @spy.id, :public => false
+    @spy.reload
+    @salkar.reload
+    @talisman.reload
+    @morozovm.reload
   end
 
   it "user should been added to community" do
     users_ids = ActiveSupport::JSON.decode @community_1.users_ids
     users_ids.size.should == 1
-    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
-    communities_ids.size.should == 0
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 0
     @community_1.add_user :user => @salkar
     @community_1.reload
     @salkar.reload
     users_ids = ActiveSupport::JSON.decode @community_1.users_ids
     users_ids.size.should == 2
     users_ids[1].should == @salkar.id
-    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
-    communities_ids.size.should == 1
-    communities_ids[0].should == @community_1.id
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id"=>@community_1.id, "a"=>"w"}
   end
 
   it "community's posts should been transferred to user timeline" do
@@ -144,7 +150,7 @@ describe "Community" do
 
   it "user should be in community after added (include_user?)" do
     @community_1.include_user?(@salkar).should == false
-    @salkar.communities_ids = "[#{@community_1.id}]"
+    @salkar.communities_info = ActiveSupport::JSON.encode [{"c_id"=>@community_1.id, "a"=>"w"}]
     @community_1.users_ids = "[#{@salkar.id}]"
     @community_1.save
     @salkar.save
@@ -156,10 +162,9 @@ describe "Community" do
   end
 
   it "user should be admin" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{'community_id' => @salkar.id}]
-    @salkar.save
-    @community_1.admins_info = ActiveSupport::JSON.encode [{'user_id' => @salkar.id}]
+    @community_1.admins_info = ActiveSupport::JSON.encode [{'admin_id' => @salkar.id}]
     @community_1.save
+    @community_1.reload
     @community_1.include_admin?(@salkar).should == true
   end
 
@@ -173,7 +178,6 @@ describe "Community" do
     @salkar.reload
     @community_1.include_user?(@salkar).should == false
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 0
   end
 
   it "community owner should not remove himself from community" do
@@ -245,8 +249,6 @@ describe "Community" do
   end
 
   it "admin level of user should be returned" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 3}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 3}]
     @community_1.save
     @community_1.admin_level_of(@salkar).should == 3
@@ -257,8 +259,6 @@ describe "Community" do
   end
 
   it "admin should be added" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -278,8 +278,6 @@ describe "Community" do
     expect { @community_1.add_admin(:user => @salkar, :admin => @talisman) }.to raise_error
     expect { @community_1.add_admin(:user => "@salkar", :admin => "@talisman") }.to raise_error
 
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -291,12 +289,9 @@ describe "Community" do
     @community_1.reload
     @salkar.reload
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 1
   end
 
   it "admin should be removed" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -314,7 +309,6 @@ describe "Community" do
     @community_1.include_admin?(@salkar).should == true
     @community_1.include_admin?(@morozovm).should == false
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@morozovm.admin_of).size.should == 0
 
     @community_1.add_admin :admin => @salkar, :user => @morozovm
     @community_1.reload
@@ -331,8 +325,6 @@ describe "Community" do
     expect { @community_1.remove_admin :admin => "@salkar", :user => "@morozovm" }.to raise_error
     expect { @community_1.remove_admin :user => @morozovm }.to raise_error
 
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -412,7 +404,6 @@ describe "Community" do
     @salkar.communities_row.size.should == 0
     @talisman.communities_row.size.should == 0
     @morozovm.communities_row.size.should == 0
-    ActiveSupport::JSON.decode(@talisman.admin_of).size.should == 0
   end
 
   it "post should be added to community blogline and user's timeline" do
@@ -560,17 +551,17 @@ describe "Community" do
   it "user should join community" do
     users_ids = ActiveSupport::JSON.decode @community_1.users_ids
     users_ids.size.should == 1
-    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
-    communities_ids.size.should == 0
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 0
     @salkar.join @community_1
     @community_1.reload
     @salkar.reload
     users_ids = ActiveSupport::JSON.decode @community_1.users_ids
     users_ids.size.should == 2
     users_ids[1].should == @salkar.id
-    communities_ids = ActiveSupport::JSON.decode @salkar.communities_ids
-    communities_ids.size.should == 1
-    communities_ids[0].should == @community_1.id
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id"=>@community_1.id, "a"=>"w"}
   end
 
   it "user should leave community" do
@@ -583,7 +574,6 @@ describe "Community" do
     @salkar.reload
     @community_1.include_user?(@salkar).should == false
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 0
   end
 
   it "user should be kicked from community" do
@@ -597,7 +587,6 @@ describe "Community" do
     @salkar.reload
     @community_1.include_user?(@salkar).should == false
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@salkar.admin_of).size.should == 0
   end
 
   it "post should be sended to community" do
@@ -647,8 +636,6 @@ describe "Community" do
   end
 
   it "admin permissions should be granted" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -664,8 +651,6 @@ describe "Community" do
   end
 
   it "admin permissions should be revoked" do
-    @salkar.admin_of = ActiveSupport::JSON.encode [{:community_id => @community_1.id, :admin_level => 0}]
-    @salkar.save
     @community_1.admins_info = ActiveSupport::JSON.encode [{:admin_id => @salkar.id, :admin_level => 0}]
     @community_1.save
     @community_1.add_user :user => @salkar
@@ -683,7 +668,105 @@ describe "Community" do
     @community_1.include_admin?(@salkar).should == true
     @community_1.include_admin?(@morozovm).should == false
     ActiveSupport::JSON.decode(@community_1.admins_info).size.should == 1
-    ActiveSupport::JSON.decode(@morozovm.admin_of).size.should == 0
   end
+
+  it "community row should be returned for user" do
+    @community_2 = Community.create :name => "Community_1", :owner_id => @talisman.id
+    @community_3 = Community.create :name => "Community_1", :owner_id => @talisman.id
+    @talisman.reload
+    @talisman.communities_row.should == [@community_1.id, @community_2.id, @community_3.id]
+  end
+
+  it "admin should be added to community users in open community" do
+    @community_1.reload
+    @talisman.reload
+    @community_1.include_user?(@talisman).should == true
+    @community_1.include_admin?(@talisman).should == true
+  end
+
+  it "private community with default W access should be created" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @morozovm.reload
+    @private_community.public.should == false
+    @private_community.admins_info.should == "[{\"admin_id\":#{@morozovm.id},\"admin_level\":0}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    ActiveSupport::JSON.decode(@morozovm.communities_info).should == [{"c_id"=>@private_community.id, "a"=>"w"}]
+  end
+
+  it "private community with default R access should be created" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.reload
+    @morozovm.reload
+    @private_community.public.should == false
+    @private_community.admins_info.should == "[{\"admin_id\":#{@morozovm.id},\"admin_level\":0}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    ActiveSupport::JSON.decode(@morozovm.communities_info).should == [{"c_id"=>@private_community.id, "a"=>"w"}]
+  end
+
+  it "public community with default W access should be created" do
+    @w_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @w_community.reload
+    @morozovm.reload
+    @w_community.public.should == true
+    @w_community.admins_info.should == "[{\"admin_id\":#{@morozovm.id},\"admin_level\":0}]"
+    @w_community.writers_ids.should == "[#{@morozovm.id}]"
+    @w_community.users_ids.should == "[#{@morozovm.id}]"
+    ActiveSupport::JSON.decode(@morozovm.communities_info).should == [{"c_id"=>@w_community.id, "a"=>"w"}]
+  end
+
+  it "public community with default R access should be created" do
+    @community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @community.default_user_access = 'r'
+    @community.save
+    @community.reload
+    @morozovm.reload
+    @community.public.should == true
+    @community.admins_info.should == "[{\"admin_id\":#{@morozovm.id},\"admin_level\":0}]"
+    @community.writers_ids.should == "[#{@morozovm.id}]"
+    @community.users_ids.should == "[#{@morozovm.id}]"
+    ActiveSupport::JSON.decode(@morozovm.communities_info).should == [{"c_id" => @community.id, "a" => "w"}]
+  end
+
+  it "added to public community with default W access user should have W access" do
+    @w_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @w_community.reload
+    @morozovm.reload
+    @w_community.add_user :user => @salkar
+    @w_community.reload
+    @salkar.reload
+    @w_community.include_user?(@salkar).should == true
+    ActiveSupport::JSON.decode(@salkar.communities_info).should == [{"c_id" => @w_community.id, "a" => "w"}]
+    ActiveSupport::JSON.decode(@w_community.users_ids).should == [@morozovm.id, @salkar.id]
+    ActiveSupport::JSON.decode(@w_community.writers_ids).should == [@morozovm.id, @salkar.id]
+  end
+
+  it "added to public community with default R access user should have W access" do
+    @community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @community.default_user_access = 'r'
+    @community.save
+    @community.reload
+    @morozovm.reload
+    @community.add_user :user => @salkar
+    @community.reload
+    @salkar.reload
+    @community.include_user?(@salkar).should == true
+    ActiveSupport::JSON.decode(@salkar.communities_info).should == [{"c_id" => @community.id, "a" => "r"}]
+    ActiveSupport::JSON.decode(@community.users_ids).should == [@morozovm.id, @salkar.id]
+    ActiveSupport::JSON.decode(@community.writers_ids).should == [@morozovm.id]
+  end
+
+  it "added to private community with default W access user should have W access" do
+    puts "TODO"
+  end
+
+  it "added to private community with default R access user should have W access" do
+    puts "TODO"
+  end
+
 
 end

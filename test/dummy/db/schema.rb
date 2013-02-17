@@ -11,15 +11,21 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130213121414) do
+ActiveRecord::Schema.define(:version => 20130217135512) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
-    t.datetime "created_at",                    :null => false
-    t.datetime "updated_at",                    :null => false
-    t.text     "users_ids",   :default => "[]"
-    t.text     "admins_info", :default => "[]"
+    t.datetime "created_at",                            :null => false
+    t.datetime "updated_at",                            :null => false
+    t.text     "users_ids",           :default => "[]"
+    t.text     "admins_info",         :default => "[]"
     t.integer  "owner_id"
+    t.string   "default_user_access", :default => "w"
+    t.text     "writers_ids",         :default => "[]"
+    t.text     "banned_ids",          :default => "[]"
+    t.text     "muted_ids",           :default => "[]"
+    t.text     "invitations_uids",    :default => "[]"
+    t.boolean  "public",              :default => true
   end
 
   create_table "inkwell_blog_items", :force => true do |t|
@@ -80,12 +86,11 @@ ActiveRecord::Schema.define(:version => 20130213121414) do
 
   create_table "users", :force => true do |t|
     t.string   "nick"
-    t.datetime "created_at",                        :null => false
-    t.datetime "updated_at",                        :null => false
-    t.text     "followers_ids",   :default => "[]"
-    t.text     "followings_ids",  :default => "[]"
-    t.text     "communities_ids", :default => "[]"
-    t.text     "admin_of",        :default => "[]"
+    t.datetime "created_at",                         :null => false
+    t.datetime "updated_at",                         :null => false
+    t.text     "followers_ids",    :default => "[]"
+    t.text     "followings_ids",   :default => "[]"
+    t.text     "communities_info", :default => "[]"
   end
 
 end

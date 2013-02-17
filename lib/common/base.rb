@@ -46,5 +46,16 @@ module Inkwell
       USER = 'u'
       COMMUNITY = 'c'
     end
+
+    module HashParams
+      COMMUNITY_ID = 'c_id'
+      USER_ID = 'u_id'
+      ACCESS_LEVEL = 'a'
+    end
+
+    module CommunityAccessLevels
+      WRITE = 'w'
+      READ = 'r'
+    end
   end
 end

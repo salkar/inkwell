@@ -32,11 +32,16 @@ module Inkwell
         users_ids = ActiveSupport::JSON.decode self.users_ids
         users_ids << user.id
         self.users_ids = ActiveSupport::JSON.encode users_ids
+        if (self.default_user_access == CommunityAccessLevels::WRITE) && !(self.include_muted_user? user)
+          writers_ids = ActiveSupport::JSON.decode self.writers_ids
+          writers_ids << user.id
+          self.writers_ids = ActiveSupport::JSON.encode writers_ids
+        end
         self.save
 
-        communities_ids = ActiveSupport::JSON.decode user.communities_ids
-        communities_ids << self.id
-        user.communities_ids = ActiveSupport::JSON.encode communities_ids
+        communities_info = ActiveSupport::JSON.decode user.communities_info
+        communities_info << Hash[HashParams::COMMUNITY_ID => self.id, HashParams::ACCESS_LEVEL => self.default_user_access]
+        user.communities_info = ActiveSupport::JSON.encode communities_info
         user.save
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
@@ -75,9 +80,9 @@ module Inkwell
         self.users_ids = ActiveSupport::JSON.encode users_ids
         self.save
 
-        communities_ids = ActiveSupport::JSON.decode user.communities_ids
-        communities_ids.delete self.id
-        user.communities_ids = ActiveSupport::JSON.encode communities_ids
+        communities_info = ActiveSupport::JSON.decode user.communities_info
+        communities_info.delete_if {|item| item[HashParams::COMMUNITY_ID] == self.id}
+        user.communities_info = ActiveSupport::JSON.encode communities_info
         user.save
 
         timeline_items = ::Inkwell::TimelineItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"community_id\":#{self.id}%'"
@@ -93,8 +98,12 @@ module Inkwell
 
       def include_user?(user)
         check_user user
-        communities_ids = ActiveSupport::JSON.decode user.communities_ids
-        communities_ids.include? self.id
+        communities_info = ActiveSupport::JSON.decode user.communities_info
+        (communities_info.index{|item| item[HashParams::COMMUNITY_ID] == self.id}) ? true : false
+      end
+
+      def include_muted_user?(user)
+        false
       end
 
       def add_admin(options = {})
@@ -107,11 +116,6 @@ module Inkwell
         raise "user should be a member of this community" unless self.include_user?(user)
 
         admin_level_granted_for_user = admin_level_of(admin) + 1
-
-        admin_positions = ActiveSupport::JSON.decode user.admin_of
-        admin_positions << Hash['community_id' => self.id, 'admin_level' => admin_level_granted_for_user]
-        user.admin_of = ActiveSupport::JSON.encode admin_positions
-        user.save
 
         admins_info = ActiveSupport::JSON.decode self.admins_info
         admins_info << Hash['admin_id' => user.id, 'admin_level' => admin_level_granted_for_user]
@@ -130,11 +134,6 @@ module Inkwell
         raise "admin has no permissions to delete this user from admins" if (admin_level_of(admin) >= admin_level_of(user)) && (user != admin)
         raise "community owner can not be removed from admins" if admin_level_of(user) == 0
 
-        admin_positions = ActiveSupport::JSON.decode user.admin_of
-        admin_positions.delete_if{|rec| rec['community_id'] == self.id}
-        user.admin_of = ActiveSupport::JSON.encode admin_positions
-        user.save
-
         admins_info = ActiveSupport::JSON.decode self.admins_info
         admins_info.delete_if{|rec| rec['admin_id'] == user.id}
         self.admins_info = ActiveSupport::JSON.encode admins_info
@@ -142,16 +141,17 @@ module Inkwell
       end
 
       def admin_level_of(admin)
-        admin_positions = ActiveSupport::JSON.decode admin.admin_of
-        index = admin_positions.index{|item| item['community_id'] == self.id}
+        admin_positions = ActiveSupport::JSON.decode self.admins_info
+        index = admin_positions.index{|item| item['admin_id'] == admin.id}
         raise "admin is not admin" unless index
         admin_positions[index]['admin_level']
       end
 
       def include_admin?(user)
         check_user user
-        admin_positions = ActiveSupport::JSON.decode user.admin_of
-        (admin_positions.index{|item| item['community_id'] == self.id} == nil) ? false : true
+
+        admin_positions = ActiveSupport::JSON.decode self.admins_info
+        (admin_positions.index{|item| item['admin_id'] == user.id}) ? true : false
       end
 
       def add_post(options = {})
@@ -264,21 +264,20 @@ module Inkwell
       end
 
       private
+
       def processing_a_community
         user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-        user = user_class.find self.owner_id
+        owner = user_class.find self.owner_id
 
-        admin_positions = ActiveSupport::JSON.decode user.admin_of
-        admin_positions << Hash['community_id' => self.id, 'admin_level' => 0]
-        user.admin_of = ActiveSupport::JSON.encode admin_positions
-        communities_ids = ActiveSupport::JSON.decode user.communities_ids
-        communities_ids << self.id
-        user.communities_ids = ActiveSupport::JSON.encode communities_ids
-        user.save
+        communities_info = ActiveSupport::JSON.decode owner.communities_info
+        communities_info << Hash[HashParams::COMMUNITY_ID => self.id, HashParams::ACCESS_LEVEL => self.default_user_access]
+        owner.communities_info = ActiveSupport::JSON.encode communities_info
+        owner.save
 
-        admins_info = [Hash['admin_id' => user.id, 'admin_level' => 0]]
+        admins_info = [Hash['admin_id' => owner.id, 'admin_level' => 0]]
         self.admins_info = ActiveSupport::JSON.encode admins_info
-        self.users_ids = ActiveSupport::JSON.encode [user.id]
+        self.users_ids = ActiveSupport::JSON.encode [owner.id]
+        self.writers_ids = ActiveSupport::JSON.encode [owner.id]
         self.save
       end
 
@@ -287,12 +286,9 @@ module Inkwell
         users_ids = ActiveSupport::JSON.decode self.users_ids
         users_ids.each do |user_id|
           user = user_class.find user_id
-          admin_positions = ActiveSupport::JSON.decode user.admin_of
-          admin_positions.delete_if{|rec| rec['community_id'] == self.id}
-          user.admin_of = ActiveSupport::JSON.encode admin_positions
-          communities_ids = ActiveSupport::JSON.decode user.communities_ids
-          communities_ids.delete self.id
-          user.communities_ids = ActiveSupport::JSON.encode communities_ids
+          communities_info = ActiveSupport::JSON.decode user.communities_info
+          communities_info.delete_if {|item| item[HashParams::COMMUNITY_ID] == self.id}
+          user.communities_info = ActiveSupport::JSON.encode communities_info
           user.save
         end
 
