@@ -889,6 +889,120 @@ describe "Community" do
     expect { @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm }.to raise_error
   end
 
+  it "user should be removed from private community"  do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.add_user :user => @salkar    #only for test
+    @private_community.reload
+    @salkar.reload
 
+    @private_community.include_user?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @salkar.communities_row.should == [@private_community.id]
+
+    @private_community.remove_user :admin => @morozovm, :user => @salkar
+    @private_community.reload
+    @salkar.reload
+
+    @private_community.include_user?(@salkar).should == false
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == []
+  end
+
+  it "admin should be removed from private community"  do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.add_user :user => @salkar #only for test
+    @private_community.add_admin :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @salkar.reload
+
+    @private_community.include_user?(@salkar).should == true
+    @private_community.include_admin?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    ActiveSupport::JSON.decode(@private_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should_not == nil
+    @salkar.communities_row.should == [@private_community.id]
+
+    @private_community.remove_user :admin => @morozovm, :user => @salkar
+    @private_community.reload
+    @salkar.reload
+
+    @private_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@private_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should == nil
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == []
+  end
+
+  it "user should leave private community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @salkar.leave @private_community
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@private_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should == nil
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == []
+  end
+
+  it "user should be kicked from private community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @morozovm.kick :user => @salkar, :from_community => @private_community
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@private_community.admins_info).index { |item| item['admin_id'] == @salkar.id }.should == nil
+    @private_community.users_ids.should == "[#{@morozovm.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == []
+  end
+
+  it "user should not join private community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    expect { @salkar.join @private_community }.to raise_error
+  end
+
+  it "user info should be deleted from community with W access if user is removed" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @public_community.reload
+    @morozovm.reload
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @public_community.reload
+
+    @public_community.include_user?(@salkar).should == true
+    @public_community.include_admin?(@salkar).should == true
+    @public_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @public_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    ActiveSupport::JSON.decode(@public_community.admins_info).index { |item| item['admin_id'] == @salkar.id }.should_not == nil
+    @salkar.communities_row.should == [@public_community.id]
+
+    @morozovm.kick :user => @salkar, :from_community => @public_community
+    @salkar.reload
+    @public_community.reload
+
+    @public_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@public_community.admins_info).index { |item| item['admin_id'] == @salkar.id }.should == nil
+    @public_community.users_ids.should == "[#{@morozovm.id}]"
+    @public_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == []
+  end
 
 end

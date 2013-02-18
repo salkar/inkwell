@@ -311,6 +311,7 @@ module Inkwell
       #wrappers for community methods
 
       def join(open_community)
+        raise "it is impossible to join private community. use invitation request to do it." unless open_community.public
         open_community.add_user :user => self
       end
 

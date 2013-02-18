@@ -79,6 +79,15 @@ module Inkwell
         users_ids = ActiveSupport::JSON.decode self.users_ids
         users_ids.delete user.id
         self.users_ids = ActiveSupport::JSON.encode users_ids
+
+        writers_ids = ActiveSupport::JSON.decode self.writers_ids
+        writers_ids.delete user.id
+        self.writers_ids = ActiveSupport::JSON.encode writers_ids
+
+        admins_info = ActiveSupport::JSON.decode self.admins_info
+        admins_info.delete_if{|item| item['admin_id'] == user.id}
+        self.admins_info = ActiveSupport::JSON.encode admins_info
+
         self.save
 
         communities_info = ActiveSupport::JSON.decode user.communities_info
