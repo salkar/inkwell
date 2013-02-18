@@ -8,8 +8,6 @@ describe "Community" do
     @spy = User.create :nick => "Spy"
     @community_1 = Community.create :name => "Community_1", :owner_id => @talisman.id
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
-    @private_community = Community.create :name => "Private Community", :owner_id => @spy.id, :public => false
-    @spy.reload
     @salkar.reload
     @talisman.reload
     @morozovm.reload
@@ -1004,5 +1002,113 @@ describe "Community" do
     @public_community.writers_ids.should == "[#{@morozovm.id}]"
     @salkar.communities_row.should == []
   end
+
+  it "user should be muted" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_muted_user?(@salkar).should == false
+    @public_community.mute_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == true
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_muted_user?(@salkar).should == false
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == true
+  end
+
+  it "user should not be muted" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+    @talisman.reload
+
+    expect { @public_community.mute_user :user => @spy, :admin => @morozovm }.to raise_error
+    expect { @public_community.mute_user :user => @salkar }.to raise_error
+    expect { @public_community.mute_user :admin => @morozovm }.to raise_error
+    expect { @public_community.mute_user :user => @salkar, :admin => @talisman }.to raise_error
+    expect { @public_community.mute_user :user => @morozovm, :admin => @morozovm }.to raise_error
+    @public_community.add_admin :user => @talisman, :admin => @morozovm
+    expect { @public_community.mute_user :user => @morozovm, :admin => @talisman }.to raise_error
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    expect { @public_community.mute_user :user => @salkar, :admin => @talisman }.to raise_error
+    @public_community.mute_user :user => @salkar, :admin => @morozovm
+    expect { @public_community.mute_user :user => @salkar, :admin => @morozovm }.to raise_error
+  end
+
+  it "user should be unmuted" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_muted_user?(@salkar).should == false
+    @public_community.mute_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == true
+    @public_community.unmute_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_muted_user?(@salkar).should == false
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == true
+    @private_community.unmute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == false
+  end
+
+  it "user should not be unmuted" do
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @talisman, :admin => @morozovm
+    @talisman.reload
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @morozovm.reload
+    @talisman.reload
+
+    expect { @private_community.unmute_user :user => @spy, :admin => @morozovm }.to raise_error
+
+    expect { @private_community.unmute_user :user => @salkar }.to raise_error
+    expect { @private_community.unmute_user :admin => @morozovm }.to raise_error
+    expect { @private_community.unmute_user :user => @salkar, :admin => @talisman }.to raise_error
+    @private_community.add_admin :user => @talisman, :admin => @morozovm
+    @private_community.add_admin :user => @salkar, :admin => @morozovm
+    expect { @private_community.unmute_user :user => @salkar, :admin => @salkar }.to raise_error
+    expect { @private_community.unmute_user :user => @salkar, :admin => @talisman }.to raise_error
+    @private_community.unmute_user :user => @salkar, :admin => @morozovm
+    expect { @private_community.unmute_user :user => @salkar, :admin => @morozovm }.to raise_error
+  end
+
+
 
 end

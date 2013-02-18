@@ -112,6 +112,46 @@ module Inkwell
         (communities_info.index{|item| item[HashParams::COMMUNITY_ID] == self.id}) ? true : false
       end
 
+      def mute_user(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        raise "user should be passed in params" unless user
+        raise "admin should be passed in params" unless admin
+        check_user user
+        check_user admin
+        raise "admin is not admin" unless self.include_admin? admin
+        raise "user should be a member of this community" unless self.include_user? user
+        raise "this user is already muted" if self.include_muted_user? user
+        raise "it is impossible to mute yourself" if user == admin
+        raise "admin has no permissions to mute this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
+
+
+        muted_ids = ActiveSupport::JSON.decode self.muted_ids
+        muted_ids << user.id
+        self.muted_ids = ActiveSupport::JSON.encode muted_ids
+        self.save
+      end
+
+      def unmute_user(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        raise "user should be passed in params" unless user
+        raise "admin should be passed in params" unless admin
+        check_user user
+        check_user admin
+        raise "admin is not admin" unless self.include_admin? admin
+        raise "user should be a member of this community" unless self.include_user? user
+        raise "this user is not muted" unless self.include_muted_user? user
+        raise "admin has no permissions to unmute this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
+
+        muted_ids = ActiveSupport::JSON.decode self.muted_ids
+        muted_ids.delete user.id
+        self.muted_ids = ActiveSupport::JSON.encode muted_ids
+        self.save
+      end
+
       def include_muted_user?(user)
         check_user user
         muted_ids = ActiveSupport::JSON.decode self.muted_ids
@@ -128,7 +168,10 @@ module Inkwell
         options.symbolize_keys!
         user = options[:user]
         admin = options[:admin]
+        raise "user should be passed in params" unless user
         raise "admin should be passed in params" unless admin
+        check_user user
+        check_user admin
         raise "user is already admin" if self.include_admin?(user)
         raise "admin is not admin" unless self.include_admin?(admin)
         raise "user should be a member of this community" unless self.include_user?(user)
