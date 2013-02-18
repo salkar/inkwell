@@ -27,7 +27,8 @@ module Inkwell
       def add_user(options = {})
         options.symbolize_keys!
         user = options[:user]
-        return if self.include_user? user
+        raise "this user is already in this community" if self.include_user? user
+        raise "this user is banned" if self.include_banned_user? user
 
         users_ids = ActiveSupport::JSON.decode self.users_ids
         users_ids << user.id
@@ -103,7 +104,15 @@ module Inkwell
       end
 
       def include_muted_user?(user)
-        false
+        check_user user
+        muted_ids = ActiveSupport::JSON.decode self.muted_ids
+        muted_ids.include? user.id
+      end
+
+      def include_banned_user?(user)
+        check_user user
+        banned_ids = ActiveSupport::JSON.decode self.banned_ids
+        banned_ids.include? user.id
       end
 
       def add_admin(options = {})
@@ -263,7 +272,60 @@ module Inkwell
         ActiveSupport::JSON.decode self.users_ids
       end
 
+      def create_invitation_request(user)
+        raise "invitation request was already created" if self.include_invitation_request? user
+        raise "it is impossible to create request. user is banned in this community" if self.include_banned_user? user
+        raise "it is impossible to create request for public community" if self.public
+
+        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
+        invitations_uids << user.id
+        self.invitations_uids = ActiveSupport::JSON.encode invitations_uids
+        self.save
+      end
+
+      def accept_invitation_request(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        check_user user
+        check_user admin
+        raise "admin is not admin in this community" unless self.include_admin? admin
+        raise "this user is already in this community" if self.include_user? user
+        raise "there is no invitation request for this user" unless self.include_invitation_request? user
+
+        self.add_user :user => user
+
+        remove_invitation_request user
+      end
+
+      def reject_invitation_request(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        check_user user
+        check_user admin
+        raise "there is no invitation request for this user" unless self.include_invitation_request? user
+        raise "admin is not admin in this community" unless self.include_admin? admin
+
+        remove_invitation_request user
+      end
+
+      def include_invitation_request?(user)
+        raise "invitations work only for private community. this community is public." if self.public
+        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
+        (invitations_uids.index{|uid| uid == user.id}) ? true : false
+      end
+
+
+
       private
+
+      def remove_invitation_request(user)
+        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
+        invitations_uids.delete user.id
+        self.invitations_uids = ActiveSupport::JSON.encode invitations_uids
+        self.save
+      end
 
       def processing_a_community
         user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize

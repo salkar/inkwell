@@ -745,7 +745,7 @@ describe "Community" do
     ActiveSupport::JSON.decode(@w_community.writers_ids).should == [@morozovm.id, @salkar.id]
   end
 
-  it "added to public community with default R access user should have W access" do
+  it "added to public community with default R access user should have R access" do
     @community = Community.create :name => "Community", :owner_id => @morozovm.id
     @community.default_user_access = 'r'
     @community.save
@@ -761,12 +761,134 @@ describe "Community" do
   end
 
   it "added to private community with default W access user should have W access" do
-    puts "TODO"
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @private_community.include_user?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @salkar.communities_row.should == [@private_community.id]
+    ActiveSupport::JSON.decode(@salkar.communities_info).should == [{"c_id" => @private_community.id, "a" => "w"}]
   end
 
-  it "added to private community with default R access user should have W access" do
-    puts "TODO"
+  it "added to private community with default R access user should have R access" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @private_community.include_user?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id}]"
+    @salkar.communities_row.should == [@private_community.id]
+    ActiveSupport::JSON.decode(@salkar.communities_info).should == [{"c_id" => @private_community.id, "a" => "r"}]
   end
+
+  it "request invitation should be created (include_invitation_request?)" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+    @private_community.include_invitation_request?(@salkar).should == true
+  end
+
+  it "request invitation should be created (include_invitation_request?)" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == false
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == false
+  end
+
+  it "error should be excepted on try to check invitation request for public community" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @public_community.reload
+    expect { @public_community.include_invitation_request?(@salkar) }.to raise_error
+  end
+
+  it "request invitation should be created" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+  end
+
+  it "request invitation should not be created" do
+    expect { @community_1.create_invitation_request(@salkar) }.to raise_error
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.banned_ids = "[#{@talisman.id}]"
+    @private_community.save
+    expect { @private_community.create_invitation_request(@talisman) }.to raise_error
+    @private_community.create_invitation_request(@salkar)
+    expect { @private_community.create_invitation_request(@salkar) }.to raise_error
+  end
+
+  it "user should not be added to public community cause he is banned" do
+    @community_1.banned_ids = "[#{@morozovm.id}]"
+    @community_1.save
+    expect { @morozovm.join @community_1 }.to raise_error
+  end
+
+  it "error should be raised on trying to add to community user who already added to it" do
+    @salkar.join @community_1
+    expect { @salkar.join @community_1 }.to raise_error
+  end
+
+  it "invitation request should be rejected" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request(@salkar)
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == true
+    @private_community.reject_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == false
+  end
+
+  it "invitation request should not be rejected" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request(@salkar)
+    @private_community.add_user :user => @talisman    #only for test
+    @private_community.reload
+    expect { @private_community.reject_invitation_request :user => @spy, :admin => @morozovm }.to raise_error
+    expect { @private_community.reject_invitation_request :user => @salkar }.to raise_error
+    expect { @private_community.reject_invitation_request :admin => @morozovm }.to raise_error
+    expect { @private_community.reject_invitation_request :user => @salkar, :admin => @talisman }.to raise_error
+  end
+
+  it "invitation request should be accepted" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @private_community.include_user?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @salkar.communities_row.should == [@private_community.id]
+  end
+
+  it "invitation request should not be accepted" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.add_user :user => @talisman    #only for test
+    @private_community.reload
+
+    expect { @private_community.accept_invitation_request :user => @spy, :admin => @morozovm }.to raise_error
+    expect { @private_community.accept_invitation_request :user => @salkar }.to raise_error
+    expect { @private_community.accept_invitation_request :admin => @morozovm }.to raise_error
+    expect { @private_community.accept_invitation_request :user => @salkar, :admin => @talisman }.to raise_error
+    @private_community.add_user :user => @salkar    #only for test
+    expect { @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm }.to raise_error
+  end
+
 
 
 end
