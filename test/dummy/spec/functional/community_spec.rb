@@ -1134,6 +1134,152 @@ describe "Community" do
     @private_community.include_muted_user?(@salkar).should == false
   end
 
+  it "user should be banned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_banned_user?(@salkar).should == false
+    @public_community.ban_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_banned_user?(@salkar).should == true
+    @public_community.include_user?(@salkar).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_banned_user?(@salkar).should == false
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == true
+    @private_community.include_user?(@salkar).should == false
+  end
+
+  it "admin should be banned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    ActiveSupport::JSON.decode(@public_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should_not == nil
+    @public_community.include_banned_user?(@salkar).should == false
+    @public_community.ban_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_banned_user?(@salkar).should == true
+    @public_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@public_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should == nil
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.add_admin :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    ActiveSupport::JSON.decode(@private_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should_not == nil
+    @private_community.include_banned_user?(@salkar).should == false
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == true
+    @private_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@private_community.admins_info).index{|item| item['admin_id'] == @salkar.id}.should == nil
+  end
+
+  it "user with request invitation should be banned" do
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == false
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == true
+    @private_community.include_user?(@salkar).should == false
+  end
+
+  it "user should not be banned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+    @talisman.reload
+
+    expect { @public_community.ban_user :user => @spy, :admin => @morozovm }.to raise_error
+    expect { @public_community.ban_user :user => @salkar }.to raise_error
+    expect { @public_community.ban_user :admin => @morozovm }.to raise_error
+    expect { @public_community.ban_user :user => @salkar, :admin => @talisman }.to raise_error
+    expect { @public_community.ban_user :user => @morozovm, :admin => @morozovm }.to raise_error
+    @public_community.add_admin :user => @talisman, :admin => @morozovm
+    expect { @public_community.ban_user :user => @morozovm, :admin => @talisman }.to raise_error
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    expect { @public_community.ban_user :user => @salkar, :admin => @talisman }.to raise_error
+    @public_community.ban_user :user => @salkar, :admin => @morozovm
+    expect { @public_community.ban_user :user => @salkar, :admin => @morozovm }.to raise_error
+  end
+
+  it "user should be unbanned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_banned_user?(@salkar).should == false
+    @public_community.ban_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_banned_user?(@salkar).should == true
+    @public_community.unban_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_banned_user?(@salkar).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_banned_user?(@salkar).should == false
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == true
+    @private_community.unban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == false
+  end
+
+  it "user should not be unbanned" do
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @talisman, :admin => @morozovm
+    @talisman.reload
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @morozovm.reload
+    @talisman.reload
+
+    expect { @private_community.unban_user :user => @spy, :admin => @morozovm }.to raise_error
+
+    expect { @private_community.unban_user :user => @salkar }.to raise_error
+    expect { @private_community.unban_user :admin => @morozovm }.to raise_error
+    expect { @private_community.unban_user :user => @salkar, :admin => @talisman }.to raise_error
+  end
+
 
 
 end

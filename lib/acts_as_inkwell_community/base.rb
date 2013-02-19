@@ -158,6 +158,50 @@ module Inkwell
         muted_ids.include? user.id
       end
 
+      def ban_user(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        raise "user should be passed in params" unless user
+        raise "admin should be passed in params" unless admin
+        check_user user
+        check_user admin
+        raise "admin is not admin" unless self.include_admin? admin
+        if self.public
+          raise "user should be a member of public community" unless self.include_user?(user)
+        else
+          raise "user should be a member of private community or send invitation request to it" unless self.include_user?(user) || self.include_invitation_request?(user)
+        end
+        raise "this user is already banned" if self.include_banned_user? user
+        raise "admin has no permissions to ban this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
+
+        banned_ids = ActiveSupport::JSON.decode self.banned_ids
+        banned_ids << user.id
+        self.banned_ids = ActiveSupport::JSON.encode banned_ids
+        self.save
+        unless self.public
+          self.reject_invitation_request :admin => admin, :user => user if self.include_invitation_request? user
+        end
+        self.remove_user :admin => admin, :user => user
+      end
+
+      def unban_user(options = {})
+        options.symbolize_keys!
+        user = options[:user]
+        admin = options[:admin]
+        raise "user should be passed in params" unless user
+        raise "admin should be passed in params" unless admin
+        check_user user
+        check_user admin
+        raise "admin is not admin" unless self.include_admin? admin
+        raise "this user is not banned" unless self.include_banned_user? user
+
+        banned_ids = ActiveSupport::JSON.decode self.banned_ids
+        banned_ids.delete user.id
+        self.banned_ids = ActiveSupport::JSON.encode banned_ids
+        self.save
+      end
+
       def include_banned_user?(user)
         check_user user
         banned_ids = ActiveSupport::JSON.decode self.banned_ids
@@ -184,7 +228,6 @@ module Inkwell
         admins_info << Hash['admin_id' => user.id, 'admin_level' => admin_level_granted_for_user]
         self.admins_info = ActiveSupport::JSON.encode admins_info
         self.save
-
       end
 
       def remove_admin(options = {})
