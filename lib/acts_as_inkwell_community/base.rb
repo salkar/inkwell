@@ -172,9 +172,11 @@ module Inkwell
         raise "admin should be passed in params" unless admin
         check_user user
         check_user admin
-        raise "user is already admin" if self.include_admin?(user)
-        raise "admin is not admin" unless self.include_admin?(admin)
-        raise "user should be a member of this community" unless self.include_user?(user)
+        raise "user is already admin" if self.include_admin? user
+        raise "admin is not admin" unless self.include_admin? admin
+        raise "user should be a member of this community" unless self.include_user? user
+
+        self.unmute_user :user => user, :admin => admin if self.include_muted_user? user
 
         admin_level_granted_for_user = admin_level_of(admin) + 1
 
@@ -182,6 +184,7 @@ module Inkwell
         admins_info << Hash['admin_id' => user.id, 'admin_level' => admin_level_granted_for_user]
         self.admins_info = ActiveSupport::JSON.encode admins_info
         self.save
+
       end
 
       def remove_admin(options = {})

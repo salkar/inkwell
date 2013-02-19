@@ -1101,12 +1101,37 @@ describe "Community" do
     expect { @private_community.unmute_user :user => @salkar }.to raise_error
     expect { @private_community.unmute_user :admin => @morozovm }.to raise_error
     expect { @private_community.unmute_user :user => @salkar, :admin => @talisman }.to raise_error
-    @private_community.add_admin :user => @talisman, :admin => @morozovm
+  end
+
+  it "user should be unmuted when he is become admin" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_muted_user?(@salkar).should == false
+    @public_community.mute_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == true
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_muted_user?(@salkar).should == false
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == true
     @private_community.add_admin :user => @salkar, :admin => @morozovm
-    expect { @private_community.unmute_user :user => @salkar, :admin => @salkar }.to raise_error
-    expect { @private_community.unmute_user :user => @salkar, :admin => @talisman }.to raise_error
-    @private_community.unmute_user :user => @salkar, :admin => @morozovm
-    expect { @private_community.unmute_user :user => @salkar, :admin => @morozovm }.to raise_error
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == false
   end
 
 
