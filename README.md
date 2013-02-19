@@ -74,6 +74,13 @@ Next, get gem migrations:
 
 and `db:migrate` it.
 
+## Upgrade
+
+After upgrading gem do not forget to get new migrations and migrate it.
+
+    rake inkwell:install:migrations
+    db:migrate
+
 ## Usage
 
 ### Favorite features
