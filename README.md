@@ -261,14 +261,21 @@ Community is association of users. It has own blogline, consisting of posts of
 its members. Community member can send his post to the community blogline.
 Then this post is added to the timelines of other community users.
 
-When you create community you need to pass `owner_id`:
+There are two types of community: private and public. Users can join public community when they want - no one controls this process (They should not be banned in it).
+The user should leave the invitation request to join the private community. Then the admin will review it and add the user to the community or reject the request.
+
+When you create community you need to pass `owner_id`. To create public community:
 
     @community = Community.create :name => "Community", :owner_id => @user.id 
+    
+To create private community you need to pass `:public => false` in addition to the rest: 
 
-User with the passed id will be the first administrator of created community
+    @private_community = Community.create :name => "Private Community", :owner_id => @user.id, :public => false
+
+User with the passed id (`owner_id`) will be the first administrator of created community
 and will be added to it.
 
-To add a user to the open community:
+To add a user to the public community:
 
     @user.join @community
 
@@ -276,6 +283,20 @@ After it last 10 `@community` blogline's items will be transferred to `@user`
 timeline. And each new `@community` blogline item will be added to `@user`
 timeline. Moreover `@user` will be able to add their posts in community
 blogline.
+
+To send invitation request to the private community:
+
+    @private_community.create_invitation_request @user
+    
+To accept invitation request: 
+
+    @private_community.accept_invitation_request :user => @user, :admin => @admin
+    
+To reject invitation request:
+
+    @private_community.reject_invitation_request :user => @user, :admin => @admin
+    
+To prevent invitation requests spam you are able to ban spamming users.
 
 To remove a user from community:
 
@@ -293,6 +314,11 @@ from the user timeline.
 To send post to the community blogline:
 
     @user.send_post_to_community :post => @user_post, :to_community => @community
+    
+Preferably check the possibility of sending a post by `@user` before using `send_post_to_community`. To check user permissions for post sending:
+
+    @user.send_post_to_community :post => @user_post, :to_community => @community
+        if @user.can_send_post_to_community? @community
 
 Sent post will be added to timelines of community members. A post can be sent
 to the community only by its owner.
@@ -345,6 +371,33 @@ To get ids of community members:
 To get ids of communities to which the user has joined:
 
     @user.communities_row
+    
+Admin of community is able to mute or ban user. Muted users is not able to send posts to community, but they are still in it.
+Banned users are not in community and are not able to join it or send invite in it.
+
+To mute user:
+
+    @admin.mute :user => @user, :in_community => @community
+    
+To unmute user:
+
+    @admin.unmute :user => @user, :in_community => @community
+    
+To check that user is muted:
+
+    @community.include_muted_user? @user
+    
+To ban user:
+
+    @admin.ban :user => @user, :in_community => @community
+    
+To unban user:
+    
+    @admin.unban :user => @user, :in_community => @community
+    
+To check that user is banned:
+
+    @community.include_banned_user? @user
 
 Community blogline is consists of the posts of members that have added to it.
 To get it:
