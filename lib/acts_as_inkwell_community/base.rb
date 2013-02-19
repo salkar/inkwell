@@ -228,6 +228,12 @@ module Inkwell
 
         self.unmute_user :user => user, :admin => admin if self.include_muted_user? user
 
+        unless self.include_writer? user
+          writers_ids = ActiveSupport::JSON.decode self.writers_ids
+          writers_ids << user.id
+          self.writers_ids = ActiveSupport::JSON.encode writers_ids
+        end
+
         admin_level_granted_for_user = admin_level_of(admin) + 1
 
         admins_info = ActiveSupport::JSON.decode self.admins_info

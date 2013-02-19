@@ -1430,16 +1430,15 @@ describe "Community" do
     @salkar.can_send_post_to_community?(@public_community).should == true
 
     @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
-    @private_community.default_user_access = 'r'
-    @private_community.save
     @private_community.create_invitation_request @salkar
     @private_community.reload
     @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
     @salkar.reload
+    @morozovm.reload
     @private_community.reload
 
-    @morozovm.can_send_post_to_community?(@public_community).should == true
-    @salkar.can_send_post_to_community?(@public_community).should == true
+    @morozovm.can_send_post_to_community?(@private_community).should == true
+    @salkar.can_send_post_to_community?(@private_community).should == true
   end
 
   it "user should be able to send post to community (can_send_post_to_community?)" do
@@ -1541,6 +1540,22 @@ describe "Community" do
     @private_community.reload
     expect {@talisman.send_post_to_community :to_community => @public_community_r, :post => @talisman_post}.to raise_error
     expect {@talisman.send_post_to_community :to_community => @private_community, :post => @talisman_post}.to raise_error
+  end
+
+  it "admin should be a writer" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+    @public_community.include_writer?(@salkar).should == false
+
+    @public_community.add_admin :admin => @morozovm, :user => @salkar
+    @public_community.reload
+    @salkar.reload
+    @public_community.include_writer?(@salkar).should == true
   end
 
 end
