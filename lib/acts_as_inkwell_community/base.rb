@@ -106,6 +106,12 @@ module Inkwell
         end
       end
 
+      def include_writer?(user)
+        check_user user
+        writers_ids = ActiveSupport::JSON.decode self.writers_ids
+        writers_ids.include? user.id
+      end
+
       def include_user?(user)
         check_user user
         communities_info = ActiveSupport::JSON.decode user.communities_info
@@ -266,7 +272,8 @@ module Inkwell
         user = options[:user]
         post = options[:post]
         raise "user should be passed in params" unless user
-        raise "user should be a member of community" unless self.include_user?(user)
+        raise "user should be a member of community" unless self.include_user? user
+        raise "user is muted" if self.include_muted_user? user
         raise "post should be passed in params" unless post
         check_post post
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"

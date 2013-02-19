@@ -1344,4 +1344,203 @@ describe "Community" do
     @private_community.include_muted_user?(@salkar).should == false
   end
 
+  it "muted user should not be able to add post to community" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_muted_user?(@salkar).should == false
+    @public_community.mute_user :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == true
+    expect { @public_community.add_post :user => @salkar, :post => @salkar_post }.to raise_error
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_muted_user?(@salkar).should == false
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == true
+    expect { @private_community.add_post :user => @salkar, :post => @salkar_post }.to raise_error
+  end
+
+  it "user should be writer in community (include_writer?)" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_writer?(@morozovm).should == true
+    @public_community.include_writer?(@salkar).should == true
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_writer?(@morozovm).should == true
+    @private_community.include_writer?(@salkar).should == true
+  end
+
+  it "user should not be writer in community (include_writer?)" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_writer?(@morozovm).should == true
+    @public_community.include_writer?(@salkar).should == false
+    @public_community.include_writer?(@talisman).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_writer?(@morozovm).should == true
+    @private_community.include_writer?(@salkar).should == false
+    @private_community.include_writer?(@talisman).should == false
+  end
+
+  it "user should be able to send post to community (can_send_post_to_community?)" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @morozovm.can_send_post_to_community?(@public_community).should == true
+    @salkar.can_send_post_to_community?(@public_community).should == true
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @morozovm.can_send_post_to_community?(@public_community).should == true
+    @salkar.can_send_post_to_community?(@public_community).should == true
+  end
+
+  it "user should be able to send post to community (can_send_post_to_community?)" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @morozovm.mute :user => @salkar, :in_community => @public_community
+    @public_community.reload
+    @salkar.can_send_post_to_community?(@public_community).should == false
+    @talisman.can_send_post_to_community?(@public_community).should == false
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @talisman.join @public_community
+    @public_community.reload
+    @talisman.reload
+    @talisman.can_send_post_to_community?(@public_community).should == false
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @morozovm.mute :user => @salkar, :in_community => @private_community
+    @private_community.reload
+    @salkar.can_send_post_to_community?(@private_community).should == false
+    @talisman.can_send_post_to_community?(@private_community).should == false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @talisman, :admin => @morozovm
+    @talisman.reload
+    @private_community.reload
+    @talisman.can_send_post_to_community?(@private_community).should == false
+  end
+
+  it "post should be sended to community" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @salkar.send_post_to_community :to_community => @public_community, :post => @salkar_post
+    @salkar_post.communities_row.should == [@public_community.id]
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    @salkar.send_post_to_community :to_community => @private_community, :post => @salkar_post
+    @salkar_post.communities_row.should == [@public_community.id, @private_community.id]
+  end
+
+  it "post should not be sended to community" do
+    @public_community_r = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community_r
+    @public_community_r.default_user_access = 'r'
+    @public_community_r.save
+    @salkar.join @public_community_r
+    @salkar.reload
+    @public_community_r.reload
+    expect {@salkar.send_post_to_community :to_community => @public_community_r, :post => @salkar_post}.to raise_error
+    @salkar_post.communities_row.should == []
+
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @talisman, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.default_user_access = 'r'
+    @private_community.save
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+    expect {@salkar.send_post_to_community :to_community => @private_community, :post => @salkar_post}.to raise_error
+    @salkar_post.communities_row.should == []
+
+    @spy_post = @spy.posts.create :body => "spy_post_test_body"
+    expect {@spy.send_post_to_community :to_community => @public_community_r, :post => @spy_post}.to raise_error
+    expect {@spy.send_post_to_community :to_community => @private_community, :post => @spy_post}.to raise_error
+
+    @talisman_post = @talisman.posts.create :body => "morozovm_post_test_body"
+    @morozovm.mute :user => @talisman, :in_community => @public_community_r
+    @morozovm.mute :user => @talisman, :in_community => @private_community
+    @public_community_r.reload
+    @private_community.reload
+    expect {@talisman.send_post_to_community :to_community => @public_community_r, :post => @talisman_post}.to raise_error
+    expect {@talisman.send_post_to_community :to_community => @private_community, :post => @talisman_post}.to raise_error
+  end
+
 end

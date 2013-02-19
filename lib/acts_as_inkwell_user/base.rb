@@ -354,10 +354,18 @@ module Inkwell
         in_community.unmute_user :user => user, :admin => self
       end
 
+      def can_send_post_to_community?(community)
+        return false unless community.include_user? self
+        return false if community.include_muted_user? self
+        return false unless community.include_writer? self
+        true
+      end
+
       def send_post_to_community(options = {})
         options.symbolize_keys!
         to_community = options[:to_community]
         post = options[:post]
+        raise "this user have no permissions to send post to this community" unless self.can_send_post_to_community? to_community
         to_community.add_post :post => post, :user => self
       end
 
