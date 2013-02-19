@@ -1280,6 +1280,68 @@ describe "Community" do
     expect { @private_community.unban_user :user => @salkar, :admin => @talisman }.to raise_error
   end
 
+  it "admin should ban another user" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
 
+    ActiveSupport::JSON.decode(@public_community.admins_info).index { |item| item['admin_id'] == @salkar.id }.should_not == nil
+    @public_community.include_banned_user?(@salkar).should == false
+    @morozovm.ban :user => @salkar, :in_community => @public_community
+    @public_community.reload
+    @public_community.include_banned_user?(@salkar).should == true
+    @public_community.include_user?(@salkar).should == false
+    ActiveSupport::JSON.decode(@public_community.admins_info).index { |item| item['admin_id'] == @salkar.id }.should == nil
+  end
+
+  it "user should unban another user" do
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_banned_user?(@salkar).should == false
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == true
+    @morozovm.unban :user => @salkar, :in_community => @private_community
+    @private_community.reload
+    @private_community.include_banned_user?(@salkar).should == false
+  end
+
+  it "user should muted another user" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+
+    @public_community.include_muted_user?(@salkar).should == false
+    @morozovm.mute :user => @salkar, :in_community => @public_community
+    @public_community.reload
+    @public_community.include_muted_user?(@salkar).should == true
+  end
+
+  it "user should unmute another user" do
+    @private_community = Community.create :name => "Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @salkar.reload
+    @private_community.reload
+
+    @private_community.include_muted_user?(@salkar).should == false
+    @private_community.mute_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == true
+    @morozovm.unmute :user => @salkar, :in_community => @private_community
+    @private_community.reload
+    @private_community.include_muted_user?(@salkar).should == false
+  end
 
 end

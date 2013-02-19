@@ -326,6 +326,34 @@ module Inkwell
         from_community.remove_user :user => user, :admin => self
       end
 
+      def ban(options = {})
+        options.symbolize_keys!
+        in_community = options[:in_community]
+        user = options[:user]
+        in_community.ban_user :user => user, :admin => self
+      end
+
+      def unban(options = {})
+        options.symbolize_keys!
+        in_community = options[:in_community]
+        user = options[:user]
+        in_community.unban_user :user => user, :admin => self
+      end
+
+      def mute(options = {})
+        options.symbolize_keys!
+        in_community = options[:in_community]
+        user = options[:user]
+        in_community.mute_user :user => user, :admin => self
+      end
+
+      def unmute(options = {})
+        options.symbolize_keys!
+        in_community = options[:in_community]
+        user = options[:user]
+        in_community.unmute_user :user => user, :admin => self
+      end
+
       def send_post_to_community(options = {})
         options.symbolize_keys!
         to_community = options[:to_community]
