@@ -161,7 +161,7 @@ comment the post:
 
     @user.create_comment :for_object => @post, :body => "comment_body"
 
-If you want to comment other comment you should add `parent_id` of parent
+If you want to comment other comment you should add `parent_comment_id` of parent
 comment:
 
     @user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_comment_id => @parent_comment.id
