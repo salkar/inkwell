@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130213115835) do
+ActiveRecord::Schema.define(:version => 20130219152806) do
 
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"
@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(:version => 20130213115835) do
   create_table "inkwell_comments", :force => true do |t|
     t.integer  "user_id"
     t.text     "body"
-    t.integer  "parent_id"
+    t.integer  "parent_comment_id"
     t.integer  "topmost_obj_id"
     t.text     "upper_comments_tree"
     t.text     "users_ids_who_favorite_it", :default => "[]"

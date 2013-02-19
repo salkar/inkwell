@@ -67,7 +67,7 @@ describe "Comments" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment1.id)
+    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment1.id)
     @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
@@ -102,9 +102,9 @@ describe "Comments" do
     ::Inkwell::Comment.all.size.should == 0
   end
 
-  it "2 comments with parent_id should been created" do
+  it "2 comments with parent_comment_id should been created" do
     @salkar_comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @morozovm_comment = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @salkar_comment.id)
+    @morozovm_comment = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @salkar_comment.id)
     @salkar_comment = ::Inkwell::Comment.find @salkar_comment
     @morozovm_comment = ::Inkwell::Comment.find @morozovm_comment
     @salkar_post.reload
@@ -119,11 +119,11 @@ describe "Comments" do
 
   it "7 comments should been created" do
     @salkar_comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @morozovm_comment = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @salkar_comment.id)
+    @morozovm_comment = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @salkar_comment.id)
     @salkar_comment1 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @morozovm_comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @salkar_comment.id)
+    @morozovm_comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @salkar_comment.id)
     @salkar_comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @morozovm_comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @salkar_comment.id)
+    @morozovm_comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @salkar_comment.id)
     @salkar_comment3 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
@@ -172,7 +172,7 @@ describe "Comments" do
 
   it "1 comments should been deleted from post with parent comment" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment_to_delete = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment_to_delete = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.should == [{"user_id" => @salkar.id, "comment_id" => @comment.id}, {"user_id" => @morozovm.id, "comment_id" => @comment_to_delete.id}]
@@ -203,7 +203,7 @@ describe "Comments" do
 
   it "2 comments should been deleted from post with parent comment" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.should == [{"user_id" => @salkar.id, "comment_id" => @comment.id}, {"user_id" => @morozovm.id, "comment_id" => @comment2.id}]
@@ -232,9 +232,9 @@ describe "Comments" do
 
   it "4 comments should been deleted from post with parent comment" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment2.id)
-    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment2.id)
+    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar_post.reload
     users_ids_who_comment_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_comment_it)
     users_ids_who_comment_it.size.should == 4
@@ -263,17 +263,17 @@ describe "Comments" do
 
   it "commentline for comment should been returned (comments for 1 comment)" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
 
     @comment.reload
     commentline = @comment.commentline
@@ -289,17 +289,17 @@ describe "Comments" do
 
   it "commentline for comment should been returned (comments for several comments)" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment1.id)
-    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment2.id)
-    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment3.id)
-    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment2.id)
-    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment5.id)
-    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment4.id)
-    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment1.id)
+    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment2.id)
+    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment3.id)
+    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment2.id)
+    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment5.id)
+    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment4.id)
+    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
 
     @comment.reload
     commentline = @comment.commentline
@@ -315,17 +315,17 @@ describe "Comments" do
 
   it "5 comments for comment should been received" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment1.id)
-    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment2.id)
-    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment3.id)
-    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment2.id)
-    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment5.id)
-    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment4.id)
-    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment3 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment1.id)
+    @comment4 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment2.id)
+    @comment5 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment6 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment3.id)
+    @comment7 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment2.id)
+    @comment8 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment9 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment5.id)
+    @comment10 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment4.id)
+    @comment11 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
 
     @comment.reload
     commentline = @comment.commentline :limit => 5
@@ -348,8 +348,8 @@ describe "Comments" do
 
   it "is_favorited should been returned in commentline for comment for for_user" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar.favorite @comment1
     @morozovm.favorite @comment2
 
@@ -369,8 +369,8 @@ describe "Comments" do
 
   it "is_favorited should been returned in commentline for post for for_user" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar.favorite @comment1
     @morozovm.favorite @comment2
 
@@ -392,8 +392,8 @@ describe "Comments" do
     ::Inkwell::Comment.where(:topmost_obj_id => @salkar_post.id, :topmost_obj_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 0
     @salkar_post.comment_count.should == 0
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @salkar_post.reload
     ::Inkwell::Comment.where(:topmost_obj_id => @salkar_post.id, :topmost_obj_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 3
     @salkar_post.comment_count.should == 3
@@ -403,8 +403,8 @@ describe "Comments" do
     @comment = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post)
     @comment.reload
     @comment.comment_count.should == 0
-    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
-    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_id => @comment.id)
+    @comment1 = @morozovm.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
+    @comment2 = @salkar.create_comment(:body => 'Lets You Party Like a Facebook User', :for_object => @salkar_post, :parent_comment_id => @comment.id)
     @comment.reload
     @comment.comment_count.should == 2
   end
