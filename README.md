@@ -32,7 +32,13 @@ need to have `Community` class, too:
 
 Put in `Gemfile`:
 
+    gem 'inkwell'
+    
+to get it from RubyGems or
+
     gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
+    
+to get it from github (This version may contain unfinished new features).
 
 After it do `bundle install`
 
@@ -74,7 +80,7 @@ Next, get gem migrations:
 
 and `db:migrate` it.
 
-## Upgrade
+## Upgrading
 
 After upgrading gem do not forget to get new migrations and migrate it.
 
