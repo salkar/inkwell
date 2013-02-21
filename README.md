@@ -140,8 +140,7 @@ where
 
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/favorite_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb).
 
 ### Reblog features
 
@@ -164,8 +163,7 @@ To check that post/comment enters in reblogs:
 Reblogs don't have their own line and are contained in user's blogline.
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/reblog_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb).
 
 ### Comment features
 
@@ -204,8 +202,7 @@ commentline results. For example:
 [favoriteline](https://github.com/salkar/inkwell#favorite-features).
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/comments_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb).
 
 ### Follow features
 
@@ -236,8 +233,7 @@ To get followers ids for user and ids of users, which he follow:
 Both methods return arrays of ids.
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/following_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb).
 
 ### Blogline feature
 
@@ -250,8 +246,7 @@ where parameters are similar with described
 parameters.
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/blogline_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/blogline_spec.rb).
 
 ### Timeline feature
 
@@ -265,8 +260,7 @@ where parameters are similar with described
 parameters.
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functiona
-l/timeline_spec.rb).
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb).
 
 ### Community feature
 
@@ -422,8 +416,7 @@ where parameters are similar with described
 parameters.
 
 More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_commu
-nity/base.rb)
+[spec](https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb)
 
 ## License
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
