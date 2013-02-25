@@ -410,8 +410,9 @@ To check that user is banned:
 
     @community.include_banned_user? @user
     
-Community's users can have different levels of access to community - some of them can send post to it, other can not.
+Community's users can have different types of access to community - some of them can send post to it, other can not.
 This applies to both types of community - private and public. By default all new users can send posts to the community (except for the muted users).
+*Notice: do not forget to check the admin rights for operations with Write/Read community access*
 
 To set default access for new users to read (does not affect users who are already in the community):
 
