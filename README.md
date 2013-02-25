@@ -293,15 +293,15 @@ blogline.
 
 To send invitation request to the private community:
 
-    @private_community.create_invitation_request @user
+    @user.request_invitation @private_community
     
 To accept invitation request: 
 
-    @private_community.accept_invitation_request :user => @user, :admin => @admin
+    @admin.approve_invitation_request :user => @user, :community => @private_community
     
 To reject invitation request:
 
-    @private_community.reject_invitation_request :user => @user, :admin => @admin
+    @admin.reject_invitation_request :user => @user, :community => @private_community
     
 To prevent invitation requests spam you are able to ban spamming users.
 
@@ -374,6 +374,10 @@ To get communities ids in which there is this post:
 To get ids of community members:
 
     @community.users_row
+    
+To get ids of community administrators:
+
+    @community.admins_row
 
 To get ids of communities to which the user has joined:
 
@@ -405,8 +409,32 @@ To unban user:
 To check that user is banned:
 
     @community.include_banned_user? @user
+    
+Community's users can have different levels of access to community - some of them can send post to it, other can not.
+This applies to both types of community - private and public. By default all new users can send posts to the community (except for the muted users).
+
+To set default access for new users to read (does not affect users who are already in the community):
+
+    @community.change_default_access_to_read
+    
+To set default access for new users to write (does not affect users who are already in the community):
+
+    @community.change_default_access_to_write
+    
+To set write access for users who are already in the community:
+
+    @community.set_write_access [@user.id, @another_user.id]
+    
+To set read access for users who are already in the community:
+
+    @community.set_read_access [@user.id, @another_user.id]
+    
+To get ids of users with write access (result could include muted users ids):
+
+    @community.writers_row
 
 Community blogline is consists of the posts of members that have added to it.
+
 To get it:
 
     @community.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
