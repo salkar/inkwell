@@ -383,6 +383,19 @@ module Inkwell
         ActiveSupport::JSON.decode self.users_ids
       end
 
+      def writers_row
+        ActiveSupport::JSON.decode self.writers_ids
+      end
+
+      def admins_row
+        admins_info = ActiveSupport::JSON.decode self.admins_info
+        result = []
+        admins_info.each do |rec|
+          result << rec['admin_id']
+        end
+        result
+      end
+
       def create_invitation_request(user)
         raise "invitation request was already created" if self.include_invitation_request? user
         raise "it is impossible to create request. user is banned in this community" if self.include_banned_user? user
@@ -427,7 +440,77 @@ module Inkwell
         (invitations_uids.index{|uid| uid == user.id}) ? true : false
       end
 
+      def change_default_access_to_write
+        unless self.default_user_access == CommunityAccessLevels::WRITE
+          self.default_user_access = CommunityAccessLevels::WRITE
+          self.save
+        end
+      end
 
+      def change_default_access_to_read
+        unless self.default_user_access == CommunityAccessLevels::READ
+          self.default_user_access = CommunityAccessLevels::READ
+          self.save
+        end
+      end
+
+      def set_write_access(uids)
+        raise "array with users ids should be passed" unless uids.class == Array
+        users_ids = self.users_row
+        matching_ids = users_ids & uids
+        unless matching_ids.size == uids.size
+          mismatched_ids = uids - matching_ids
+          raise "there is no users with ids #{mismatched_ids} in the community"
+        end
+
+        current_writers_ids = ActiveSupport::JSON.decode self.writers_ids
+        already_added_ids = current_writers_ids & uids
+        uids -= already_added_ids
+
+        current_writers_ids += uids
+        self.writers_ids = ActiveSupport::JSON.encode current_writers_ids
+        self.save
+
+        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+        users = user_class.find uids
+        users.each do |user|
+          raise "user with id #{uid} does not exist" unless user
+          communities_info = ActiveSupport::JSON.decode user.communities_info
+          index = communities_info.index { |rec| rec[HashParams::COMMUNITY_ID] == self.id }
+          communities_info[index][HashParams::ACCESS_LEVEL] = CommunityAccessLevels::WRITE
+          user.communities_info = ActiveSupport::JSON.encode communities_info
+          user.save
+        end
+      end
+
+      def set_read_access(uids)
+        raise "array with users ids should be passed" unless uids.class == Array
+        users_ids = self.users_row
+        matching_ids = users_ids & uids
+        unless matching_ids.size == uids.size
+          mismatched_ids = uids - matching_ids
+          raise "there is no users with ids #{mismatched_ids} in the community"
+        end
+
+        matching_ids = self.admins_row & uids
+        raise "there is impossible to change access level to read for admins with ids #{matching_ids} in the community" unless matching_ids.empty?
+
+        current_writers_ids = ActiveSupport::JSON.decode self.writers_ids
+        current_writers_ids -= uids
+        self.writers_ids = ActiveSupport::JSON.encode current_writers_ids
+        self.save
+
+        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+        users = user_class.find uids
+        users.each do |user|
+          raise "user with id #{uid} does not exist" unless user
+          communities_info = ActiveSupport::JSON.decode user.communities_info
+          index = communities_info.index { |rec| rec[HashParams::COMMUNITY_ID] == self.id }
+          communities_info[index][HashParams::ACCESS_LEVEL] = CommunityAccessLevels::READ
+          user.communities_info = ActiveSupport::JSON.encode communities_info
+          user.save
+        end
+      end
 
       private
 

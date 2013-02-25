@@ -315,6 +315,24 @@ module Inkwell
         open_community.add_user :user => self
       end
 
+      def request_invitation(community)
+        community.create_invitation_request(self)
+      end
+
+      def approve_invitation_request(options = {})
+        options.symbolize_keys!
+        community = options[:community]
+        user = options[:user]
+        community.accept_invitation_request :user => user, :admin => self
+      end
+
+      def reject_invitation_request(options = {})
+        options.symbolize_keys!
+        community = options[:community]
+        user = options[:user]
+        community.reject_invitation_request :user => user, :admin => self
+      end
+
       def leave(community)
         community.remove_user :user => self
       end

@@ -811,14 +811,14 @@ describe "Community" do
     expect { @public_community.include_invitation_request?(@salkar) }.to raise_error
   end
 
-  it "request invitation should be created" do
+  it "invitation request should be created" do
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
     @private_community.create_invitation_request @salkar
     @private_community.reload
     @private_community.invitations_uids.should == "[#{@salkar.id}]"
   end
 
-  it "request invitation should not be created" do
+  it "invitation request should not be created" do
     expect { @community_1.create_invitation_request(@salkar) }.to raise_error
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
     @private_community.banned_ids = "[#{@talisman.id}]"
@@ -1556,6 +1556,301 @@ describe "Community" do
     @public_community.reload
     @salkar.reload
     @public_community.include_writer?(@salkar).should == true
+  end
+
+  it "user should be able to request invitation to private community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @salkar.request_invitation @private_community
+    @private_community.reload
+    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+  end
+
+  it "admin should be able to accept invitation request" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @morozovm.approve_invitation_request :user => @salkar, :community => @private_community
+    @salkar.reload
+    @private_community.reload
+    @private_community.include_user?(@salkar).should == true
+    @private_community.users_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @private_community.writers_ids.should == "[#{@morozovm.id},#{@salkar.id}]"
+    @salkar.communities_row.should == [@private_community.id]
+  end
+
+  it "admin should be able to reject invitation request" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.create_invitation_request(@salkar)
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == true
+    @morozovm.reject_invitation_request :user => @salkar, :community => @private_community
+    @private_community.reload
+    @private_community.include_invitation_request?(@salkar).should == false
+  end
+
+  it "default user access should changed to write" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.reload
+    @public_community.default_user_access.should == 'r'
+    @public_community.change_default_access_to_write
+    @public_community.reload
+    @public_community.default_user_access.should == 'w'
+  end
+
+  it "default user access should changed to read" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.default_user_access.should == 'w'
+    @public_community.change_default_access_to_read
+    @public_community.reload
+    @public_community.default_user_access.should == 'r'
+  end
+
+  it "write access should be granted in the public community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_write_access [@salkar.id, @talisman.id]
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    writers_ids = ActiveSupport::JSON.decode(@public_community.writers_ids)
+    writers_ids.include?(@salkar.id).should == true
+    writers_ids.include?(@talisman.id).should == true
+    writers_ids.include?(@spy.id).should == false
+    @public_community.include_writer?(@salkar).should == true
+    @public_community.include_writer?(@talisman).should == true
+    @public_community.include_writer?(@spy).should == false
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id"=>@public_community.id, "a"=>"w"}
+    communities_info = ActiveSupport::JSON.decode @talisman.communities_info
+    communities_info.size.should == 2
+    communities_info[1].should == {"c_id" => @public_community.id, "a" => "w"}
+    communities_info = ActiveSupport::JSON.decode @spy.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @public_community.id, "a" => "r"}
+  end
+
+  it "write access should be granted in the private community" do
+    @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
+    @private_community.default_user_access = 'r'
+    @private_community.save
+
+    @private_community.add_user :user => @salkar    #only for test
+    @private_community.add_user :user => @talisman    #only for test
+    @private_community.add_user :user => @spy    #only for test
+
+    @private_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @private_community.set_write_access [@salkar.id, @talisman.id]
+
+    @private_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    writers_ids = ActiveSupport::JSON.decode(@private_community.writers_ids)
+    writers_ids.include?(@salkar.id).should == true
+    writers_ids.include?(@talisman.id).should == true
+    writers_ids.include?(@spy.id).should == false
+    @private_community.include_writer?(@salkar).should == true
+    @private_community.include_writer?(@talisman).should == true
+    @private_community.include_writer?(@spy).should == false
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @private_community.id, "a" => "w"}
+    communities_info = ActiveSupport::JSON.decode @talisman.communities_info
+    communities_info.size.should == 2
+    communities_info[1].should == {"c_id" => @private_community.id, "a" => "w"}
+    communities_info = ActiveSupport::JSON.decode @spy.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @private_community.id, "a" => "r"}
+  end
+
+  it "error should not raised when W access granted to user with W access" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_write_access @public_community.users_row
+    writers_ids = ActiveSupport::JSON.decode(@public_community.writers_ids)
+    writers_ids.should == [@morozovm.id, @salkar.id, @talisman.id, @spy.id]
+  end
+
+  it "passed empty array should not lead to error" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.set_write_access []
+    @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
+    @private_community.set_write_access []
+  end
+
+  it "write access should not be granted" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    expect {@public_community.set_write_access [@salkar.id, @talisman.id]}.to raise_error
+    expect {@public_community.set_write_access [@talisman.id]}.to raise_error
+    expect {@public_community.set_write_access @talisman}.to raise_error
+    expect {@public_community.set_write_access [-1]}.to raise_error
+  end
+
+  it "read access should be set in the public community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_read_access [@salkar.id, @talisman.id]
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    writers_ids = ActiveSupport::JSON.decode(@public_community.writers_ids)
+    writers_ids.include?(@salkar.id).should == false
+    writers_ids.include?(@talisman.id).should == false
+    writers_ids.include?(@spy.id).should == true
+    @public_community.include_writer?(@salkar).should == false
+    @public_community.include_writer?(@talisman).should == false
+    @public_community.include_writer?(@spy).should == true
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @public_community.id, "a" => "r"}
+    communities_info = ActiveSupport::JSON.decode @talisman.communities_info
+    communities_info.size.should == 2
+    communities_info[1].should == {"c_id" => @public_community.id, "a" => "r"}
+    communities_info = ActiveSupport::JSON.decode @spy.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @public_community.id, "a" => "w"}
+  end
+
+  it "read access should be set in the private community" do
+    @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
+
+    @private_community.add_user :user => @salkar #only for test
+    @private_community.add_user :user => @talisman #only for test
+    @private_community.add_user :user => @spy #only for test
+
+    @private_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @private_community.set_read_access [@salkar.id, @talisman.id]
+
+    @private_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    writers_ids = ActiveSupport::JSON.decode(@private_community.writers_ids)
+    writers_ids.include?(@salkar.id).should == false
+    writers_ids.include?(@talisman.id).should == false
+    writers_ids.include?(@spy.id).should == true
+    @private_community.include_writer?(@salkar).should == false
+    @private_community.include_writer?(@talisman).should == false
+    @private_community.include_writer?(@spy).should == true
+    communities_info = ActiveSupport::JSON.decode @salkar.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @private_community.id, "a" => "r"}
+    communities_info = ActiveSupport::JSON.decode @talisman.communities_info
+    communities_info.size.should == 2
+    communities_info[1].should == {"c_id" => @private_community.id, "a" => "r"}
+    communities_info = ActiveSupport::JSON.decode @spy.communities_info
+    communities_info.size.should == 1
+    communities_info[0].should == {"c_id" => @private_community.id, "a" => "w"}
+  end
+
+  it "error should not raised when R access set to user with R access" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_read_access (@public_community.users_row - [@morozovm.id])
+    writers_ids = ActiveSupport::JSON.decode(@public_community.writers_ids)
+    writers_ids.should == [@morozovm.id]
+  end
+
+  it "passed empty array should not lead to error" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.set_read_access []
+    @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
+    @private_community.set_read_access []
+  end
+
+  it "write access should not be granted" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    expect { @public_community.set_read_access [@salkar.id, @talisman.id] }.to raise_error
+    expect { @public_community.set_read_access [@talisman.id] }.to raise_error
+    expect { @public_community.set_read_access @talisman }.to raise_error
+    expect { @public_community.set_read_access [-1] }.to raise_error
+
+    expect { @public_community.set_read_access [@morozovm.id] }.to raise_error
+  end
+
+  it "admins ids should be returned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @spy.join @public_community
+    @spy.reload
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+    @talisman.reload
+    @public_community.add_admin :user => @talisman, :admin => @morozovm
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.admins_row.should == [@morozovm.id, @talisman.id, @salkar.id]
+  end
+
+  it "writers ids should be returned" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @spy.join @public_community
+    @spy.reload
+    @salkar.reload
+    @public_community.reload
+    @morozovm.reload
+    @talisman.reload
+    @public_community.writers_row.should == [@morozovm.id, @talisman.id, @salkar.id, @spy.id]
   end
 
 end
