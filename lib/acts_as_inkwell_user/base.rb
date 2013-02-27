@@ -134,18 +134,16 @@ module Inkwell
       end
 
       def follow(user)
-        return if self.follow? user
-        raise "User tries to follow himself." if self == user
+        raise "user tries to follow already followed user" if self.follow? user
+        raise "user tries to follow himself." if self == user
 
-        followers = ActiveSupport::JSON.decode user.followers_ids
-        followers = followers << self.id
-        user.followers_ids = ActiveSupport::JSON.encode followers
-        user.save
+        ::Inkwell::Following.create :follower_id => self.id, :followed_id => user.id
 
-        followings = ActiveSupport::JSON.decode self.followings_ids
-        followings << user.id
-        self.followings_ids = ActiveSupport::JSON.encode followings
+        self.following_count += 1
         self.save
+
+        user.follower_count += 1
+        user.save
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
@@ -180,18 +178,16 @@ module Inkwell
       end
 
       def unfollow(user)
-        return unless self.follow? user
-        raise "User tries to unfollow himself." if self == user
+        raise "user tries to unfollow not followed user" unless self.follow? user
+        raise "user tries to unfollow himself." if self == user
 
-        followers = ActiveSupport::JSON.decode user.followers_ids
-        followers.delete self.id
-        user.followers_ids = ActiveSupport::JSON.encode followers
-        user.save
+        ::Inkwell::Following.delete_all :follower_id => self.id, :followed_id => user.id
 
-        followings = ActiveSupport::JSON.decode self.followings_ids
-        followings.delete user.id
-        self.followings_ids = ActiveSupport::JSON.encode followings
+        self.following_count -= 1
         self.save
+
+        user.follower_count -= 1
+        user.save
 
         timeline_items = ::Inkwell::TimelineItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"user_id\":#{user.id}%'"
         timeline_items.delete_all :has_many_sources => false
@@ -205,16 +201,25 @@ module Inkwell
       end
 
       def follow?(user)
-        followings = ActiveSupport::JSON.decode self.followings_ids
-        followings.include? user.id
+        ::Inkwell::Following.exists? :follower_id => self.id, :followed_id => user.id
       end
 
       def followers_row
-        ActiveSupport::JSON.decode self.followers_ids
+        records = ::Inkwell::Following.where :followed_id => self.id
+        result = []
+        records.each do |rec|
+          result << rec.follower_id
+        end
+        result
       end
 
       def followings_row
-        ActiveSupport::JSON.decode self.followings_ids
+        records = ::Inkwell::Following.where :follower_id => self.id
+        result = []
+        records.each do |rec|
+          result << rec.followed_id
+        end
+        result
       end
 
       def reblog(obj)

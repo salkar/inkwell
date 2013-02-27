@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130217135512) do
+ActiveRecord::Schema.define(:version => 20130227154519) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -61,6 +61,13 @@ ActiveRecord::Schema.define(:version => 20130217135512) do
     t.string   "owner_type"
   end
 
+  create_table "inkwell_followings", :force => true do |t|
+    t.integer  "follower_id"
+    t.integer  "followed_id"
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
+  end
+
   create_table "inkwell_timeline_items", :force => true do |t|
     t.integer  "item_id"
     t.integer  "owner_id"
@@ -88,9 +95,9 @@ ActiveRecord::Schema.define(:version => 20130217135512) do
     t.string   "nick"
     t.datetime "created_at",                         :null => false
     t.datetime "updated_at",                         :null => false
-    t.text     "followers_ids",    :default => "[]"
-    t.text     "followings_ids",   :default => "[]"
     t.text     "communities_info", :default => "[]"
+    t.integer  "follower_count",   :default => 0
+    t.integer  "following_count",  :default => 0
   end
 
 end

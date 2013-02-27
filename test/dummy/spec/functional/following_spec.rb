@@ -21,10 +21,15 @@ describe "Following" do
     @salkar.follow @morozovm
     @salkar.reload
     @morozovm.reload
-    @salkar.followings_ids.should == "[#{@morozovm.id}]"
+    @morozovm.followings_row.should == []
+    @morozovm.followers_row.should == [@salkar.id]
+    @morozovm.follower_count.should == 1
+    @morozovm.following_count.should == 0
+    @salkar.follower_count.should == 0
+    @salkar.following_count.should == 1
     @salkar.followings_row.should == [@morozovm.id]
-    @salkar.followers_ids.should == "[]"
     @salkar.followers_row.should == []
+    ::Inkwell::Following.exists?(:follower_id => @salkar.id, :followed_id => @morozovm.id).should == true
 
     ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 4
     ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).find_by_item_id_and_item_type(@morozovm_post.id, ::Inkwell::Constants::ItemTypes::POST).should be
@@ -38,10 +43,6 @@ describe "Following" do
     end
 
     ::Inkwell::TimelineItem.where(:owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 0
-    @morozovm.followers_ids.should == "[#{@salkar.id}]"
-    @morozovm.followers_row.should == [@salkar.id]
-    @morozovm.followings_ids.should == "[]"
-    @morozovm.followings_row.should == []
   end
 
   it "created_at from blog_item should transferred to timeline_item for follower when he follow this user" do
@@ -59,8 +60,12 @@ describe "Following" do
     @morozovm.reload
     @salkar.follow?(@morozovm).should be
     @morozovm.follow?(@salkar).should == false
+  end
+
+  it "user should not follow already followed user" do
     @salkar.follow @morozovm
-    @salkar.follow?(@morozovm).should be
+    @salkar.follow?(@morozovm).should == true
+    expect{@salkar.follow @morozovm}.to raise_error
   end
 
   it "user should not follow himself" do
@@ -75,6 +80,14 @@ describe "Following" do
     @salkar.reload
     ::Inkwell::TimelineItem.where(:owner_id => @salkar.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER).size.should == 0
 
+    @salkar.followings_row.should == []
+    @salkar.followers_row.should == []
+    @morozovm.followings_row.should == []
+    @morozovm.followers_row.should == []
+    @salkar.follower_count.should == 0
+    @salkar.following_count.should == 0
+    @morozovm.follower_count.should == 0
+    @morozovm.following_count.should == 0
   end
 
   it "reblog should added to followers timeline when follow" do
