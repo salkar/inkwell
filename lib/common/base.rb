@@ -34,9 +34,18 @@ module Inkwell
       post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
       raise "post should be a #{user_class.to_s}" unless obj.is_a? post_class
     end
+
+    def user_id_attr
+      "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+    end
+
+    def community_id_attr
+      "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+    end
   end
 
   module Constants
+
     module ItemTypes
       POST = 'p'
       COMMENT = 'c'
