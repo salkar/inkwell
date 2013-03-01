@@ -11,21 +11,21 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130227154519) do
+ActiveRecord::Schema.define(:version => 20130228115224) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
     t.datetime "created_at",                            :null => false
     t.datetime "updated_at",                            :null => false
-    t.text     "users_ids",           :default => "[]"
-    t.text     "admins_info",         :default => "[]"
     t.integer  "owner_id"
     t.string   "default_user_access", :default => "w"
-    t.text     "writers_ids",         :default => "[]"
     t.text     "banned_ids",          :default => "[]"
-    t.text     "muted_ids",           :default => "[]"
     t.text     "invitations_uids",    :default => "[]"
     t.boolean  "public",              :default => true
+    t.integer  "user_count",          :default => 0
+    t.integer  "writer_count",        :default => 0
+    t.integer  "admin_count",         :default => 0
+    t.integer  "muted_count",         :default => 0
   end
 
   create_table "inkwell_blog_items", :force => true do |t|
@@ -50,6 +50,17 @@ ActiveRecord::Schema.define(:version => 20130227154519) do
     t.datetime "created_at",                                  :null => false
     t.datetime "updated_at",                                  :null => false
     t.string   "topmost_obj_type"
+  end
+
+  create_table "inkwell_community_users", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "community_id"
+    t.string   "user_access",  :default => "r"
+    t.boolean  "is_admin",     :default => false
+    t.integer  "admin_level"
+    t.boolean  "muted",        :default => false
+    t.datetime "created_at",                      :null => false
+    t.datetime "updated_at",                      :null => false
   end
 
   create_table "inkwell_favorite_items", :force => true do |t|
@@ -93,11 +104,11 @@ ActiveRecord::Schema.define(:version => 20130227154519) do
 
   create_table "users", :force => true do |t|
     t.string   "nick"
-    t.datetime "created_at",                         :null => false
-    t.datetime "updated_at",                         :null => false
-    t.text     "communities_info", :default => "[]"
-    t.integer  "follower_count",   :default => 0
-    t.integer  "following_count",  :default => 0
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
+    t.integer  "follower_count",  :default => 0
+    t.integer  "following_count", :default => 0
+    t.integer  "community_count", :default => 0
   end
 
 end

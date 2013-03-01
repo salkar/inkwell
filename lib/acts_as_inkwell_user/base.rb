@@ -66,10 +66,13 @@ module Inkwell
       end
 
       def communities_row
-        communities_info = ActiveSupport::JSON.decode self.communities_info
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relations = ::Inkwell::CommunityUser.where user_id => self.id
         result = []
-        communities_info.each do |item|
-          result << item[HashParams::COMMUNITY_ID]
+        relations.each do |relation|
+          result << relation.send(community_id)
         end
         result
       end

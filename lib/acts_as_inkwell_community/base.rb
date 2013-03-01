@@ -30,25 +30,14 @@ module Inkwell
         raise "this user is already in this community" if self.include_user? user
         raise "this user is banned" if self.include_banned_user? user
 
-        users_ids = ActiveSupport::JSON.decode self.users_ids
-        users_ids << user.id
-        self.users_ids = ActiveSupport::JSON.encode users_ids
-        if (self.default_user_access == CommunityAccessLevels::WRITE) && !(self.include_muted_user? user)
-          writers_ids = ActiveSupport::JSON.decode self.writers_ids
-          writers_ids << user.id
-          self.writers_ids = ActiveSupport::JSON.encode writers_ids
-        end
-        self.save
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
 
-        communities_info = ActiveSupport::JSON.decode user.communities_info
-        communities_info << Hash[HashParams::COMMUNITY_ID => self.id, HashParams::ACCESS_LEVEL => self.default_user_access]
-        user.communities_info = ActiveSupport::JSON.encode communities_info
-        user.save
+        ::Inkwell::CommunityUser.create user_id => user.id, community_id => self.id, :user_access => self.default_user_access
 
         post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
-        user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
         ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(10).each do |blog_item|
-          next if post_class.find(blog_item.item_id).send(user_id_attr) == user.id
+          next if post_class.find(blog_item.item_id).send(user_id) == user.id
 
           item = ::Inkwell::TimelineItem.where(:item_id => blog_item.item_id, :item_type => blog_item.item_type, :owner_id => user.id, :owner_type => OwnerTypes::USER).first
           if item
@@ -76,24 +65,10 @@ module Inkwell
           raise "admin has no permissions to delete this user from community" if (self.admin_level_of(user) <= self.admin_level_of(admin)) && (user != admin)
         end
 
-        users_ids = ActiveSupport::JSON.decode self.users_ids
-        users_ids.delete user.id
-        self.users_ids = ActiveSupport::JSON.encode users_ids
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
 
-        writers_ids = ActiveSupport::JSON.decode self.writers_ids
-        writers_ids.delete user.id
-        self.writers_ids = ActiveSupport::JSON.encode writers_ids
-
-        admins_info = ActiveSupport::JSON.decode self.admins_info
-        admins_info.delete_if{|item| item['admin_id'] == user.id}
-        self.admins_info = ActiveSupport::JSON.encode admins_info
-
-        self.save
-
-        communities_info = ActiveSupport::JSON.decode user.communities_info
-        communities_info.delete_if {|item| item[HashParams::COMMUNITY_ID] == self.id}
-        user.communities_info = ActiveSupport::JSON.encode communities_info
-        user.save
+        ::Inkwell::CommunityUser.delete_all user_id => user.id, community_id => self.id
 
         timeline_items = ::Inkwell::TimelineItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"community_id\":#{self.id}%'"
         timeline_items.delete_all :has_many_sources => false
@@ -108,14 +83,18 @@ module Inkwell
 
       def include_writer?(user)
         check_user user
-        writers_ids = ActiveSupport::JSON.decode self.writers_ids
-        writers_ids.include? user.id
+
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.exists? user_id => user.id, community_id => self.id, :user_access => CommunityAccessLevels::WRITE
       end
 
       def include_user?(user)
         check_user user
-        communities_info = ActiveSupport::JSON.decode user.communities_info
-        (communities_info.index{|item| item[HashParams::COMMUNITY_ID] == self.id}) ? true : false
+
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.exists? user_id => user.id, community_id => self.id
       end
 
       def mute_user(options = {})
@@ -126,17 +105,19 @@ module Inkwell
         raise "admin should be passed in params" unless admin
         check_user user
         check_user admin
+
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        relation = ::Inkwell::CommunityUser.where(user_id => user.id, community_id => self.id).first
+
         raise "admin is not admin" unless self.include_admin? admin
-        raise "user should be a member of this community" unless self.include_user? user
-        raise "this user is already muted" if self.include_muted_user? user
+        raise "user should be a member of this community" unless relation
+        raise "this user is already muted" if relation.muted
         raise "it is impossible to mute yourself" if user == admin
-        raise "admin has no permissions to mute this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
+        raise "admin has no permissions to mute this user" if (relation.is_admin) && (admin_level_of(admin) >= relation.admin_level)
 
-
-        muted_ids = ActiveSupport::JSON.decode self.muted_ids
-        muted_ids << user.id
-        self.muted_ids = ActiveSupport::JSON.encode muted_ids
-        self.save
+        relation.muted = true
+        relation.save
       end
 
       def unmute_user(options = {})
@@ -147,21 +128,26 @@ module Inkwell
         raise "admin should be passed in params" unless admin
         check_user user
         check_user admin
-        raise "admin is not admin" unless self.include_admin? admin
-        raise "user should be a member of this community" unless self.include_user? user
-        raise "this user is not muted" unless self.include_muted_user? user
-        raise "admin has no permissions to unmute this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
 
-        muted_ids = ActiveSupport::JSON.decode self.muted_ids
-        muted_ids.delete user.id
-        self.muted_ids = ActiveSupport::JSON.encode muted_ids
-        self.save
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        relation = ::Inkwell::CommunityUser.where(user_id => user.id, community_id => self.id).first
+
+        raise "admin is not admin" unless self.include_admin? admin
+        raise "user should be a member of this community" unless relation
+        raise "this user is not muted" unless relation.muted
+        raise "admin has no permissions to unmute this user" if (relation.is_admin) && (admin_level_of(admin) >= relation.admin_level)
+
+        relation.muted = false
+        relation.save
       end
 
       def include_muted_user?(user)
         check_user user
-        muted_ids = ActiveSupport::JSON.decode self.muted_ids
-        muted_ids.include? user.id
+
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.exists? user_id => user.id, community_id => self.id, :muted => true
       end
 
       def ban_user(options = {})
@@ -222,24 +208,22 @@ module Inkwell
         raise "admin should be passed in params" unless admin
         check_user user
         check_user admin
-        raise "user is already admin" if self.include_admin? user
+
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relation = ::Inkwell::CommunityUser.where(user_id => user.id, community_id => self.id).first
+
+        raise "user should be in the community" unless relation
+        raise "user is already admin" if relation.is_admin
         raise "admin is not admin" unless self.include_admin? admin
-        raise "user should be a member of this community" unless self.include_user? user
+        raise "user should be a member of this community" unless relation
 
-        self.unmute_user :user => user, :admin => admin if self.include_muted_user? user
-
-        unless self.include_writer? user
-          writers_ids = ActiveSupport::JSON.decode self.writers_ids
-          writers_ids << user.id
-          self.writers_ids = ActiveSupport::JSON.encode writers_ids
-        end
-
-        admin_level_granted_for_user = admin_level_of(admin) + 1
-
-        admins_info = ActiveSupport::JSON.decode self.admins_info
-        admins_info << Hash['admin_id' => user.id, 'admin_level' => admin_level_granted_for_user]
-        self.admins_info = ActiveSupport::JSON.encode admins_info
-        self.save
+        relation.muted = false
+        relation.user_access = CommunityAccessLevels::WRITE
+        relation.admin_level = admin_level_of(admin) + 1
+        relation.is_admin = true
+        relation.save
       end
 
       def remove_admin(options = {})
@@ -253,24 +237,28 @@ module Inkwell
         raise "admin has no permissions to delete this user from admins" if (admin_level_of(admin) >= admin_level_of(user)) && (user != admin)
         raise "community owner can not be removed from admins" if admin_level_of(user) == 0
 
-        admins_info = ActiveSupport::JSON.decode self.admins_info
-        admins_info.delete_if{|rec| rec['admin_id'] == user.id}
-        self.admins_info = ActiveSupport::JSON.encode admins_info
-        self.save
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        ::Inkwell::CommunityUser.where(user_id => user.id, community_id => self.id).update_all :is_admin => false, :admin_level => nil
       end
 
       def admin_level_of(admin)
-        admin_positions = ActiveSupport::JSON.decode self.admins_info
-        index = admin_positions.index{|item| item['admin_id'] == admin.id}
-        raise "admin is not admin" unless index
-        admin_positions[index]['admin_level']
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relation = ::Inkwell::CommunityUser.where(user_id => admin.id, community_id => self.id).first
+        raise "this user is not community member" unless relation
+        raise "admin is not admin" unless relation.is_admin
+        relation.admin_level
       end
 
       def include_admin?(user)
         check_user user
 
-        admin_positions = ActiveSupport::JSON.decode self.admins_info
-        (admin_positions.index{|item| item['admin_id'] == user.id}) ? true : false
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.exists? user_id => user.id, community_id => self.id, :is_admin => true
       end
 
       def add_post(options = {})
@@ -380,18 +368,37 @@ module Inkwell
       end
 
       def users_row
-        ActiveSupport::JSON.decode self.users_ids
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relations = ::Inkwell::CommunityUser.where community_id => self.id
+        result = []
+        relations.each do |rel|
+          result << rel.send(user_id)
+        end
+        result
       end
 
       def writers_row
-        ActiveSupport::JSON.decode self.writers_ids
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relations = ::Inkwell::CommunityUser.where community_id => self.id, :user_access => CommunityAccessLevels::WRITE
+        result = []
+        relations.each do |rel|
+          result << rel.send(user_id)
+        end
+        result
       end
 
       def admins_row
-        admins_info = ActiveSupport::JSON.decode self.admins_info
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+
+        relations = ::Inkwell::CommunityUser.where community_id => self.id, :is_admin => true
         result = []
-        admins_info.each do |rec|
-          result << rec['admin_id']
+        relations.each do |rel|
+          result << rel.send(user_id)
         end
         result
       end
@@ -456,60 +463,24 @@ module Inkwell
 
       def set_write_access(uids)
         raise "array with users ids should be passed" unless uids.class == Array
-        users_ids = self.users_row
-        matching_ids = users_ids & uids
-        unless matching_ids.size == uids.size
-          mismatched_ids = uids - matching_ids
-          raise "there is no users with ids #{mismatched_ids} in the community"
-        end
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        relations = ::Inkwell::CommunityUser.where user_id => uids, community_id => self.id
+        raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
 
-        current_writers_ids = ActiveSupport::JSON.decode self.writers_ids
-        already_added_ids = current_writers_ids & uids
-        uids -= already_added_ids
-
-        current_writers_ids += uids
-        self.writers_ids = ActiveSupport::JSON.encode current_writers_ids
-        self.save
-
-        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-        users = user_class.find uids
-        users.each do |user|
-          raise "user with id #{uid} does not exist" unless user
-          communities_info = ActiveSupport::JSON.decode user.communities_info
-          index = communities_info.index { |rec| rec[HashParams::COMMUNITY_ID] == self.id }
-          communities_info[index][HashParams::ACCESS_LEVEL] = CommunityAccessLevels::WRITE
-          user.communities_info = ActiveSupport::JSON.encode communities_info
-          user.save
-        end
+        relations.update_all :user_access => CommunityAccessLevels::WRITE
       end
 
       def set_read_access(uids)
         raise "array with users ids should be passed" unless uids.class == Array
-        users_ids = self.users_row
-        matching_ids = users_ids & uids
-        unless matching_ids.size == uids.size
-          mismatched_ids = uids - matching_ids
-          raise "there is no users with ids #{mismatched_ids} in the community"
-        end
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        relations = ::Inkwell::CommunityUser.where user_id => uids, community_id => self.id
+        raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
+        admin_relations = relations.where :is_admin => true
+        raise "there is impossible to change access level to read for admins in the community" unless admin_relations.size == 0
 
-        matching_ids = self.admins_row & uids
-        raise "there is impossible to change access level to read for admins with ids #{matching_ids} in the community" unless matching_ids.empty?
-
-        current_writers_ids = ActiveSupport::JSON.decode self.writers_ids
-        current_writers_ids -= uids
-        self.writers_ids = ActiveSupport::JSON.encode current_writers_ids
-        self.save
-
-        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-        users = user_class.find uids
-        users.each do |user|
-          raise "user with id #{uid} does not exist" unless user
-          communities_info = ActiveSupport::JSON.decode user.communities_info
-          index = communities_info.index { |rec| rec[HashParams::COMMUNITY_ID] == self.id }
-          communities_info[index][HashParams::ACCESS_LEVEL] = CommunityAccessLevels::READ
-          user.communities_info = ActiveSupport::JSON.encode communities_info
-          user.save
-        end
+        relations.update_all :user_access => CommunityAccessLevels::READ
       end
 
       private
@@ -522,31 +493,15 @@ module Inkwell
       end
 
       def processing_a_community
-        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-        owner = user_class.find self.owner_id
-
-        communities_info = ActiveSupport::JSON.decode owner.communities_info
-        communities_info << Hash[HashParams::COMMUNITY_ID => self.id, HashParams::ACCESS_LEVEL => self.default_user_access]
-        owner.communities_info = ActiveSupport::JSON.encode communities_info
-        owner.save
-
-        admins_info = [Hash['admin_id' => owner.id, 'admin_level' => 0]]
-        self.admins_info = ActiveSupport::JSON.encode admins_info
-        self.users_ids = ActiveSupport::JSON.encode [owner.id]
-        self.writers_ids = ActiveSupport::JSON.encode [owner.id]
-        self.save
+        user_id = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.create user_id => self.owner_id, community_id => self.id, :is_admin => true, :admin_level => 0,
+                                        :user_access => CommunityAccessLevels::WRITE
       end
 
       def destroy_community_processing
-        user_class = Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-        users_ids = ActiveSupport::JSON.decode self.users_ids
-        users_ids.each do |user_id|
-          user = user_class.find user_id
-          communities_info = ActiveSupport::JSON.decode user.communities_info
-          communities_info.delete_if {|item| item[HashParams::COMMUNITY_ID] == self.id}
-          user.communities_info = ActiveSupport::JSON.encode communities_info
-          user.save
-        end
+        community_id = "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+        ::Inkwell::CommunityUser.delete_all community_id => self.id
 
         timeline_items = ::Inkwell::TimelineItem.where "from_source like '%{\"community_id\":#{self.id}%'"
         timeline_items.delete_all :has_many_sources => false
