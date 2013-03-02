@@ -39,8 +39,16 @@ module Inkwell
       "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
     end
 
+    def user_class
+      Object.const_get ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+    end
+
     def community_id_attr
       "#{::Inkwell::Engine::config.community_table.to_s.singularize}_id"
+    end
+
+    def community_class
+      Object.const_get ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize
     end
   end
 

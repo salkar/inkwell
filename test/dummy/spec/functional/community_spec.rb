@@ -1758,4 +1758,26 @@ describe "Community" do
     @public_community.writers_row.should == [@morozovm.id, @talisman.id, @salkar.id, @spy.id]
   end
 
+  it "communities should be returned for their member" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    communities = @talisman.communities
+    communities.include?(@community_1).should == true
+    communities.include?(@public_community).should == true
+    communities.size.should == 2
+  end
+
+  it "communities should be returned for their member" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @spy.join @public_community
+    users = @public_community.users
+    users.include?(@morozovm).should == true
+    users.include?(@talisman).should == true
+    users.include?(@salkar).should == true
+    users.include?(@spy).should == true
+    users.size.should == 4
+  end
+
 end
