@@ -14,10 +14,6 @@ module Inkwell
 
         after_create :processing_a_community
         before_destroy :destroy_community_processing
-
-        has_many :communities_users, :class_name => 'Inkwell::CommunityUser'
-        has_many ::Inkwell::Engine::config.user_table, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
-
         include ::Inkwell::ActsAsInkwellCommunity::InstanceMethods
       end
     end

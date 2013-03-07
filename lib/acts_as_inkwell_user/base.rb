@@ -11,9 +11,6 @@ module Inkwell
     module Config
       def acts_as_inkwell_user
         has_many :comments, :class_name => 'Inkwell::Comment'
-        has_many :communities_users, :class_name => 'Inkwell::CommunityUser'
-        has_many ::Inkwell::Engine::config.community_table, :through => :communities_users, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize
-
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
       end
     end
