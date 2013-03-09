@@ -11,6 +11,8 @@ module Inkwell
     module Config
       def acts_as_inkwell_user
         has_many :comments, :class_name => 'Inkwell::Comment'
+
+        before_destroy :destroy_processing
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
       end
     end
@@ -406,14 +408,31 @@ module Inkwell
         options.symbolize_keys!
         to_user = options[:to_user]
         in_community = options[:in_community]
-        in_community.add_admin(:user => to_user, :admin => self)
+        in_community.add_admin :user => to_user, :admin => self
       end
 
       def revoke_admin_permissions(options = {})
         options.symbolize_keys!
         user = options[:user]
         in_community = options[:in_community]
-        in_community.remove_admin(:user => user, :admin => self)
+        in_community.remove_admin :user => user, :admin => self
+      end
+
+      def destroy_processing
+        communities_relations = ::Inkwell::CommunityUser.where user_id_attr => self.id
+        communities_relations.each do |relation|
+          community = community_class.find relation.send(community_id_attr)
+          if relation.user_access == CommunityAccessLevels::WRITE
+            community.writer_count -= 1
+          else
+            community.reader_count -= 1
+          end
+          community.user_count -= 1
+          community.save
+        end
+
+        #TODO if user is community owner
+        ::Inkwell::CommunityUser.delete_all user_id_attr => self.id
       end
 
     end

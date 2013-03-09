@@ -1607,7 +1607,7 @@ describe "Community" do
     @private_community.include_writer?(@spy).should == false
   end
 
-  it "error should not raised when W access granted to user with W access" do
+  it "error should raised when W access granted to user with W access" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
     @salkar.join @public_community
     @talisman.join @public_community
@@ -1618,7 +1618,7 @@ describe "Community" do
     @talisman.reload
     @spy.reload
 
-    @public_community.set_write_access @public_community.users_row
+    expect {@public_community.set_write_access @public_community.users_row}.to raise_error
     (@public_community.writers_row & [@morozovm.id, @salkar.id, @talisman.id, @spy.id]).size.should == 4
   end
 
@@ -1631,7 +1631,6 @@ describe "Community" do
 
   it "write access should not be granted" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
-    expect {@public_community.set_write_access [@salkar.id, @talisman.id]}.to raise_error
     expect {@public_community.set_write_access [@talisman.id]}.to raise_error
     expect {@public_community.set_write_access @talisman}.to raise_error
     expect {@public_community.set_write_access [-1]}.to raise_error
@@ -1695,7 +1694,7 @@ describe "Community" do
     @private_community.include_writer?(@spy).should == true
   end
 
-  it "error should not raised when R access set to user with R access" do
+  it "error shouldraised when R access set to user with R access" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
     @public_community.default_user_access = 'r'
     @public_community.save
@@ -1708,7 +1707,7 @@ describe "Community" do
     @talisman.reload
     @spy.reload
 
-    @public_community.set_read_access (@public_community.users_row - [@morozovm.id])
+    expect { @public_community.set_read_access (@public_community.users_row - [@morozovm.id]) }.to raise_error
     @public_community.writers_row.should == [@morozovm.id]
   end
 
@@ -1756,6 +1755,139 @@ describe "Community" do
     @morozovm.reload
     @talisman.reload
     @public_community.writers_row.should == [@morozovm.id, @talisman.id, @salkar.id, @spy.id]
+  end
+
+  it "counters should be incremented when user enters into the community" do
+    @community_1.reload
+    @community_1.add_user :admin => @talisman, :user => @salkar
+    @community_1.reload
+    @community_1.user_count.should == 2
+    @salkar.reload
+    @salkar.community_count.should == 1
+    @talisman.reload
+    @talisman.community_count.should == 1
+  end
+
+  it "counters should be incremented for community owner when he creates community" do
+    @community_1.reload
+    @community_1.user_count.should == 1
+    @talisman.community_count.should == 1
+  end
+
+  it "counters should be decremented when user leaves community" do
+    @community_1.reload
+    @community_1.add_user :admin => @talisman, :user => @salkar
+    @community_1.reload
+    @salkar.reload
+    @community_1.user_count.should == 2
+    @community_1.remove_user :admin => @talisman, :user => @salkar
+    @community_1.reload
+    @community_1.user_count.should == 1
+    @salkar.reload
+    @salkar.community_count.should == 0
+    @talisman.reload
+    @talisman.community_count.should == 1
+  end
+
+  it "counters should be decremented when community has been destroyed" do
+    @community_1.add_user :admin => @talisman, :user => @salkar
+    @community_1.destroy
+    @salkar.reload
+    @salkar.community_count.should == 0
+    @talisman.reload
+    @talisman.community_count.should == 0
+  end
+
+  it "writer counter should be incremented when user enters to community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.writer_count.should == 2
+  end
+
+  it "writer counter should not be incremented when user enters to community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.writer_count.should == 1
+  end
+
+  it "writer counter should be incremented for community owner" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.writer_count.should == 1
+  end
+
+  it "writer counter should be decremented when user is removed" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.remove_user :user => @salkar
+    @public_community.reload
+    @public_community.writer_count.should == 1
+  end
+
+  it "writer counter should be decremented when user is removed" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.add_user :user => @salkar
+    @public_community.remove_user :user => @salkar
+    @public_community.reload
+    @public_community.writer_count.should == 1
+  end
+
+  it "writer count should be incremented when admin gives W access to user" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.reload
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.set_write_access [@salkar.id]
+    @public_community.reload
+    @public_community.writer_count.should == 2
+  end
+
+  it "writer and user counters should be decremeted when user destroy his accaunt" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @salkar.reload
+    @salkar.destroy
+    @public_community.reload
+    @public_community.user_count.should == 1
+    @public_community.writer_count.should == 1
+  end
+
+  it "writer count should be decremented when admin set R access for user" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.set_read_access [@salkar.id]
+    @public_community.reload
+    @public_community.writer_count.should == 1
+  end
+
+  it "reader count should be returned for community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.reader_count.should == 0
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.reader_count.should == 0
+    @public_community.set_read_access [@salkar.id]
+    @public_community.reload
+    @public_community.reader_count.should == 1
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.add_user :user => @talisman
+    @public_community.reload
+    @public_community.reader_count.should == 2
   end
 
 end

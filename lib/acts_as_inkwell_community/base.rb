@@ -29,9 +29,14 @@ module Inkwell
         raise "this user is already in this community" if self.include_user? user
         raise "this user is banned" if self.include_banned_user? user
 
-        ::Inkwell::CommunityUser.create user_id_attr => user.id, community_id_attr => self.id, :user_access => self.default_user_access
+        record = ::Inkwell::CommunityUser.create user_id_attr => user.id, community_id_attr => self.id, :user_access => self.default_user_access
 
-        post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
+        self.user_count += 1
+        self.writer_count += 1 if record.user_access == CommunityAccessLevels::WRITE
+        self.save
+        user.community_count += 1
+        user.save
+
         ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(10).each do |blog_item|
           next if post_class.find(blog_item.item_id).send(user_id_attr) == user.id
 
@@ -61,7 +66,14 @@ module Inkwell
           raise "admin has no permissions to delete this user from community" if (self.admin_level_of(user) <= self.admin_level_of(admin)) && (user != admin)
         end
 
-        ::Inkwell::CommunityUser.delete_all user_id_attr => user.id, community_id_attr => self.id
+        records = ::Inkwell::CommunityUser.where user_id_attr => user.id, community_id_attr => self.id
+
+        self.user_count -= 1
+        self.writer_count -= 1 if records.first.user_access == CommunityAccessLevels::WRITE
+        self.save
+        user.community_count -= 1
+        user.save
+        records.destroy_all
 
         timeline_items = ::Inkwell::TimelineItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"community_id\":#{self.id}%'"
         timeline_items.delete_all :has_many_sources => false
@@ -422,20 +434,28 @@ module Inkwell
 
       def set_write_access(uids)
         raise "array with users ids should be passed" unless uids.class == Array
-        relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id
+        relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id, :user_access => CommunityAccessLevels::READ, :is_admin => false
         raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
+
+        self.writer_count += relations.size
+        self.save
 
         relations.update_all :user_access => CommunityAccessLevels::WRITE
       end
 
       def set_read_access(uids)
         raise "array with users ids should be passed" unless uids.class == Array
-        relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id
+        relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id, :user_access => CommunityAccessLevels::WRITE, :is_admin => false
         raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
-        admin_relations = relations.where :is_admin => true
-        raise "there is impossible to change access level to read for admins in the community" unless admin_relations.size == 0
+
+        self.writer_count -= relations.size
+        self.save
 
         relations.update_all :user_access => CommunityAccessLevels::READ
+      end
+
+      def reader_count
+        self.user_count - self.writer_count
       end
 
       private
@@ -450,9 +470,22 @@ module Inkwell
       def processing_a_community
         ::Inkwell::CommunityUser.create user_id_attr => self.owner_id, community_id_attr => self.id, :is_admin => true, :admin_level => 0,
                                         :user_access => CommunityAccessLevels::WRITE
+        self.user_count += 1
+        self.writer_count += 1
+        self.save
+        owner = user_class.find self.owner_id
+        owner.community_count += 1
+        owner.save
       end
 
       def destroy_community_processing
+        users_ids = self.users_row
+        users_ids.each do |uid|
+          user = user_class.find uid
+          user.community_count -= 1
+          user.save
+        end
+
         ::Inkwell::CommunityUser.delete_all community_id_attr => self.id
 
         timeline_items = ::Inkwell::TimelineItem.where "from_source like '%{\"community_id\":#{self.id}%'"
