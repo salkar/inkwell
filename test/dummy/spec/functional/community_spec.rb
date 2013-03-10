@@ -1890,4 +1890,10 @@ describe "Community" do
     @public_community.reader_count.should == 2
   end
 
+  it "community should not be created if owner id is nonexistent" do
+    c_size = Community.all.size
+    expect {@public_community = Community.create :name => "community", :owner_id => -1}.to raise_error
+    Community.all.size.should == c_size
+  end
+
 end

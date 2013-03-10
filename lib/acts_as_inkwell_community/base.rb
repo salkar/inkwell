@@ -468,14 +468,15 @@ module Inkwell
       end
 
       def processing_a_community
+        owner = user_class.find self.owner_id
+        owner.community_count += 1
+        owner.save
+
         ::Inkwell::CommunityUser.create user_id_attr => self.owner_id, community_id_attr => self.id, :is_admin => true, :admin_level => 0,
                                         :user_access => CommunityAccessLevels::WRITE
         self.user_count += 1
         self.writer_count += 1
         self.save
-        owner = user_class.find self.owner_id
-        owner.community_count += 1
-        owner.save
       end
 
       def destroy_community_processing
