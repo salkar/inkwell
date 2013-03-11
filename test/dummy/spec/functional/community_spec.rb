@@ -11,6 +11,7 @@ describe "Community" do
     @salkar.reload
     @talisman.reload
     @morozovm.reload
+    @community_1.reload
   end
 
   it "user should been added to community" do
@@ -1894,6 +1895,101 @@ describe "Community" do
     c_size = Community.all.size
     expect {@public_community = Community.create :name => "community", :owner_id => -1}.to raise_error
     Community.all.size.should == c_size
+  end
+
+  it "admin counter should be incremented when admin is added" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.add_user :user => @salkar
+    @public_community.reload
+    @public_community.admin_count.should == 1
+    @public_community.add_admin :user => @salkar, :admin => @morozovm
+    @public_community.reload
+    @public_community.admin_count.should == 2
+  end
+
+  it "admin counter should be 1 after community is created" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.reload
+    @public_community.admin_count.should == 1
+  end
+
+  it "admin counter should be decremented after admin is removed" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admin_count.should == 2
+    @community_1.remove_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admin_count.should == 1
+  end
+
+  it "admin counter should be decremeted when admin is removed from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admin_count.should == 2
+    @community_1.remove_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admin_count.should == 1
+  end
+
+  it "admin counter should be decremented when admin destroy his account" do
+    @community_1.add_user :user => @salkar
+    @community_1.add_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admin_count.should == 2
+    @salkar.destroy
+    @community_1.reload
+    @community_1.admin_count.should == 1
+  end
+
+  it "muted counter should be incremented when admin mutes user" do
+    @community_1.add_user :user => @salkar
+    @community_1.muted_count.should == 0
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 1
+  end
+
+  it "muted counter should be decreaded when admin status is getting by muted user" do
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 1
+    @community_1.add_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 0
+  end
+
+  it "muted counter should be decreased when admin unmutes user" do
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 1
+    @community_1.unmute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 0
+  end
+
+  it "muted counter should be decreased when muted user is removed from community" do
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 1
+    @community_1.remove_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 0
+  end
+
+  it "muted counter should be decreased when muted user destroys his accaunt" do
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_count.should == 1
+    @salkar.destroy
+    @community_1.reload
+    @community_1.muted_count.should == 0
   end
 
 end

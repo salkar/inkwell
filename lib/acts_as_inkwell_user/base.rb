@@ -427,6 +427,8 @@ module Inkwell
           else
             community.reader_count -= 1
           end
+          community.admin_count -= 1 if relation.is_admin
+          community.muted_count -= 1 if relation.muted
           community.user_count -= 1
           community.save
         end

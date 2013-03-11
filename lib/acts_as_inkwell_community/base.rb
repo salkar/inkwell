@@ -70,6 +70,9 @@ module Inkwell
 
         self.user_count -= 1
         self.writer_count -= 1 if records.first.user_access == CommunityAccessLevels::WRITE
+        self.admin_count -= 1 if records.first.is_admin
+        self.muted_count -= 1 if records.first.muted
+        #TODO fix discard muted status by rejoin community
         self.save
         user.community_count -= 1
         user.save
@@ -115,6 +118,9 @@ module Inkwell
 
         relation.muted = true
         relation.save
+
+        self.muted_count += 1
+        self.save
       end
 
       def unmute_user(options = {})
@@ -135,6 +141,9 @@ module Inkwell
 
         relation.muted = false
         relation.save
+
+        self.muted_count -= 1
+        self.save
       end
 
       def include_muted_user?(user)
@@ -208,11 +217,20 @@ module Inkwell
         raise "admin is not admin" unless self.include_admin? admin
         raise "user should be a member of this community" unless relation
 
-        relation.muted = false
-        relation.user_access = CommunityAccessLevels::WRITE
+        if relation.muted
+          relation.muted = false
+          self.muted_count -= 1
+        end
+        unless relation.user_access == CommunityAccessLevels::WRITE
+          relation.user_access = CommunityAccessLevels::WRITE
+          self.writer_count += 1
+        end
         relation.admin_level = admin_level_of(admin) + 1
         relation.is_admin = true
         relation.save
+
+        self.admin_count += 1
+        self.save
       end
 
       def remove_admin(options = {})
@@ -227,6 +245,9 @@ module Inkwell
         raise "community owner can not be removed from admins" if admin_level_of(user) == 0
 
         ::Inkwell::CommunityUser.where(user_id_attr => user.id, community_id_attr => self.id).update_all :is_admin => false, :admin_level => nil
+
+        self.admin_count -= 1
+        self.save
       end
 
       def admin_level_of(admin)
@@ -474,8 +495,10 @@ module Inkwell
 
         ::Inkwell::CommunityUser.create user_id_attr => self.owner_id, community_id_attr => self.id, :is_admin => true, :admin_level => 0,
                                         :user_access => CommunityAccessLevels::WRITE
+        #TODO change default counters in the table
         self.user_count += 1
         self.writer_count += 1
+        self.admin_count += 1
         self.save
       end
 
