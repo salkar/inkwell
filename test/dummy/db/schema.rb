@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130228115224) do
+ActiveRecord::Schema.define(:version => 20130312084529) do
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -19,13 +19,13 @@ ActiveRecord::Schema.define(:version => 20130228115224) do
     t.datetime "updated_at",                            :null => false
     t.integer  "owner_id"
     t.string   "default_user_access", :default => "w"
-    t.text     "banned_ids",          :default => "[]"
-    t.text     "invitations_uids",    :default => "[]"
     t.boolean  "public",              :default => true
-    t.integer  "user_count",          :default => 0
-    t.integer  "writer_count",        :default => 0
-    t.integer  "admin_count",         :default => 0
+    t.integer  "user_count",          :default => 1
+    t.integer  "writer_count",        :default => 1
+    t.integer  "admin_count",         :default => 1
     t.integer  "muted_count",         :default => 0
+    t.integer  "banned_count",        :default => 0
+    t.integer  "invitation_count",    :default => 0
   end
 
   create_table "inkwell_blog_items", :force => true do |t|
@@ -55,12 +55,15 @@ ActiveRecord::Schema.define(:version => 20130228115224) do
   create_table "inkwell_community_users", :force => true do |t|
     t.integer  "user_id"
     t.integer  "community_id"
-    t.string   "user_access",  :default => "r"
-    t.boolean  "is_admin",     :default => false
+    t.string   "user_access",      :default => "r"
+    t.boolean  "is_admin",         :default => false
     t.integer  "admin_level"
-    t.boolean  "muted",        :default => false
-    t.datetime "created_at",                      :null => false
-    t.datetime "updated_at",                      :null => false
+    t.boolean  "muted",            :default => false
+    t.datetime "created_at",                          :null => false
+    t.datetime "updated_at",                          :null => false
+    t.boolean  "active",           :default => false
+    t.boolean  "banned",           :default => false
+    t.boolean  "asked_invitation", :default => false
   end
 
   create_table "inkwell_favorite_items", :force => true do |t|

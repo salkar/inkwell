@@ -26,13 +26,25 @@ module Inkwell
       def add_user(options = {})
         options.symbolize_keys!
         user = options[:user]
-        raise "this user is already in this community" if self.include_user? user
-        raise "this user is banned" if self.include_banned_user? user
+        check_user user
 
-        record = ::Inkwell::CommunityUser.create user_id_attr => user.id, community_id_attr => self.id, :user_access => self.default_user_access
+        relation = ::Inkwell::CommunityUser.where(user_id_attr => user.id, community_id_attr => self.id).first
+
+        if relation
+          raise "this user is already in this community" if relation.active
+          raise "this user is banned" if relation.banned
+
+          relation.asked_invitation = false if relation.asked_invitation
+          relation.user_access = self.default_user_access
+          relation.active = true
+          relation.save
+        else
+          relation = ::Inkwell::CommunityUser.create user_id_attr => user.id, community_id_attr => self.id, :user_access => self.default_user_access, :active => true
+        end
+
 
         self.user_count += 1
-        self.writer_count += 1 if record.user_access == CommunityAccessLevels::WRITE
+        self.writer_count += 1 if relation.user_access == CommunityAccessLevels::WRITE
         self.save
         user.community_count += 1
         user.save
@@ -66,17 +78,22 @@ module Inkwell
           raise "admin has no permissions to delete this user from community" if (self.admin_level_of(user) <= self.admin_level_of(admin)) && (user != admin)
         end
 
-        records = ::Inkwell::CommunityUser.where user_id_attr => user.id, community_id_attr => self.id
+        relation = ::Inkwell::CommunityUser.where(user_id_attr => user.id, community_id_attr => self.id).first
 
         self.user_count -= 1
-        self.writer_count -= 1 if records.first.user_access == CommunityAccessLevels::WRITE
-        self.admin_count -= 1 if records.first.is_admin
-        self.muted_count -= 1 if records.first.muted
-        #TODO fix discard muted status by rejoin community
+        self.writer_count -= 1 if relation.user_access == CommunityAccessLevels::WRITE
+        self.admin_count -= 1 if relation.is_admin
+        self.muted_count -= 1 if relation.muted
         self.save
         user.community_count -= 1
         user.save
-        records.destroy_all
+
+        if relation.muted
+          relation.active = false
+          relation.save
+        else
+          relation.destroy
+        end
 
         timeline_items = ::Inkwell::TimelineItem.where(:owner_id => user.id, :owner_type => OwnerTypes::USER).where "from_source like '%{\"community_id\":#{self.id}%'"
         timeline_items.delete_all :has_many_sources => false
@@ -91,12 +108,12 @@ module Inkwell
 
       def include_writer?(user)
         check_user user
-        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :user_access => CommunityAccessLevels::WRITE
+        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :user_access => CommunityAccessLevels::WRITE, :active => true
       end
 
       def include_user?(user)
         check_user user
-        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id
+        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :active => true
       end
 
       def mute_user(options = {})
@@ -148,7 +165,7 @@ module Inkwell
 
       def include_muted_user?(user)
         check_user user
-        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :muted => true
+        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :muted => true, :active => true
       end
 
       def ban_user(options = {})
@@ -160,22 +177,23 @@ module Inkwell
         check_user user
         check_user admin
         raise "admin is not admin" unless self.include_admin? admin
-        if self.public
-          raise "user should be a member of public community" unless self.include_user?(user)
-        else
-          raise "user should be a member of private community or send invitation request to it" unless self.include_user?(user) || self.include_invitation_request?(user)
-        end
-        raise "this user is already banned" if self.include_banned_user? user
         raise "admin has no permissions to ban this user" if (self.include_admin? user) && (admin_level_of(admin) >= admin_level_of(user))
 
-        banned_ids = ActiveSupport::JSON.decode self.banned_ids
-        banned_ids << user.id
-        self.banned_ids = ActiveSupport::JSON.encode banned_ids
-        self.save
-        unless self.public
-          self.reject_invitation_request :admin => admin, :user => user if self.include_invitation_request? user
+        relation = ::Inkwell::CommunityUser.where(user_id_attr => user.id, community_id_attr => self.id).first
+        raise "user should be a member of community or send invitation request to it" unless relation
+        raise "this user is already banned" if relation.banned
+        relation.banned = true
+        relation.active = false
+        if relation.asked_invitation
+          relation.asked_invitation = false
+          self.invitation_count -= 1
+        else
+          self.user_count -= 1
         end
-        self.remove_user :admin => admin, :user => user
+        relation.save
+
+        self.banned_count += 1
+        self.save
       end
 
       def unban_user(options = {})
@@ -187,18 +205,20 @@ module Inkwell
         check_user user
         check_user admin
         raise "admin is not admin" unless self.include_admin? admin
-        raise "this user is not banned" unless self.include_banned_user? user
 
-        banned_ids = ActiveSupport::JSON.decode self.banned_ids
-        banned_ids.delete user.id
-        self.banned_ids = ActiveSupport::JSON.encode banned_ids
+        relation = ::Inkwell::CommunityUser.where(user_id_attr => user.id, community_id_attr => self.id).first
+        raise "this user is not banned" unless relation || relation.banned
+
+        relation.banned = false
+        relation.active = true unless relation.asked_invitation
+        relation.save
+
+        self.banned_count -= 1
         self.save
       end
 
       def include_banned_user?(user)
-        check_user user
-        banned_ids = ActiveSupport::JSON.decode self.banned_ids
-        banned_ids.include? user.id
+        ::Inkwell::CommunityUser.exists? :community_id => self.id, :user_id => user.id, :banned => true
       end
 
       def add_admin(options = {})
@@ -259,7 +279,7 @@ module Inkwell
 
       def include_admin?(user)
         check_user user
-        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :is_admin => true
+        ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :is_admin => true, :active => true
       end
 
       def add_post(options = {})
@@ -396,13 +416,20 @@ module Inkwell
       end
 
       def create_invitation_request(user)
-        raise "invitation request was already created" if self.include_invitation_request? user
-        raise "it is impossible to create request. user is banned in this community" if self.include_banned_user? user
+        check_user user
+
+        relation = ::Inkwell::CommunityUser.where(community_id_attr => self.id, user_id_attr => user.id).first
+        if relation
+          raise "invitation request was already created" if relation.asked_invitation
+          raise "it is impossible to create request. user is banned in this community" if relation.banned
+          raise "user is already community member" if relation.active
+          raise "there is relation for user who is not member of community and he is not banned and not asked invitation to it"
+        end
         raise "it is impossible to create request for public community" if self.public
 
-        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
-        invitations_uids << user.id
-        self.invitations_uids = ActiveSupport::JSON.encode invitations_uids
+        ::Inkwell::CommunityUser.create community_id_attr => self.id, user_id_attr => user.id, :asked_invitation => true, :active => false
+
+        self.invitation_count += 1
         self.save
       end
 
@@ -413,12 +440,15 @@ module Inkwell
         check_user user
         check_user admin
         raise "admin is not admin in this community" unless self.include_admin? admin
-        raise "this user is already in this community" if self.include_user? user
-        raise "there is no invitation request for this user" unless self.include_invitation_request? user
+
+        relation = ::Inkwell::CommunityUser.where(community_id_attr => self.id, user_id_attr => user.id).first
+        raise "this user is already in this community" if relation.active
+        raise "there is no invitation request for this user" unless relation.asked_invitation
 
         self.add_user :user => user
 
-        remove_invitation_request user
+        self.invitation_count -= 1
+        self.save
       end
 
       def reject_invitation_request(options = {})
@@ -427,16 +457,29 @@ module Inkwell
         admin = options[:admin]
         check_user user
         check_user admin
-        raise "there is no invitation request for this user" unless self.include_invitation_request? user
+
+        relation = ::Inkwell::CommunityUser.where(community_id_attr => self.id, user_id_attr => user.id).first
+        raise "there is no invitation request for this user" unless relation || relation.asked_invitation
         raise "admin is not admin in this community" unless self.include_admin? admin
 
-        remove_invitation_request user
+        relation.destroy
+
+        self.invitation_count -= 1
+        self.save
       end
 
       def include_invitation_request?(user)
         raise "invitations work only for private community. this community is public." if self.public
-        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
-        (invitations_uids.index{|uid| uid == user.id}) ? true : false
+        ::Inkwell::CommunityUser.exists? community_id_attr => self.id, user_id_attr => user.id, :asked_invitation => true
+      end
+
+      def invitations_row
+        relations = ::Inkwell::CommunityUser.where community_id_attr => self.id, :asked_invitation => true
+        result = []
+        relations.each do |relation|
+          result << relation.send(user_id_attr)
+        end
+        result
       end
 
       def change_default_access_to_write
@@ -481,25 +524,13 @@ module Inkwell
 
       private
 
-      def remove_invitation_request(user)
-        invitations_uids = ActiveSupport::JSON.decode self.invitations_uids
-        invitations_uids.delete user.id
-        self.invitations_uids = ActiveSupport::JSON.encode invitations_uids
-        self.save
-      end
-
       def processing_a_community
         owner = user_class.find self.owner_id
         owner.community_count += 1
         owner.save
 
         ::Inkwell::CommunityUser.create user_id_attr => self.owner_id, community_id_attr => self.id, :is_admin => true, :admin_level => 0,
-                                        :user_access => CommunityAccessLevels::WRITE
-        #TODO change default counters in the table
-        self.user_count += 1
-        self.writer_count += 1
-        self.admin_count += 1
-        self.save
+                                        :user_access => CommunityAccessLevels::WRITE, :active => true
       end
 
       def destroy_community_processing

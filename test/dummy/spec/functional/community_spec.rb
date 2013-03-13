@@ -143,7 +143,7 @@ describe "Community" do
 
   it "user should be in community after added (include_user?)" do
     @community_1.include_user?(@salkar).should == false
-    ::Inkwell::CommunityUser.create :user_id => @salkar.id, :community_id => @community_1.id
+    ::Inkwell::CommunityUser.create :user_id => @salkar.id, :community_id => @community_1.id, :active => true
     @community_1.include_user?(@salkar).should == true
   end
 
@@ -741,8 +741,7 @@ describe "Community" do
   it "request invitation should be created (include_invitation_request?)" do
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
     @private_community.create_invitation_request @salkar
-    @private_community.reload
-    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+    ::Inkwell::CommunityUser.exists?(:user_id => @salkar.id, :community_id => @private_community.id, :active => false, :asked_invitation => true).should == true
     @private_community.include_invitation_request?(@salkar).should == true
   end
 
@@ -764,23 +763,20 @@ describe "Community" do
   it "invitation request should be created" do
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
     @private_community.create_invitation_request @salkar
-    @private_community.reload
-    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+    ::Inkwell::CommunityUser.exists?(:user_id => @salkar.id, :community_id => @private_community.id, :active => false, :asked_invitation => true).should == true
   end
 
   it "invitation request should not be created" do
     expect { @community_1.create_invitation_request(@salkar) }.to raise_error
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
-    @private_community.banned_ids = "[#{@talisman.id}]"
-    @private_community.save
+    ::Inkwell::CommunityUser.create :user_id => @talisman.id, :community_id => @private_community.id, :active => false, :banned => true
     expect { @private_community.create_invitation_request(@talisman) }.to raise_error
     @private_community.create_invitation_request(@salkar)
     expect { @private_community.create_invitation_request(@salkar) }.to raise_error
   end
 
   it "user should not be added to public community cause he is banned" do
-    @community_1.banned_ids = "[#{@morozovm.id}]"
-    @community_1.save
+    ::Inkwell::CommunityUser.create :user_id => @morozovm.id, :community_id => @community_1.id, :active => false, :banned => true
     expect { @morozovm.join @community_1 }.to raise_error
   end
 
@@ -1502,8 +1498,7 @@ describe "Community" do
   it "user should be able to request invitation to private community" do
     @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
     @salkar.request_invitation @private_community
-    @private_community.reload
-    @private_community.invitations_uids.should == "[#{@salkar.id}]"
+    ::Inkwell::CommunityUser.exists?(:user_id => @salkar.id, :community_id => @private_community.id, :active => false, :asked_invitation => true).should == true
   end
 
   it "admin should be able to accept invitation request" do
@@ -1990,6 +1985,102 @@ describe "Community" do
     @salkar.destroy
     @community_1.reload
     @community_1.muted_count.should == 0
+  end
+
+  it "banned counter should be increased when admin bans user" do
+    @community_1.add_user :user => @salkar
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_count.should == 1
+    @community_1.include_banned_user?(@salkar).should == true
+  end
+
+  it "banned counter should be decreased when admin unbans user" do
+    @community_1.add_user :user => @salkar
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_count.should == 1
+    @community_1.include_banned_user?(@salkar).should == true
+    @community_1.unban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_count.should == 0
+    @community_1.include_banned_user?(@salkar).should == false
+  end
+
+  it "banned counter should be decremeted when user destroys his accaunt" do
+    @community_1.add_user :user => @salkar
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_count.should == 1
+    @salkar.destroy
+    @community_1.reload
+    @community_1.banned_count.should == 0
+  end
+
+  it "user counter should be decremented when admin ban user" do
+    @community_1.add_user :user => @salkar
+    @community_1.reload
+    @community_1.user_count.should == 2
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.user_count.should == 1
+  end
+
+  it "invitation counter should be incremented when user asks invitation" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitation_count.should == 1
+  end
+
+  it "invitation counter should be decremented when admin accept invitation" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitation_count.should == 1
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+  end
+
+  it "invitation counter should be decremented when admin reject invitation" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitation_count.should == 1
+    @private_community.reject_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+  end
+
+  it "invitation counter should be decremented when admin ban asked user" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitation_count.should == 1
+    @private_community.ban_user :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+  end
+
+  it "invitation counter should be decremented when user destroys his accaunt" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.reload
+    @private_community.invitation_count.should == 0
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.invitation_count.should == 1
+    @salkar.destroy
+    @private_community.reload
+    @private_community.invitation_count.should == 0
   end
 
 end

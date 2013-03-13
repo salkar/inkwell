@@ -383,9 +383,10 @@ module Inkwell
       end
 
       def can_send_post_to_community?(community)
-        return false unless community.include_user? self
-        return false if community.include_muted_user? self
-        return false unless community.include_writer? self
+        relation = ::Inkwell::CommunityUser.where(user_id_attr => self.id, community_id_attr => community.id).first
+        return false unless relation
+        return false if relation.muted
+        return false unless relation.user_access == CommunityAccessLevels::WRITE
         true
       end
 
@@ -422,14 +423,18 @@ module Inkwell
         communities_relations = ::Inkwell::CommunityUser.where user_id_attr => self.id
         communities_relations.each do |relation|
           community = community_class.find relation.send(community_id_attr)
-          if relation.user_access == CommunityAccessLevels::WRITE
-            community.writer_count -= 1
+          if relation.active
+            if relation.user_access == CommunityAccessLevels::WRITE
+              community.writer_count -= 1
+            end
+            community.admin_count -= 1 if relation.is_admin
+            community.muted_count -= 1 if relation.muted
+            community.user_count -= 1
           else
-            community.reader_count -= 1
+            community.banned_count -= 1 if relation.banned
+            community.invitation_count -= 1 if relation.asked_invitation
           end
-          community.admin_count -= 1 if relation.is_admin
-          community.muted_count -= 1 if relation.muted
-          community.user_count -= 1
+
           community.save
         end
 
