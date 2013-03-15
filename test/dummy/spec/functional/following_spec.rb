@@ -5,6 +5,7 @@ describe "Following" do
   before(:each) do
     @salkar = User.create :nick => "Salkar"
     @morozovm = User.create :nick => "Morozovm"
+    @talisman = User.create :nick => "Talisman"
     @salkar_post = @salkar.posts.create :body => "salkar_post_test_body"
     @salkar_comment = @salkar.create_comment :for_object => @salkar_post, :body => "salkar_comment_body"
     @salkar_post1 = @salkar.posts.create :body => "salkar_post_test_body"
@@ -137,7 +138,41 @@ describe "Following" do
     @salkar.timeline.size.should == 0
   end
 
+  it "following relations should be returned for user" do
+    @salkar.follow @talisman
+    @salkar.follow @morozovm
+    following_relations = @salkar.following_relations
+    following_relations.size.should == 2
+    following_relations.where(:followed_id => @talisman.id).size.should == 1
+    following_relations.where(:followed_id => @morozovm.id).size.should == 1
+  end
 
+  it "follower relations should be returned for user" do
+    @talisman.follow @salkar
+    @morozovm.follow @salkar
+    follower_relations = @salkar.follower_relations
+    follower_relations.size.should == 2
+    follower_relations.where(:follower_id => @talisman.id).size.should == 1
+    follower_relations.where(:follower_id => @morozovm.id).size.should == 1
+  end
+
+  it "followings should be returned" do
+    @salkar.follow @talisman
+    @salkar.follow @morozovm
+    followings = @salkar.followings
+    followings.size.should == 2
+    followings.include?(@talisman).should == true
+    followings.include?(@morozovm).should == true
+  end
+
+  it "followers should be returned" do
+    @talisman.follow @salkar
+    @morozovm.follow @salkar
+    followers = @salkar.followers
+    followers.size.should == 2
+    followers.include?(@talisman).should == true
+    followers.include?(@morozovm).should == true
+  end
 
 
 end

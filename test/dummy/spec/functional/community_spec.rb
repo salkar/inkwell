@@ -2083,4 +2083,91 @@ describe "Community" do
     @private_community.invitation_count.should == 0
   end
 
+  it "communities should be returned for their member" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    communities = @talisman.communities
+    communities.include?(@community_1).should == true
+    communities.include?(@public_community).should == true
+    communities.size.should == 2
+  end
+
+  it "communities should be returned for their member" do
+    @public_community = Community.create :name => "Community", :owner_id => @morozovm.id
+    @talisman.join @public_community
+    @salkar.join @public_community
+    @spy.join @public_community
+    users = @public_community.users
+    users.include?(@morozovm).should == true
+    users.include?(@talisman).should == true
+    users.include?(@salkar).should == true
+    users.include?(@spy).should == true
+    users.size.should == 4
+  end
+
+  it "admins should be returned for community" do
+    @community_1.admins.should == [@talisman]
+    @community_1.add_user :user => @salkar, :admin => @talisman
+    @community_1.admins.should == [@talisman]
+    @community_1.add_admin :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.admins.should == [@talisman, @salkar]
+  end
+
+  it "writers should be returned for community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+    @public_community.reload
+    @public_community.writers.should == [@morozovm]
+    @salkar.join @public_community
+    @public_community.reload
+    @public_community.writers.should == [@morozovm]
+    @public_community.set_write_access [@salkar.id]
+    @public_community.reload
+    @public_community.writers.should == [@morozovm, @salkar]
+  end
+
+  it "muted users should be returned for community" do
+    @community_1.muted_users.should == []
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_users.should == [@salkar]
+  end
+
+  it "banned users should be returned for community" do
+    @community_1.banned_users.should == []
+    @community_1.add_user :user => @salkar
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_users.should == [@salkar]
+  end
+
+  it "asked invitation users should be returned for community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.asked_invitation_users.should == []
+    @private_community.create_invitation_request @salkar
+    @private_community.reload
+    @private_community.asked_invitation_users.should == [@salkar]
+    @private_community.accept_invitation_request :user => @salkar, :admin => @morozovm
+    @private_community.reload
+    @private_community.asked_invitation_users.should == []
+  end
+
+  it "invitation_uids should be returned for community" do
+    @private_community = Community.create :name => "Private Community", :owner_id => @morozovm.id, :public => false
+    @private_community.invitations_row.should == []
+    @private_community.create_invitation_request @salkar
+    @private_community.create_invitation_request @talisman
+    @private_community.reload
+    @private_community.invitations_row.should == [@salkar.id, @talisman.id]
+  end
+
+  it "user should not be destroyed if he is owner of some communities" do
+    expect {@talisman.destroy}.to raise_error
+    @talisman.reload
+    @talisman.should be
+  end
+
 end

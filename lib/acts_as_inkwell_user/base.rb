@@ -11,7 +11,14 @@ module Inkwell
     module Config
       def acts_as_inkwell_user
         has_many :comments, :class_name => 'Inkwell::Comment'
-
+        has_many :following_relations, :class_name => 'Inkwell::Following', :foreign_key => :follower_id
+        has_many :followings, :through => :following_relations, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+        has_many :follower_relations, :class_name => 'Inkwell::Following', :foreign_key => :followed_id
+        has_many :followers, :through => :follower_relations, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+        if ::Inkwell::Engine::config.respond_to?('community_table')
+          has_many :communities_users, :class_name => 'Inkwell::CommunityUser'
+          has_many :communities, :through => :communities_users, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.active" => true}
+        end
         before_destroy :destroy_processing
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
       end
@@ -420,6 +427,8 @@ module Inkwell
       end
 
       def destroy_processing
+        raise "there is community where this user is owner. Change their owner before destroy this user." unless community_class.where(:owner_id => self.id).empty?
+
         communities_relations = ::Inkwell::CommunityUser.where user_id_attr => self.id
         communities_relations.each do |relation|
           community = community_class.find relation.send(community_id_attr)
@@ -438,7 +447,6 @@ module Inkwell
           community.save
         end
 
-        #TODO if user is community owner
         ::Inkwell::CommunityUser.delete_all user_id_attr => self.id
       end
 
