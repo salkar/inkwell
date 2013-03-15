@@ -467,6 +467,10 @@ To set read access for users who are already in the community:
 To get ids of users with write access (result could include muted users ids):
 
     @community.writers_row
+    
+To get users with write access (result could include muted users ids):
+
+    @community.writers
 
 Community blogline is consists of the posts of members that have added to it.
 
