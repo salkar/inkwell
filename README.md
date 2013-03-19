@@ -229,6 +229,12 @@ To get followers ids for user and ids of users, which he follow:
 
     @user.followers_row
     @user.followings_row
+    
+Or if you need User objects:
+    
+    @user.followers
+    @user.followings
+    
 
 Both methods return arrays of ids.
 
@@ -305,6 +311,14 @@ To reject invitation request:
     
 To prevent invitation requests spam you are able to ban spamming users.
 
+To get asked invitation users:
+
+    @community.asked_invitation_users
+    
+To get ids of asked invitation users:
+
+    @community.invitations_row
+
 To remove a user from community:
 
     @admin.kick :user => @user, :from_community => @community
@@ -375,13 +389,25 @@ To get ids of community members:
 
     @community.users_row
     
+To get community members:
+
+    @community.users
+    
 To get ids of community administrators:
 
     @community.admins_row
+    
+To get community administrators:
+
+    @community.admins
 
 To get ids of communities to which the user has joined:
 
     @user.communities_row
+    
+To get communities to which the user has joined:
+
+    @user.communities
     
 Admin of community is able to mute or ban user. Muted users is not able to send posts to community, but they are still in it.
 Banned users are not in community and are not able to join it or send invite in it.
@@ -398,6 +424,10 @@ To check that user is muted:
 
     @community.include_muted_user? @user
     
+To get muted users:
+
+    @community.muted_users
+    
 To ban user:
 
     @admin.ban :user => @user, :in_community => @community
@@ -409,6 +439,10 @@ To unban user:
 To check that user is banned:
 
     @community.include_banned_user? @user
+    
+To get banned users:
+
+    @community.banned_users
     
 Community's users can have different types of access to community - some of them can send post to it, other can not.
 This applies to both types of community - private and public. By default all new users can send posts to the community (except for the muted users).
@@ -433,6 +467,10 @@ To set read access for users who are already in the community:
 To get ids of users with write access (result could include muted users ids):
 
     @community.writers_row
+    
+To get users with write access (result could include muted users ids):
+
+    @community.writers
 
 Community blogline is consists of the posts of members that have added to it.
 
