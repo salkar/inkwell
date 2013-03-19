@@ -20,6 +20,8 @@ module Inkwell
           has_many :muted_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.muted" => true, "inkwell_community_users.active" => true}
           has_many :banned_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.banned" => true}
           has_many :asked_invitation_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.asked_invitation" => true}
+          has_many :blog_items, :class_name => 'Inkwell::BlogItem', :foreign_key => :owner_id, :conditions => {:owner_type => ::Inkwell::Constants::OwnerTypes::COMMUNITY}
+          has_many ::Inkwell::Engine::config.post_table, :class_name => ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize, :through => :blog_items, :conditions => {"inkwell_blog_items.item_type" => ::Inkwell::Constants::ItemTypes::POST}
         end
 
         after_create :processing_a_community
@@ -178,6 +180,15 @@ module Inkwell
         ::Inkwell::CommunityUser.exists? user_id_attr => user.id, community_id_attr => self.id, :muted => true, :active => true
       end
 
+      def muted_row
+        relations = ::Inkwell::CommunityUser.where community_id_attr => self.id, :muted => true
+        result = []
+        relations.each do |relation|
+          result << relation.send(user_id_attr)
+        end
+        result
+      end
+
       def ban_user(options = {})
         options.symbolize_keys!
         user = options[:user]
@@ -229,6 +240,15 @@ module Inkwell
 
       def include_banned_user?(user)
         ::Inkwell::CommunityUser.exists? :community_id => self.id, :user_id => user.id, :banned => true
+      end
+
+      def banned_row
+        relations = ::Inkwell::CommunityUser.where community_id_attr => self.id, :banned => true
+        result = []
+        relations.each do |relation|
+          result << relation.send(user_id_attr)
+        end
+        result
       end
 
       def add_admin(options = {})
@@ -416,6 +436,12 @@ module Inkwell
         result
       end
 
+      def readers_row
+        users_row = self.users_row
+        writers_row = self.writers_row
+        users_row - writers_row
+      end
+
       def admins_row
         relations = ::Inkwell::CommunityUser.where community_id_attr => self.id, :is_admin => true
         result = []
@@ -506,10 +532,19 @@ module Inkwell
         end
       end
 
-      def set_write_access(uids)
-        raise "array with users ids should be passed" unless uids.class == Array
+      def set_write_access(arr)
+        raise "array with users objects or ids should be passed" unless arr.class == Array
+        raise "empty array passed in params" if arr.empty?
+        uids = []
+        if arr[0].is_a? user_class
+          arr.each do |user|
+            uids << user.id
+          end
+        else
+          uids = arr
+        end
         relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id, :user_access => CommunityAccessLevels::READ, :is_admin => false
-        raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
+        raise "there is different count of passed users (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
 
         self.writer_count += relations.size
         self.save
@@ -517,10 +552,19 @@ module Inkwell
         relations.update_all :user_access => CommunityAccessLevels::WRITE
       end
 
-      def set_read_access(uids)
-        raise "array with users ids should be passed" unless uids.class == Array
+      def set_read_access(arr)
+        raise "array with users ids should be passed" unless arr.class == Array
+        raise "empty array passed in params" if arr.empty?
+        uids = []
+        if arr[0].is_a? user_class
+          arr.each do |user|
+            uids << user.id
+          end
+        else
+          uids = arr
+        end
         relations = ::Inkwell::CommunityUser.where user_id_attr => uids, community_id_attr => self.id, :user_access => CommunityAccessLevels::WRITE, :is_admin => false
-        raise "there is different count of passed uids (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
+        raise "there is different count of passed users (#{uids.size}) and found users (#{relations.size}) in this community" unless relations.size == uids.size
 
         self.writer_count -= relations.size
         self.save

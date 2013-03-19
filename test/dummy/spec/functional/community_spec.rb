@@ -1618,11 +1618,11 @@ describe "Community" do
     (@public_community.writers_row & [@morozovm.id, @salkar.id, @talisman.id, @spy.id]).size.should == 4
   end
 
-  it "passed empty array should not lead to error" do
+  it "passed empty array should lead to error" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
-    @public_community.set_write_access []
+    expect {@public_community.set_write_access []}.to raise_error
     @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
-    @private_community.set_write_access []
+    expect {@private_community.set_write_access []}.to raise_error
   end
 
   it "write access should not be granted" do
@@ -1690,7 +1690,7 @@ describe "Community" do
     @private_community.include_writer?(@spy).should == true
   end
 
-  it "error shouldraised when R access set to user with R access" do
+  it "error should raised when R access set to user with R access" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
     @public_community.default_user_access = 'r'
     @public_community.save
@@ -1707,11 +1707,11 @@ describe "Community" do
     @public_community.writers_row.should == [@morozovm.id]
   end
 
-  it "passed empty array should not lead to error" do
+  it "passed empty array should lead to error" do
     @public_community = Community.create :name => "community", :owner_id => @morozovm.id
-    @public_community.set_read_access []
+    expect {@public_community.set_read_access []}.to raise_error
     @private_community = Community.create :name => "community", :owner_id => @morozovm.id, :public => false
-    @private_community.set_read_access []
+    expect {@private_community.set_read_access []}.to raise_error
   end
 
   it "write access should not be granted" do
@@ -2169,5 +2169,134 @@ describe "Community" do
     @talisman.reload
     @talisman.should be
   end
+
+  it "blog_items should be returned for community" do
+    @community_1.blog_items.size.should == 0
+    @community_1.add_user :user => @salkar
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
+    @community_1.reload
+    @community_1.blog_items.size.should == 1
+    @community_1.blog_items.should == ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :owner_type => 'c')
+    @salkar_post_1 = @salkar.posts.create :body => "salkar_post_test_body"
+    @salkar.send_post_to_community :post => @salkar_post_1, :to_community => @community_1
+    @community_1.reload
+    @community_1.blog_items.size.should == 2
+    @community_1.blog_items.should == ::Inkwell::BlogItem.where(:owner_id => @community_1.id, :owner_type => 'c')
+  end
+
+  it "posts should be returned for community" do
+    @community_1.add_user :user => @salkar
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
+    @community_1.reload
+    @community_1.posts.size.should == 1
+    @community_1.posts.should == [@salkar_post]
+    @salkar_post_1 = @salkar.posts.create :body => "salkar_post_test_body"
+    @salkar.send_post_to_community :post => @salkar_post_1, :to_community => @community_1
+    @community_1.reload
+    @community_1.posts.size.should == 2
+    @community_1.posts.should == [@salkar_post, @salkar_post_1]
+  end
+
+  it "blog_items should be returned for post" do
+    @salkar_post.blog_items.size.should == 1
+    @community_1.add_user :user => @salkar
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
+    @salkar_post.reload
+    @salkar_post.blog_items.size.should == 2
+    @public_community = Community.create :name => "community", :owner_id => @salkar.id
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @public_community
+    @salkar_post.reload
+    @salkar_post.blog_items.size.should == 3
+  end
+
+  it "communities should be returned for post" do
+    @salkar_post.communities.size.should == 0
+    @community_1.add_user :user => @salkar
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @community_1
+    @salkar_post.reload
+    @salkar_post.communities.size.should == 1
+    @public_community = Community.create :name => "community", :owner_id => @salkar.id
+    @salkar.send_post_to_community :post => @salkar_post, :to_community => @public_community
+    @salkar_post.reload
+    @salkar_post.communities.size.should == 2
+    @salkar_post.communities.should == [@community_1, @public_community]
+  end
+
+  it "muted uids should be returned for community" do
+    @community_1.muted_users.should == []
+    @community_1.add_user :user => @salkar
+    @community_1.mute_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.muted_row.should == [@salkar.id]
+  end
+
+  it "banned uids should be returned for community" do
+    @community_1.banned_row.should == []
+    @community_1.add_user :user => @salkar
+    @community_1.ban_user :user => @salkar, :admin => @talisman
+    @community_1.reload
+    @community_1.banned_row.should == [@salkar.id]
+  end
+
+  it "read access should be set in the public community when users passed" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_read_access [@salkar, @talisman]
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+    @public_community.readers_row.size.should == 2
+  end
+
+  it "write access should be set in the public community when users passed" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+
+    @public_community.set_write_access [@salkar, @talisman]
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+    @public_community.readers_row.size.should == 1
+    @public_community.writers_row.size.should == 3
+  end
+
+  it "readers uids should be returned for community" do
+    @public_community = Community.create :name => "community", :owner_id => @morozovm.id
+    @public_community.default_user_access = 'r'
+    @public_community.save
+
+    @salkar.join @public_community
+    @talisman.join @public_community
+    @spy.join @public_community
+
+    @public_community.reload
+    @salkar.reload
+    @talisman.reload
+    @spy.reload
+    @public_community.readers_row.should == [@salkar.id, @talisman.id, @spy.id]
+  end
+
 
 end
