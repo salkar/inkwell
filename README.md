@@ -545,6 +545,9 @@ To get category blogline pass `category` param:
 
     user.blogline :category => category
     community.blogline :category => category
+    
+More examples you can find in this
+[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/category_spec.rb)
 
 ## License
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
