@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Sergey Sokolov"]
   s.email       = ["sokolov.sergey.a@gmail.com"]
   s.homepage    = "https://github.com/salkar/inkwell#inkwell"
-  s.summary     = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities and timelines to your Ruby on Rails application."
-  s.description = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities and timelines to your Ruby on Rails application."
+  s.summary     = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities, categories and timelines to your Ruby on Rails application."
+  s.description = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities, categories and timelines to your Ruby on Rails application."
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["Rakefile"]
   s.test_files = Dir["test/**/*"]
