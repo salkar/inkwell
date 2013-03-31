@@ -79,26 +79,30 @@ module Inkwell
 
     def destroy_comment_processing
       child_comments = ActiveSupport::JSON.decode self.users_ids_who_comment_it
-      child_comments_ids_to_deleted = []
+      child_comments_ids_to_delete = []
       child_comments.each do |comment|
-        child_comments_ids_to_deleted << comment['comment_id']
+        child_comments_ids_to_delete << comment['comment_id']
       end
-      ::Inkwell::Comment.delete child_comments_ids_to_deleted
+      ::Inkwell::Comment.delete child_comments_ids_to_delete
 
-      comment_with_child_comments_ids_to_deleted = child_comments_ids_to_deleted << self.id
-      ::Inkwell::TimelineItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
-      ::Inkwell::FavoriteItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
-      ::Inkwell::BlogItem.delete_all :item_id => comment_with_child_comments_ids_to_deleted, :item_type => ItemTypes::COMMENT
+      comments_ids_to_delete = child_comments_ids_to_delete << self.id
+      ::Inkwell::TimelineItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
+      ::Inkwell::FavoriteItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
+      ::Inkwell::BlogItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
 
-      user_id = self.send("#{::Inkwell::Engine::config.user_table.to_s.singularize}_id")
-      comment_with_child_comments_info = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]
-      remove_info_from_upper_comments comment_with_child_comments_info
+      user_id = self.send user_id_attr
+      comments_info_to_delete = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]
+      remove_info_from_upper_comments comments_info_to_delete
 
       parent_obj = get_class_for_item_type(self.topmost_obj_type).find self.topmost_obj_id
       users_ids_who_comment_it = ActiveSupport::JSON.decode parent_obj.users_ids_who_comment_it
-      users_ids_who_comment_it -= comment_with_child_comments_info
+      users_ids_who_comment_it -= comments_info_to_delete
       parent_obj.users_ids_who_comment_it = ActiveSupport::JSON.encode users_ids_who_comment_it
       parent_obj.save
+
+      if ::Inkwell::Engine::config.respond_to?('category_table')
+        ::Inkwell::BlogItemCategory.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
+      end
     end
 
     def processing_a_comment

@@ -95,11 +95,20 @@ module Inkwell
         ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::BlogItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST)
+        comment_ids = []
         comments.each do |comment|
-          ::Inkwell::TimelineItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
-          ::Inkwell::FavoriteItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
-          ::Inkwell::BlogItem.delete_all :item_id => comment.id, :item_type => ItemTypes::COMMENT
-          ::Inkwell::Comment.delete comment
+          comment_ids << comment.id
+        end
+
+        ::Inkwell::TimelineItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
+        ::Inkwell::FavoriteItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
+        ::Inkwell::BlogItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
+        comments.delete_all
+
+
+        if ::Inkwell::Engine::config.respond_to?('category_table')
+          ::Inkwell::BlogItemCategory.delete_all :item_id => self.id, :item_type => ItemTypes::POST
+          ::Inkwell::BlogItemCategory.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
         end
       end
     end

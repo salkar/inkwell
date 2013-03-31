@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130313083917) do
+ActiveRecord::Schema.define(:version => 20130331123647) do
 
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"

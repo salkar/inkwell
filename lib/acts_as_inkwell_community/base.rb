@@ -10,6 +10,7 @@ module Inkwell
 
     module Config
       def acts_as_inkwell_community
+        attr_accessible :owner_id, :public
         validates :owner_id, :presence => true
 
         if ::Inkwell::Engine::config.respond_to?('community_table')
@@ -389,17 +390,33 @@ module Inkwell
         last_shown_obj_id = options[:last_shown_obj_id]
         limit = options[:limit] || 10
         for_user = options[:for_user]
+        category = options[:category]
 
-        if last_shown_obj_id
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+        if category
+          child_categories = ActiveSupport::JSON.decode category.child_ids
+          category_ids = [category.id] + child_categories
+          if last_shown_obj_id
+            blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).where("blog_item_created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("blog_item_created_at DESC").limit(limit)
+          else
+            blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).order("blog_item_created_at DESC").limit(limit)
+          end
+
+          blog_items_ids = []
+          blog_items_categories.each do |record|
+            blog_items_ids << record.blog_item_id
+          end
+          blog_items = ::Inkwell::BlogItem.where(:id => blog_items_ids, :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC")
         else
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(limit)
+          if last_shown_obj_id
+            blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          else
+            blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY).order("created_at DESC").limit(limit)
+          end
         end
 
-        post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         result = []
         blog_items.each do |item|
-          if item.is_comment
+          if item.item_type == ItemTypes::COMMENT
             blog_obj = ::Inkwell::Comment.find item.item_id
           else
             blog_obj = post_class.find item.item_id
@@ -576,6 +593,19 @@ module Inkwell
         self.user_count - self.writer_count
       end
 
+      #wrappers for category methods
+
+      def create_category(options = {})
+        options.symbolize_keys!
+        options[:owner_id] = self.id
+        options[:owner_type] = OwnerTypes::COMMUNITY
+        category_class.create options
+      end
+
+      def get_categories
+        category_class.get_categories_for :object => self, :type => OwnerTypes::COMMUNITY
+      end
+
       private
 
       def processing_a_community
@@ -609,6 +639,15 @@ module Inkwell
 
         ::Inkwell::BlogItem.delete_all :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY
 
+        if ::Inkwell::Engine::config.respond_to?('category_table')
+          categories = category_class.where :owner_id => self.id, :owner_type => OwnerTypes::COMMUNITY
+          category_ids = []
+          categories.each do |category|
+            category_ids << category.id
+          end
+          category_class.delete_all :id => category_ids
+          ::Inkwell::BlogItemCategory.delete_all :category_id => category_ids
+        end
       end
     end
   end

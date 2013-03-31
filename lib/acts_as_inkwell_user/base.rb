@@ -34,14 +34,30 @@ module Inkwell
         last_shown_obj_id = options[:last_shown_obj_id]
         limit = options[:limit] || 10
         for_user = options[:for_user]
+        category = options[:category]
 
-        if last_shown_obj_id
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+        if category
+          child_categories = ActiveSupport::JSON.decode category.child_ids
+          category_ids = [category.id] + child_categories
+          if last_shown_obj_id
+            blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).where("blog_item_created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("blog_item_created_at DESC").limit(limit)
+          else
+            blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).order("blog_item_created_at DESC").limit(limit)
+          end
+
+          blog_items_ids = []
+          blog_items_categories.each do |record|
+            blog_items_ids << record.blog_item_id
+          end
+          blog_items = ::Inkwell::BlogItem.where(:id => blog_items_ids, :owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC")
         else
-          blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(limit)
+          if last_shown_obj_id
+            blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).where("created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("created_at DESC").limit(limit)
+          else
+            blog_items = ::Inkwell::BlogItem.where(:owner_id => self.id, :owner_type => OwnerTypes::USER).order("created_at DESC").limit(limit)
+          end
         end
 
-        post_class = Object.const_get ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize
         result = []
         blog_items.each do |item|
           if item.item_type == ItemTypes::COMMENT
@@ -426,28 +442,54 @@ module Inkwell
         in_community.remove_admin :user => user, :admin => self
       end
 
-      def destroy_processing
-        raise "there is community where this user is owner. Change their owner before destroy this user." unless community_class.where(:owner_id => self.id).empty?
+      #wrappers for category methods
 
-        communities_relations = ::Inkwell::CommunityUser.where user_id_attr => self.id
-        communities_relations.each do |relation|
-          community = community_class.find relation.send(community_id_attr)
-          if relation.active
-            if relation.user_access == CommunityAccessLevels::WRITE
-              community.writer_count -= 1
+      def create_category(options = {})
+        options.symbolize_keys!
+        options[:owner_id] = self.id
+        options[:owner_type] = OwnerTypes::USER
+        category_class.create options
+      end
+
+      def get_categories
+        category_class.get_categories_for :object => self, :type => OwnerTypes::USER
+      end
+
+
+      def destroy_processing
+        if ::Inkwell::Engine::config.respond_to?('community_table')
+          raise "there is community where this user is owner. Change their owner before destroy this user." unless community_class.where(:owner_id => self.id).empty?
+
+          communities_relations = ::Inkwell::CommunityUser.where user_id_attr => self.id
+          communities_relations.each do |relation|
+            community = community_class.find relation.send(community_id_attr)
+            if relation.active
+              if relation.user_access == CommunityAccessLevels::WRITE
+                community.writer_count -= 1
+              end
+              community.admin_count -= 1 if relation.is_admin
+              community.muted_count -= 1 if relation.muted
+              community.user_count -= 1
+            else
+              community.banned_count -= 1 if relation.banned
+              community.invitation_count -= 1 if relation.asked_invitation
             end
-            community.admin_count -= 1 if relation.is_admin
-            community.muted_count -= 1 if relation.muted
-            community.user_count -= 1
-          else
-            community.banned_count -= 1 if relation.banned
-            community.invitation_count -= 1 if relation.asked_invitation
+
+            community.save
           end
 
-          community.save
+          ::Inkwell::CommunityUser.delete_all user_id_attr => self.id
         end
 
-        ::Inkwell::CommunityUser.delete_all user_id_attr => self.id
+        if ::Inkwell::Engine::config.respond_to?('category_table')
+          categories = category_class.where :owner_id => self.id, :owner_type => OwnerTypes::USER
+          category_ids = []
+          categories.each do |category|
+            category_ids << category.id
+          end
+          category_class.delete_all :id => category_ids
+          ::Inkwell::BlogItemCategory.delete_all :category_id => category_ids
+        end
       end
 
     end

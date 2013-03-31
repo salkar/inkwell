@@ -11,7 +11,17 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130312084529) do
+ActiveRecord::Schema.define(:version => 20130330184136) do
+
+  create_table "categories", :force => true do |t|
+    t.string   "name"
+    t.datetime "created_at",                   :null => false
+    t.datetime "updated_at",                   :null => false
+    t.text     "parent_ids", :default => "[]"
+    t.text     "child_ids",  :default => "[]"
+    t.integer  "owner_id"
+    t.string   "owner_type"
+  end
 
   create_table "communities", :force => true do |t|
     t.string   "name"
@@ -28,14 +38,25 @@ ActiveRecord::Schema.define(:version => 20130312084529) do
     t.integer  "invitation_count",    :default => 0
   end
 
+  create_table "inkwell_blog_item_categories", :force => true do |t|
+    t.integer  "blog_item_id"
+    t.integer  "category_id"
+    t.integer  "item_id"
+    t.string   "item_type"
+    t.datetime "blog_item_created_at"
+    t.datetime "created_at",           :null => false
+    t.datetime "updated_at",           :null => false
+  end
+
   create_table "inkwell_blog_items", :force => true do |t|
     t.integer  "item_id"
     t.boolean  "is_reblog"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
     t.integer  "owner_id"
     t.string   "item_type"
     t.string   "owner_type"
+    t.text     "category_ids", :default => "[]"
   end
 
   create_table "inkwell_comments", :force => true do |t|
