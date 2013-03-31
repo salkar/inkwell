@@ -23,9 +23,16 @@ should be a one-to-many relationship. For example:
 
 If you want to use
 [communities](https://github.com/salkar/inkwell#community-feature), then you
-need to have `Community` class, too:
+need to have `Community` class:
 
     class Community < ActiveRecord::Base
+    end
+    
+If you want to use
+[categories](https://github.com/salkar/inkwell#category-feature), then you
+need to have `Category` class, too:
+
+    class Category < ActiveRecord::Base
     end
 
 ## Installation
@@ -61,16 +68,24 @@ If you want to use communities, then add to your `Community` model
     class Community < ActiveRecord::Base
       acts_as_inkwell_community
     end
+    
+If you want to use categories, then add to your `Category` model
+`acts_as_inkwell_category`:
+
+    class Category < ActiveRecord::Base
+      acts_as_inkwell_category
+    end
 
 Create `inkwell.rb` file in `config/initializers` and put in it your names of
-`User` and `Post` tables (or other identical).  Put in it name of `Community`
-table if you want to use it:
+`User` and `Post` tables (or other identical).  Put in it names of `Community`/`Category`
+tables if you want to use it:
 
     module Inkwell
       class Engine < Rails::Engine
         config.post_table = :posts
         config.user_table = :users
         config.community_table = :communities #if you want to use communities
+        config.category_table = :categories #if you want to use categories
       end
     end
 
@@ -250,6 +265,10 @@ User blogline is consists of his posts and his reblogs. To get it:
 where parameters are similar with described
 [above](https://github.com/salkar/inkwell#favorite-features) favoriteline
 parameters.
+
+If you want to get `blogline` items located in the category, pass `category` param:
+
+    @user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil, :category => category) 
 
 More examples you can find in this
 [spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/blogline_spec.rb).
@@ -484,6 +503,48 @@ parameters.
 
 More examples you can find in this
 [spec](https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb)
+
+### Category feature
+Blog items (posts, reblogged comments, etc) can be combined in the category (for example - coding, travel, games). 
+Each blog item may be contained in several categories, and category can have many items. 
+Category should be used when the user writes on different themes, and need to add sort in his blog.
+Categories can also be used in the community blog.
+Category can contain subcategories.
+
+To create category:
+
+    user.create_category :name => "test category" #     name - test params, insert your parameters instead of it
+    community.create_category :name => "test category" #     name - test params, insert your parameters instead of it
+    
+To create subcategory:
+
+    category = @user.create_category :name => "test category"
+    user.create_category :name => "test subcategory", :parent_category_id => category.id
+    
+To destroy category:
+
+    category.destroy
+    
+To get the list of categories:
+
+    list = user.get_categories
+    list = community.get_categories
+    
+`list` will contain all categories of user / community. 
+All items in it will contain a parameter `parent_category_id`. Using it you can restore category tree.
+
+To add blog item to the category:
+
+    category.add_item :item => post, :owner => category_owner
+    
+To remove blog item from the category:
+
+    category.remove_item :item => post, :owner => category_owner
+    
+To get category blogline pass `category` param:
+
+    user.blogline :category => category
+    community.blogline :category => category
 
 ## License
 Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
