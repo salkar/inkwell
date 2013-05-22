@@ -4,14 +4,17 @@ Inkwell provides simple way to add social networking features like comments,
 reblogs, favorites, following/followers, communities and timelines to your
 Ruby on Rails application.
 
-You can extend the functionality using [inkwell_timelines](https://github.com/salkar/inkwell_timelines). 
-It contains helpers to create timelines with autoload content while scrolling with ability to transmit the additional parameters. It allows you to place timeline blocks on the pages.
-![Inkwell Timelines](https://github.com/salkar/inkwell_timelines/blob/master/test/screen/main-mini.png?raw=true)
-
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NYTZGSJD3H3BC)
 
 Russian translation of README file available
 [here](https://github.com/salkar/inkwell/blob/master/README_RU.rdoc).
+
+- - -
+You can extend the functionality using [inkwell_timelines](https://github.com/salkar/inkwell_timelines). 
+It contains helpers to create timelines with autoload content while scrolling with ability to transmit the additional parameters. It allows you to place timeline blocks on the pages.
+![Inkwell Timelines](https://github.com/salkar/inkwell_timelines/blob/master/test/screen/main-mini.png?raw=true)
+
+- - -
 
 ## Requirements
 You should have two classes: User and Post or other identical. Between them
