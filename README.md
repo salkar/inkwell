@@ -129,7 +129,7 @@ $ rake db:migrate
 
 ## Usage
 
-### Favorite features
+### Favoriting features
 
 User is able to favorite posts/comments:
 
@@ -195,9 +195,9 @@ where
 For more examples refer to
 [spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb).
 
-### Reblog features
+### Reblogging features
 
-Reblog means that reblogged post will be added to user's blogline and to
+If the post is reblogged, it will be added to user's blogline and to
 timelines of his followers. Thus, the behavior of reblogged object is similar
 to the post of the user who made this reblog. User is able to reblog
 posts/comments:
@@ -213,18 +213,18 @@ To delete post/comment from reblogs:
 @user.unreblog @post
 ```
 
-To check that post/comment enters in reblogs:
+To check if post/comment is in reblogs:
 
 ```ruby
 @user.reblog? @post
 ```
 
-Reblogs don't have their own line and are contained in user's blogline.
+Reblogs don't have their own line and reside in user's blogline.
 
-More examples you can find in this
+For more examples refer to
 [spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb).
 
-### Comment features
+### Commenting features
 
 User is able to create comments for post or other comment. If you want to
 comment the post:
@@ -273,7 +273,7 @@ cline_next_page = @post.commentline :last_shown_comment_id => last_shown_comment
 More examples you can find in this
 [spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb).
 
-### Follow features
+### Following features
 
 User is able to follow another users. It allows him to get followed user's
 blogline in his timeline.
