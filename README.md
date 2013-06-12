@@ -120,7 +120,7 @@ and `rake db:migrate` them.
 
 ## Upgrading
 
-After upgrading gem do not forget to get new migrations and migrate it.
+After upgrading Inkwell remember to get new migrations and migrate them.
 
 ```bash
 $ rake inkwell:install:migrations
@@ -144,13 +144,13 @@ To delete post/comment from favorites:
 @user.unfavorite @post
 ```
 
-To check that post/comment enters in favorites:
+To check if post/comment is in favorites:
 
 ```ruby
 @user.favorite? @post
 ```
 
-To return favorite line, consisting of favorited posts and comments:
+To get favorite line, consisting of favorited posts and comments:
 
 ```ruby
 @user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
@@ -158,8 +158,8 @@ To return favorite line, consisting of favorited posts and comments:
 
 where
 *   `last_shown_obj_id` - id of the last item in favorite line shown to the
-    user. Get it from the `item_id_in_line` property of last item from
-    previous `favoriteline` calls. This parameter is used for pagination and
+    user. Get the id from the `item_id_in_line` property of the last item from
+    previous `favoriteline` call. This parameter is used for pagination and
     separation of the timeline.
 
     ```ruby
@@ -168,13 +168,13 @@ where
     fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #get next 10 items from @user favorite line
     ```
 
-*   `limit` - defines the count of favorited items to return.
+*   `limit` - the count of favorited items to return.
 
     ```ruby
     fline = @user.favoriteline :limit => 20    #return first 20 items from @user favorite line
     ```
 
-*   `for_user` - `User`, who looks this favorite line. For him `is_reblogged`
+*   `for_user` - `User`, who gets this favorite line. For him `is_reblogged`
     and `is_favorited` properties will been formed.
 
     ```ruby
@@ -192,7 +192,7 @@ where
     fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
     ```
 
-More examples you can find in this
+For more examples refer to
 [spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb).
 
 ### Reblog features
