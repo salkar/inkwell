@@ -18,8 +18,8 @@ Additionally it allows you to group timelines in timeline blocks.
 - - -
 
 ## Requirements
-You should have two classes: User and Post or other identical. Between them
-should be a one-to-many relationship. For example:
+You should have User and Post (or other identical) classes declared in your application. They
+should have a one-to-many relationship. For example:
 
 ```ruby
 class User < ActiveRecord::Base
@@ -32,7 +32,7 @@ end
 ```
 
 If you want to use
-[communities](https://github.com/salkar/inkwell#community-feature), then you
+[communities](https://github.com/salkar/inkwell#community-feature), you
 need to have `Community` class:
 
 ```ruby
@@ -41,8 +41,8 @@ end
 ```
 
 If you want to use
-[categories](https://github.com/salkar/inkwell#category-feature), then you
-need to have `Category` class, too:
+[categories](https://github.com/salkar/inkwell#category-feature), you
+need to have `Category` class too:
 
 ```ruby
 class Category < ActiveRecord::Base
