@@ -51,24 +51,21 @@ end
 
 ## Installation
 
-Put in `Gemfile`:
+To get Inkwell from RubyGems, put the following line in the `Gemfile`.
 
 ```ruby
 gem 'inkwell'
 ```
 
-to get it from RubyGems or
+Alternatively, you can get it from Github (This version may contain unfinished features).
 
 ```ruby
 gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
 ```
 
-to get it from github (This version may contain unfinished new features).
+After that, run `bundle install`
 
-After it do `bundle install`
-
-Add to your `User` model `acts_as_inkwell_user` and to your `Post` model
-`acts_as_inkwell_post`
+Add the line `acts_as_inkwell_user` to your `User` model and the line `acts_as_inkwell_post` to your `Post` model.
 
 ```ruby
 class User < ActiveRecord::Base
@@ -82,8 +79,7 @@ class Post < ActiveRecord::Base
 end
 ```
 
-If you want to use communities, then add to your `Community` model
-`acts_as_inkwell_community`:
+If you want to use communities, add the line `acts_as_inkwell_community` to your `Community` model.
 
 ```ruby
 class Community < ActiveRecord::Base
@@ -91,8 +87,7 @@ class Community < ActiveRecord::Base
 end
 ```
 
-If you want to use categories, then add to your `Category` model
-`acts_as_inkwell_category`:
+If you want to use categories, add the line `acts_as_inkwell_category` to your `Category` model.
 
 ```ruby
 class Category < ActiveRecord::Base
@@ -100,9 +95,9 @@ class Category < ActiveRecord::Base
 end
 ```
 
-Create `inkwell.rb` file in `config/initializers` and put in it your names of
-`User` and `Post` tables (or other identical).  Put in it names of `Community`/`Category`
-tables if you want to use it:
+Create a file (named `inkwell.rb`) in `config/initializers` and add names of
+`User` and `Post` tables (or other identical) in this file.  If you want to use `Community`/`Category`, add names of 
+their table to `inkwell.rb`.
 
 ```ruby
 module Inkwell
@@ -121,7 +116,7 @@ Next, get gem migrations:
 $ rake inkwell:install:migrations
 ```
 
-and `rake db:migrate` it.
+and `rake db:migrate` them.
 
 ## Upgrading
 
