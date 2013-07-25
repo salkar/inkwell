@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   s.summary     = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities, categories and timelines to your Ruby on Rails application."
   s.description = "Inkwell provides simple way to add social networking features like comments, reblogs, favorites, following/followers, communities, categories and timelines to your Ruby on Rails application."
 
-  s.files = Dir["{app,config,db,lib}/**/*"] + ["Rakefile"]
-  s.test_files = Dir["test/**/*"]
+  s.files = Dir["{app,config,db,lib}/**/*"] + ["Rakefile"] + %w(MIT-LICENSE README_RU.rdoc README-1.2.0.md README.md)
+  s.test_files = Dir["test/**/*"] - Dir["**/*.log"]
 
   s.add_dependency "railties", ">= 3.1.0"
   s.add_dependency "activerecord", ">= 3.1.0"
