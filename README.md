@@ -49,6 +49,9 @@ class Category < ActiveRecord::Base
 end
 ```
 
+*MySQL* can't set default value for BLOB/TEXT fields so currently only *sqlite3* and *PostgreSQL* are supported.
+
+
 ## Installation
 
 To get Inkwell from RubyGems, put the following line in the `Gemfile`.
