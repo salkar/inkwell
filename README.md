@@ -6,6 +6,10 @@ Ruby on Rails application.
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NYTZGSJD3H3BC)
 
+References that may be useful:
+
+[Building Social Apps with Rails: inkwell](http://www.matthewpbyrne.com/blog/2014/01/09/building-social-apps-with-rails-inkwell/)
+
 Russian translation of README file available
 [here](https://github.com/salkar/inkwell/blob/master/README_RU.rdoc).
 
