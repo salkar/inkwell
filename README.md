@@ -53,6 +53,8 @@ class Category < ActiveRecord::Base
 end
 ```
 
+Default branch is the master branch, which only supports the Rails 4.0. For Rails 3 support get rails3 branch.
+
 *MySQL* can't set default value for BLOB/TEXT fields so currently only *sqlite3* and *PostgreSQL* are supported.
 
 
