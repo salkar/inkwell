@@ -16,9 +16,9 @@ module Inkwell
         attr_accessor :is_reblog_in_blogline
         attr_accessor :from_sources_in_timeline
 
-        has_many :blog_items, :class_name => 'Inkwell::BlogItem', :foreign_key => :item_id, :conditions => {:item_type => ::Inkwell::Constants::ItemTypes::POST}
+        has_many :blog_items, -> { where item_type: ::Inkwell::Constants::ItemTypes::POST}, :class_name => 'Inkwell::BlogItem', :foreign_key => :item_id
         if ::Inkwell::Engine::config.respond_to?('community_table')
-          has_many ::Inkwell::Engine::config.community_table, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize, :through => :blog_items, :conditions => {"inkwell_blog_items.owner_type" => ::Inkwell::Constants::OwnerTypes::COMMUNITY}
+          has_many ::Inkwell::Engine::config.community_table, -> {where "inkwell_blog_items.owner_type" => ::Inkwell::Constants::OwnerTypes::COMMUNITY}, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize, :through => :blog_items
         end
 
         after_create :processing_a_post

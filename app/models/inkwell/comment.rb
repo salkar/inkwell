@@ -4,7 +4,6 @@ module Inkwell
     include ::Inkwell::Constants
     include ::Inkwell::Common
 
-    attr_accessible :body, :parent_comment_id, :topmost_obj_id, :topmost_obj_type
     attr_accessor :is_reblogged
     attr_accessor :is_favorited
     attr_accessor :item_id_in_line
@@ -17,7 +16,7 @@ module Inkwell
     after_create :processing_a_comment
     before_destroy :destroy_comment_processing
 
-    belongs_to ::Inkwell::Engine::config.user_table.to_s.singularize
+    belongs_to ::Inkwell::Engine::config.user_table.to_s.singularize.to_sym
 
     def commentline(options = {})
       options.symbolize_keys!

@@ -11,7 +11,6 @@ module Inkwell
     module Config
       def acts_as_inkwell_category
         attr_accessor :parent_category_id
-        attr_accessible :owner_id, :owner_type, :parent_category_id
 
         validates :owner_id, :presence => true
         validates :owner_type, :presence => true

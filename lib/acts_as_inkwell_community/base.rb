@@ -10,19 +10,18 @@ module Inkwell
 
     module Config
       def acts_as_inkwell_community
-        attr_accessible :owner_id, :public
         validates :owner_id, :presence => true
 
         if ::Inkwell::Engine::config.respond_to?('community_table')
           has_many :communities_users, :class_name => 'Inkwell::CommunityUser'
-          has_many :users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.active" => true}
-          has_many :admins, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.is_admin" => true, "inkwell_community_users.active" => true}
-          has_many :writers, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.user_access" => ::Inkwell::Constants::CommunityAccessLevels::WRITE, "inkwell_community_users.active" => true}
-          has_many :muted_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.muted" => true, "inkwell_community_users.active" => true}
-          has_many :banned_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.banned" => true}
-          has_many :asked_invitation_users, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize, :conditions => {"inkwell_community_users.asked_invitation" => true}
-          has_many :blog_items, :class_name => 'Inkwell::BlogItem', :foreign_key => :owner_id, :conditions => {:owner_type => ::Inkwell::Constants::OwnerTypes::COMMUNITY}
-          has_many ::Inkwell::Engine::config.post_table, :class_name => ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize, :through => :blog_items, :conditions => {"inkwell_blog_items.item_type" => ::Inkwell::Constants::ItemTypes::POST}
+          has_many :users, -> { where "inkwell_community_users.active" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :admins, -> { where "inkwell_community_users.is_admin" => true, "inkwell_community_users.active" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :writers, -> { where "inkwell_community_users.user_access" => ::Inkwell::Constants::CommunityAccessLevels::WRITE, "inkwell_community_users.active" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :muted_users, -> { where "inkwell_community_users.muted" => true, "inkwell_community_users.active" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :banned_users, -> { where "inkwell_community_users.banned" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :asked_invitation_users, -> { where "inkwell_community_users.asked_invitation" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
+          has_many :blog_items, -> { where :owner_type => ::Inkwell::Constants::OwnerTypes::COMMUNITY}, :class_name => 'Inkwell::BlogItem', :foreign_key => :owner_id
+          has_many ::Inkwell::Engine::config.post_table, -> { where "inkwell_blog_items.item_type" => ::Inkwell::Constants::ItemTypes::POST}, :class_name => ::Inkwell::Engine::config.post_table.to_s.singularize.capitalize, :through => :blog_items
         end
 
         after_create :processing_a_community
