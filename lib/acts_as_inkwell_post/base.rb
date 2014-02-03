@@ -20,6 +20,7 @@ module Inkwell
         if ::Inkwell::Engine::config.respond_to?('community_table')
           has_many ::Inkwell::Engine::config.community_table, -> {where "inkwell_blog_items.owner_type" => ::Inkwell::Constants::OwnerTypes::COMMUNITY}, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize, :through => :blog_items
         end
+        has_many :comments, as: :commentable, class_name:'Inkwell::Comment'
 
         after_create :processing_a_post
         before_destroy :destroy_post_processing
@@ -40,9 +41,9 @@ module Inkwell
         for_user = options[:for_user]
 
         if last_shown_comment_id
-          comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST).where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
+          comments = self.comments.where("created_at < ?", Inkwell::Comment.find(last_shown_comment_id).created_at).order("created_at DESC").limit(limit)
         else
-          comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST).order("created_at DESC").limit(limit)
+          comments = self.comments.order("created_at DESC").limit(limit)
         end
 
         if for_user
@@ -94,17 +95,13 @@ module Inkwell
         ::Inkwell::TimelineItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::BlogItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
-        comments = ::Inkwell::Comment.where(:topmost_obj_id => self.id, :topmost_obj_type => ItemTypes::POST)
-        comment_ids = []
-        comments.each do |comment|
-          comment_ids << comment.id
-        end
+        comment_ids = self.comments.pluck(:id)
 
         ::Inkwell::TimelineItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
         ::Inkwell::FavoriteItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
         ::Inkwell::BlogItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
-        comments.delete_all
-
+        self.comments.delete_all
+        Inkwell::Comment.where(id:comment_ids).delete_all
 
         if ::Inkwell::Engine::config.respond_to?('category_table')
           ::Inkwell::BlogItemCategory.delete_all :item_id => self.id, :item_type => ItemTypes::POST

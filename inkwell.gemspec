@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "railties", ">= 4.0.0"
   s.add_dependency "activerecord", ">= 4.0.0"
+  s.add_dependency "awesome_nested_set", "~> 3.0.0.rc.3"
 
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "database_cleaner"

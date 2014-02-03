@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130330184136) do
+ActiveRecord::Schema.define(version: 20140129214551) do
 
   create_table "categories", force: true do |t|
     t.string   "name"
@@ -62,16 +62,24 @@ ActiveRecord::Schema.define(version: 20130330184136) do
   create_table "inkwell_comments", force: true do |t|
     t.integer  "user_id"
     t.text     "body"
-    t.integer  "parent_comment_id"
-    t.integer  "topmost_obj_id"
-    t.text     "upper_comments_tree"
+    t.integer  "parent_id"
+    t.integer  "commentable_id"
     t.text     "users_ids_who_favorite_it", default: "[]"
     t.text     "users_ids_who_comment_it",  default: "[]"
     t.text     "users_ids_who_reblog_it",   default: "[]"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "topmost_obj_type"
+    t.string   "commentable_type"
+    t.integer  "lft"
+    t.integer  "rgt"
+    t.integer  "depth"
   end
+
+  add_index "inkwell_comments", ["commentable_id", "commentable_type"], name: "index_inkwell_comments_on_commentable_id_and_commentable_type"
+  add_index "inkwell_comments", ["lft"], name: "index_inkwell_comments_on_lft"
+  add_index "inkwell_comments", ["parent_id"], name: "index_inkwell_comments_on_parent_id"
+  add_index "inkwell_comments", ["rgt"], name: "index_inkwell_comments_on_rgt"
+  add_index "inkwell_comments", ["user_id"], name: "index_inkwell_comments_on_user_id"
 
   create_table "inkwell_community_users", force: true do |t|
     t.integer  "user_id"

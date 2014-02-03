@@ -10,7 +10,7 @@ module Inkwell
 
     module Config
       def acts_as_inkwell_user
-        has_many :comments, :class_name => 'Inkwell::Comment'
+        has_many :comments, class_name: 'Inkwell::Comment'
         has_many :following_relations, :class_name => 'Inkwell::Following', :foreign_key => :follower_id
         has_many :followings, :through => :following_relations, :class_name => ::Inkwell::Engine::config.user_table.to_s.singularize.capitalize
         has_many :follower_relations, :class_name => 'Inkwell::Following', :foreign_key => :followed_id
@@ -80,14 +80,11 @@ module Inkwell
       end
 
       def create_comment(options = {})
+        ActiveSupport::Deprecation.warn('create_comment deprecated. Will be removed. Use user.comments.create.')
         options.symbolize_keys!
         raise "for_object should be passed" unless options[:for_object]
         raise "comment body should be passed" unless options[:body]
-        for_object = options[:for_object]
-        options[:topmost_obj_id] = for_object.id
-        options[:topmost_obj_type] = get_item_type for_object
-        options.delete :for_object
-        self.comments.create options
+        options[:for_object].comments.create body:options[:body], parent_id:options[:parent_comment_id], user_id:self.id
       end
 
       def communities_row
