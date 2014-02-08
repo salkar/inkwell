@@ -189,8 +189,7 @@ describe "Comments" do
     ::Inkwell::BlogItem.all.size.should == 2
     ::Inkwell::Comment.all.size.should == 1
     @comment.reload
-    users_ids_who_comment_it = ActiveSupport::JSON.decode(@comment.users_ids_who_comment_it)
-    users_ids_who_comment_it.should == []
+    @comment.comment_count.should == 0
   end
 
   it "2 comments should been deleted from post with parent comment" do

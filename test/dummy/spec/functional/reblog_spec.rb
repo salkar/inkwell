@@ -15,14 +15,14 @@ describe "Reblog" do
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST).size.should == 2
     ::Inkwell::BlogItem.where(:item_id => @salkar_post.id, :item_type => ::Inkwell::Constants::ItemTypes::POST, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 1
     @salkar_post.reload
-    @salkar_post.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
+    @salkar_post.reblog_count.should == 1
   end
 
   it "user should reblog comment" do
     @morozovm.reblog @salkar_comment
     ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 1
     @salkar_comment.reload
-    @salkar_comment.users_ids_who_reblog_it.should == "[#{@morozovm.id}]"
+    @salkar_comment.reblog_count.should == 1
   end
 
   it "timeline item should been created for followers when user reblog post" do
@@ -102,7 +102,7 @@ describe "Reblog" do
     @morozovm.unreblog @salkar_comment
     ::Inkwell::BlogItem.where(:item_id => @salkar_comment.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_id => @morozovm.id, :owner_type => ::Inkwell::Constants::OwnerTypes::USER, :is_reblog => true).size.should == 0
     @salkar_comment.reload
-    @salkar_comment.users_ids_who_reblog_it.should == "[]"
+    @salkar_comment.reblog_count.should == 0
   end
 
   it "timeline items should delete for followers when user unreblog post" do

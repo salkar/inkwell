@@ -45,19 +45,21 @@ module Inkwell
       result
     end
 
-    def comment_count
+    def comments_count
       self.descendants.size
     end
 
-    def favorite_count
-      users_ids_who_favorite_it = ActiveSupport::JSON.decode self.users_ids_who_favorite_it
-      users_ids_who_favorite_it.size
+    def favorites_count
+      ::Inkwell::FavoriteItem.where(:item_id => self.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT).size
     end
 
-    def reblog_count
-      users_ids_who_reblog_it = ActiveSupport::JSON.decode self.users_ids_who_reblog_it
-      users_ids_who_reblog_it.size
+    def reblogs_count
+      ::Inkwell::BlogItem.where(:item_id => self.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :is_reblog => true).size
     end
+
+    alias_method :comment_count, :comments_count
+    alias_method :favorite_count, :favorites_count
+    alias_method :reblog_count, :reblogs_count
 
     private
 

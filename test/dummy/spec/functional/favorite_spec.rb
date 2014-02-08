@@ -36,6 +36,8 @@ describe "Favorites" do
     ::Inkwell::FavoriteItem.create :item_id => @salkar_comment.id, :owner_id => @salkar.id, :item_type => ::Inkwell::Constants::ItemTypes::COMMENT, :owner_type => ::Inkwell::Constants::OwnerTypes::USER
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar.favorite?(@salkar_comment).should == true
+    @salkar_comment.reload
+    @salkar_comment.favorite_count.should == 1
   end
 
   it "Comment should not been favorited" do
@@ -48,14 +50,12 @@ describe "Favorites" do
     @salkar.favorite?(@salkar_post).should == true
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar_post.reload
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@salkar.id]
+    @salkar_post.favorite_count.should == 1
     @morozovm.favorite @salkar_post
     @morozovm.favorite?(@salkar_post).should == true
     ::Inkwell::FavoriteItem.all.size.should == 2
     @salkar_post.reload
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@salkar.id, @morozovm.id]
+    @salkar_post.favorite_count.should == 2
   end
 
   it "User should favorite comment" do
@@ -63,14 +63,12 @@ describe "Favorites" do
     @salkar.favorite?(@salkar_comment).should == true
     ::Inkwell::FavoriteItem.all.size.should == 1
     @salkar_comment.reload
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_comment.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@salkar.id]
+    @salkar_comment.favorite_count.should == 1
     @morozovm.favorite @salkar_comment
     @morozovm.favorite?(@salkar_comment).should == true
     ::Inkwell::FavoriteItem.all.size.should == 2
     @salkar_comment.reload
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_comment.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@salkar.id, @morozovm.id]
+    @salkar_comment.favorite_count.should == 2
   end
 
   it "User should unfavorite post" do
@@ -89,8 +87,7 @@ describe "Favorites" do
     @salkar.unfavorite @salkar_post
     @salkar_post.reload
     ::Inkwell::FavoriteItem.all.size.should == 1
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_post.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@morozovm.id]
+    @salkar_post.favorite_count.should == 1
   end
 
   it "User should unfavorite comment" do
@@ -100,8 +97,7 @@ describe "Favorites" do
     @salkar.unfavorite @salkar_comment
     @salkar_comment.reload
     ::Inkwell::FavoriteItem.all.size.should == 0
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_comment.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == []
+    @salkar_comment.favorite_count.should == 0
 
     @salkar.favorite @salkar_comment
     @morozovm.favorite @salkar_comment
@@ -110,8 +106,7 @@ describe "Favorites" do
     @morozovm.unfavorite @salkar_comment
     @salkar_comment.reload
     ::Inkwell::FavoriteItem.all.size.should == 1
-    users_ids_who_favorite_it = ActiveSupport::JSON.decode(@salkar_comment.users_ids_who_favorite_it)
-    users_ids_who_favorite_it.should == [@salkar.id]
+    @salkar_comment.favorite_count.should == 1
   end
 
   it "Unfavorite not favorited obj should not return error" do

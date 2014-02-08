@@ -103,11 +103,6 @@ module Inkwell
         return if self.favorite? obj
 
         FavoriteItem.create :item_id => obj.id, :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_type => get_item_type(obj)
-
-        users_ids_who_favorite_it = ActiveSupport::JSON.decode obj.users_ids_who_favorite_it
-        users_ids_who_favorite_it << self.id
-        obj.users_ids_who_favorite_it = ActiveSupport::JSON.encode users_ids_who_favorite_it
-        obj.save
       end
 
       def favorite?(obj)
@@ -118,11 +113,6 @@ module Inkwell
         return unless self.favorite? obj
 
         ::Inkwell::FavoriteItem.where(:item_id => obj.id, :item_type => get_item_type(obj), :owner_id => self.id, :owner_type => OwnerTypes::USER).destroy_all
-
-        users_ids_who_favorite_it = ActiveSupport::JSON.decode obj.users_ids_who_favorite_it
-        users_ids_who_favorite_it.delete self.id
-        obj.users_ids_who_favorite_it = ActiveSupport::JSON.encode users_ids_who_favorite_it
-        obj.save
       end
 
       def favoriteline(options = {})
@@ -256,11 +246,6 @@ module Inkwell
         user_id_attr = "#{::Inkwell::Engine::config.user_table.to_s.singularize}_id"
         BlogItem.create :item_id => obj.id, :is_reblog => true, :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_type => item_type
 
-        users_ids_who_reblog_it = ActiveSupport::JSON.decode obj.users_ids_who_reblog_it
-        users_ids_who_reblog_it << self.id
-        obj.users_ids_who_reblog_it = ActiveSupport::JSON.encode users_ids_who_reblog_it
-        obj.save
-
         self.followers_row.each do |user_id|
           next if obj.send(user_id_attr) == user_id
           item = TimelineItem.where(:item_id => obj.id, :owner_id => user_id, :owner_type => OwnerTypes::USER, :item_type => item_type).first
@@ -286,11 +271,6 @@ module Inkwell
         raise "User tries to unreblog his post." if self.id == obj.user_id
 
         item_type = get_item_type(obj)
-
-        users_ids_who_reblog_it = ActiveSupport::JSON.decode obj.users_ids_who_reblog_it
-        users_ids_who_reblog_it.delete self.id
-        obj.users_ids_who_reblog_it = ActiveSupport::JSON.encode users_ids_who_reblog_it
-        obj.save
 
         ::Inkwell::BlogItem.delete_all :owner_id => self.id, :owner_type => OwnerTypes::USER, :item_id => obj.id, :is_reblog => true, :item_type => item_type
 
