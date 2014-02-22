@@ -10,14 +10,13 @@ module Inkwell
 
     module Config
       def acts_as_inkwell_category
-        attr_accessor :parent_category_id
-
-        validates :owner_id, :presence => true
-        validates :owner_type, :presence => true
-
-        before_create :before_create_processing
-        after_create :after_create_processing
+        alias_attribute :parent_category_id, :parent_id
+        deprecate parent_category_id: 'parent_category_id deprecated. Will be removed. Use parent_id.'
+        validates_presence_of :categoryable
         before_destroy :before_destroy_processing
+
+        belongs_to :categoryable, polymorphic: true
+        acts_as_nested_set
 
         include ::Inkwell::ActsAsInkwellCategory::InstanceMethods
         extend ::Inkwell::ActsAsInkwellCategory::ClassMethods
@@ -29,18 +28,6 @@ module Inkwell
       require_relative '../common/base.rb'
       include ::Inkwell::Constants
       include ::Inkwell::Common
-
-      def get_categories_for(options = {})
-        options.symbolize_keys!
-        object = options[:object]
-        type = options[:type]
-        result = category_class.where :owner_id => object.id, :owner_type => type
-        result.each do |category|
-          parent_ids = ActiveSupport::JSON.decode category.parent_ids
-          category.parent_category_id = parent_ids.last
-        end
-        result
-      end
     end
 
     module InstanceMethods
@@ -69,42 +56,8 @@ module Inkwell
         ::Inkwell::BlogItemCategory.delete_all :blog_item_id => blog_item.id, :category_id => self.id
       end
 
-      def before_create_processing
-        if self.parent_category_id
-          parent = category_class.find self.parent_category_id
-          his_parent_ids = ActiveSupport::JSON.decode parent.parent_ids
-          parent_ids = his_parent_ids + [parent.id]
-          self.parent_ids = ActiveSupport::JSON.encode parent_ids
-        end
-      end
-
-      def after_create_processing
-        parent_ids = ActiveSupport::JSON.decode self.parent_ids
-        parent_ids.each do |parent_id|
-          parent = category_class.find parent_id
-          his_child_ids = ActiveSupport::JSON.decode parent.child_ids
-          his_child_ids << self.id
-          parent.child_ids = ActiveSupport::JSON.encode his_child_ids
-          parent.save
-        end
-      end
-
       def before_destroy_processing
-        child_ids = ActiveSupport::JSON.decode self.child_ids
-        ids_to_delete_for_parent = child_ids + [self.id]
-        category_class.delete_all :id => child_ids unless child_ids.empty?
-
-        parent_ids = ActiveSupport::JSON.decode self.parent_ids
-        parent_ids.each do |parent_id|
-          parent = category_class.find parent_id
-          his_child_ids = ActiveSupport::JSON.decode parent.child_ids
-          his_child_ids -= ids_to_delete_for_parent
-          parent.child_ids = ActiveSupport::JSON.encode his_child_ids
-          parent.save
-        end
-
-        ::Inkwell::BlogItemCategory.delete_all :category_id => ids_to_delete_for_parent
-
+        ::Inkwell::BlogItemCategory.delete_all :category_id => self.self_and_descendants.map(&:id)
       end
     end
   end

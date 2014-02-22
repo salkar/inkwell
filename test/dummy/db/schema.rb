@@ -11,17 +11,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140208120418) do
+ActiveRecord::Schema.define(version: 20140222122435) do
 
   create_table "categories", force: true do |t|
     t.string   "name"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.text     "parent_ids", default: "[]"
-    t.text     "child_ids",  default: "[]"
-    t.integer  "owner_id"
-    t.string   "owner_type"
+    t.integer  "categoryable_id"
+    t.string   "categoryable_type"
+    t.integer  "parent_id"
+    t.integer  "lft"
+    t.integer  "rgt"
+    t.integer  "depth"
   end
+
+  add_index "categories", ["categoryable_id", "categoryable_type"], name: "index_categories_on_categoryable_id_and_categoryable_type"
+  add_index "categories", ["lft"], name: "index_categories_on_lft"
+  add_index "categories", ["parent_id"], name: "index_categories_on_parent_id"
+  add_index "categories", ["rgt"], name: "index_categories_on_rgt"
 
   create_table "communities", force: true do |t|
     t.string   "name"

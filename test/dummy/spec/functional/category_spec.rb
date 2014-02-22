@@ -16,56 +16,56 @@ describe "Category" do
 
   it "Category should be created for user" do
     c = @salkar.create_category :name => "test_cat_1"
-    c.owner_id.should == @salkar.id
-    c.owner_type.should == 'u'
+    c.categoryable.should == @salkar
+    c.name.should == "test_cat_1"
   end
 
-  it "Category should be created for user" do
+  it "Category should be created for community" do
     c = @community.create_category :name => "test_cat_1"
-    c.owner_id.should == @community.id
-    c.owner_type.should == 'c'
+    c.categoryable.should == @community
+    c.name.should == "test_cat_1"
   end
 
   it "Category with parent cantegory should be created for user" do
     c = @salkar.create_category :name => "test_cat_0"
-    c1 = @salkar.create_category :name => "test_cat_1", :parent_category_id => c.id
+    c1 = @salkar.create_category :name => "test_cat_1", :parent_id => c.id
     c1.reload
-    c1.owner_id.should == @salkar.id
-    c1.owner_type.should == 'u'
-    c1.parent_ids.should == "[#{c.id}]"
     c.reload
-    c.child_ids.should == "[#{c1.id}]"
+    c1.categoryable.should == @salkar
+    c1.ancestors.should == [c]
+    c.reload
+    c.descendants.should == [c1]
     c2 = @salkar.create_category :name => "test_cat_2", :parent_category_id => c1.id
     c.reload
     c1.reload
     c2.reload
-    c.parent_ids.should == "[]"
-    c1.parent_ids.should == "[#{c.id}]"
-    c2.parent_ids.should == "[#{c.id},#{c1.id}]"
-    c.child_ids.should == "[#{c1.id},#{c2.id}]"
-    c1.child_ids.should == "[#{c2.id}]"
-    c2.child_ids.should == "[]"
+    c.ancestors.should == []
+    c1.ancestors.should == [c]
+    c2.ancestors.should == [c,c1]
+    c.descendants.should == [c1,c2]
+    c1.descendants.should == [c2]
+    c2.descendants.should == []
   end
 
   it "Category with parent cantegory should be created for community" do
     c = @community.create_category :name => "test_cat_0"
-    c1 = @community.create_category :name => "test_cat_1", :parent_category_id => c.id
+    c1 = @community.create_category :name => "test_cat_1", :parent_id => c.id
     c1.reload
-    c1.owner_id.should == @salkar.id
-    c1.owner_type.should == 'c'
-    c1.parent_ids.should == "[#{c.id}]"
     c.reload
-    c.child_ids.should == "[#{c1.id}]"
+    c1.categoryable.should == @community
+    c1.ancestors.should == [c]
+    c.reload
+    c.descendants.should == [c1]
     c2 = @community.create_category :name => "test_cat_2", :parent_category_id => c1.id
     c.reload
     c1.reload
     c2.reload
-    c.parent_ids.should == "[]"
-    c1.parent_ids.should == "[#{c.id}]"
-    c2.parent_ids.should == "[#{c.id},#{c1.id}]"
-    c.child_ids.should == "[#{c1.id},#{c2.id}]"
-    c1.child_ids.should == "[#{c2.id}]"
-    c2.child_ids.should == "[]"
+    c.ancestors.should == []
+    c1.ancestors.should == [c]
+    c2.ancestors.should == [c, c1]
+    c.descendants.should == [c1, c2]
+    c1.descendants.should == [c2]
+    c2.descendants.should == []
   end
 
   it "Category should be destroyed" do
@@ -85,15 +85,15 @@ describe "Category" do
     c.reload
     c1.reload
     c2.reload
-    c.child_ids.should == "[#{c1.id},#{c2.id}]"
-    c1.child_ids.should == "[#{c2.id}]"
-    c2.parent_ids.should == "[#{c.id},#{c1.id}]"
+    c.descendants.should == [c1,c2]
+    c1.descendants.should == [c2]
+    c2.ancestors.should == [c,c1]
 
     c2.destroy
     c.reload
     c1.reload
-    c.child_ids.should == "[#{c1.id}]"
-    c1.child_ids.should == "[]"
+    c.descendants.should == [c1]
+    c1.descendants.should == []
   end
 
   it "Category info should be destroed recursively for user" do
@@ -103,90 +103,49 @@ describe "Category" do
     c.reload
     c1.reload
     c2.reload
-    c.child_ids.should == "[#{c1.id},#{c2.id}]"
-    c1.child_ids.should == "[#{c2.id}]"
-    c2.parent_ids.should == "[#{c.id},#{c1.id}]"
+    c.descendants.should == [c1, c2]
+    c1.descendants.should == [c2]
+    c2.ancestors.should == [c, c1]
 
     c2.destroy
     c.reload
     c1.reload
-    c.child_ids.should == "[#{c1.id}]"
-    c1.child_ids.should == "[]"
+    c.descendants.should == [c1]
+    c1.descendants.should == []
   end
 
   it "Categories should be destroyed recursively for user" do
     c = @salkar.create_category :name => "test_cat_0"
     c1 = @salkar.create_category :name => "test_cat_1", :parent_category_id => c.id
     c2 = @salkar.create_category :name => "test_cat_2", :parent_category_id => c1.id
+    Category.all.size.should == 3
     c.reload
     c1.reload
     c2.reload
 
     c1.destroy
     c.reload
-    c.child_ids.should == "[]"
+    c.descendants.should == []
     Category.where(:name => "test_cat_2").should == []
+    Category.all.size.should == 1
   end
 
   it "Categories should be destroyed recursively for community" do
     c = @community.create_category :name => "test_cat_0"
     c1 = @community.create_category :name => "test_cat_1", :parent_category_id => c.id
     c2 = @community.create_category :name => "test_cat_2", :parent_category_id => c1.id
+    Category.all.size.should == 3
     c.reload
     c1.reload
     c2.reload
 
     c1.destroy
     c.reload
-    c.child_ids.should == "[]"
+    c.descendants.should == []
     Category.where(:name => "test_cat_2").should == []
+    Category.all.size.should == 1
   end
 
-  it "Categories should be returned for user" do
-    c0 = @salkar.create_category :name => "test_cat"
-    c00 = @salkar.create_category :name => "test_cat_0", :parent_category_id => c0.id
-    c000 = @salkar.create_category :name => "test_cat_00", :parent_category_id => c00.id
-    c01 = @salkar.create_category :name => "test_cat_1", :parent_category_id => c0.id
-    c010 = @salkar.create_category :name => "test_cat_00", :parent_category_id => c01.id
-    c011 = @salkar.create_category :name => "test_cat_00", :parent_category_id => c01.id
-    c0101 = @salkar.create_category :name => "test_cat_00", :parent_category_id => c010.id
-    c1 =  @salkar.create_category :name => "test_cat_c_1"
-    c10 = @salkar.create_category :name => "test_cat_c_1_0", :parent_category_id => c1.id
-    result = Category.get_categories_for :object => @salkar, :type => 'u'
-    result.size.should == 9
-    result.select{|r| r.id == c0.id}[0].parent_category_id.should == nil
-    result.select{|r| r.id == c00.id}[0].parent_category_id.should == c0.id
-    result.select{|r| r.id == c000.id}[0].parent_category_id.should == c00.id
-    result.select{|r| r.id == c01.id}[0].parent_category_id.should == c0.id
-    result.select{|r| r.id == c010.id}[0].parent_category_id.should == c01.id
-    result.select{|r| r.id == c011.id}[0].parent_category_id.should == c01.id
-    result.select{|r| r.id == c0101.id}[0].parent_category_id.should == c010.id
-    result.select{|r| r.id == c1.id}[0].parent_category_id.should == nil
-    result.select{|r| r.id == c10.id}[0].parent_category_id.should == c1.id
-  end
-
-  it "Categories should be returned for user" do
-    c0 = @community.create_category :name => "test_cat"
-    c00 = @community.create_category :name => "test_cat_0", :parent_category_id => c0.id
-    c000 = @community.create_category :name => "test_cat_00", :parent_category_id => c00.id
-    c01 = @community.create_category :name => "test_cat_1", :parent_category_id => c0.id
-    c010 = @community.create_category :name => "test_cat_00", :parent_category_id => c01.id
-    c011 = @community.create_category :name => "test_cat_00", :parent_category_id => c01.id
-    c0101 = @community.create_category :name => "test_cat_00", :parent_category_id => c010.id
-    c1 = @community.create_category :name => "test_cat_c_1"
-    c10 = @community.create_category :name => "test_cat_c_1_0", :parent_category_id => c1.id
-    result = Category.get_categories_for :object => @community, :type => 'c'
-    result.size.should == 9
-    result.select { |r| r.id == c0.id }[0].parent_category_id.should == nil
-    result.select { |r| r.id == c00.id }[0].parent_category_id.should == c0.id
-    result.select { |r| r.id == c000.id }[0].parent_category_id.should == c00.id
-    result.select { |r| r.id == c01.id }[0].parent_category_id.should == c0.id
-    result.select { |r| r.id == c010.id }[0].parent_category_id.should == c01.id
-    result.select { |r| r.id == c011.id }[0].parent_category_id.should == c01.id
-    result.select { |r| r.id == c0101.id }[0].parent_category_id.should == c010.id
-    result.select { |r| r.id == c1.id }[0].parent_category_id.should == nil
-    result.select { |r| r.id == c10.id }[0].parent_category_id.should == c1.id
-  end
 
   it "Categories should be returned for user (user wrapper)" do
     c0 = @salkar.create_category :name => "test_cat"
@@ -398,8 +357,10 @@ describe "Category" do
 
   it "Category blogline should be returned for user" do
     c = @salkar.create_category :name => "test_cat"
-    c1 = @salkar.create_category :name => "test_cat", :parent_category_id => c
     c.reload
+    c1 = @salkar.create_category :name => "test_cat_2", :parent_category_id => c.id
+    c.reload
+    c1.reload
     @morozovm_post = @morozovm.posts.create :body => "morozovm_post_test_body"
     @morozovm_post1 = @morozovm.posts.create :body => "morozovm_post_test_body1"
     @morozovm_post2 = @morozovm.posts.create :body => "morozovm_post_test_body2"
@@ -583,10 +544,9 @@ describe "Category" do
   it "User's categories should be deleted when user is deleted" do
     c = @salkar.create_category :name => "test_cat"
     c1 = @salkar.create_category :name => "test_cat", :parent_category_id => c.id
-    id = @salkar.id
-    Category.where(:owner_id => id, :owner_type => 'u').size.should == 2
+    @salkar.categories.size.should == 2
     @salkar.destroy
-    Category.where(:owner_id => id, :owner_type => 'u').size.should == 0
+    Category.all.size.should == 0
   end
 
   it "Child categories blogline records should be deleted when user is deleted" do
@@ -604,9 +564,9 @@ describe "Category" do
     c = @community.create_category :name => "test_cat"
     c1 = @community.create_category :name => "test_cat", :parent_category_id => c.id
     id = @community.id
-    Category.where(:owner_id => id, :owner_type => 'c').size.should == 2
+    @community.categories.size.should == 2
     @community.destroy
-    Category.where(:owner_id => id, :owner_type => 'c').size.should == 0
+    Category.all.size.should == 0
   end
 
   it "Child categories blogline records should be deleted when community is deleted" do

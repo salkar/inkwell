@@ -19,6 +19,9 @@ module Inkwell
           has_many :communities_users, :class_name => 'Inkwell::CommunityUser'
           has_many :communities, -> {where "inkwell_community_users.active" => true}, :through => :communities_users, :class_name => ::Inkwell::Engine::config.community_table.to_s.singularize.capitalize
         end
+        if ::Inkwell::Engine::config.respond_to?('category_table')
+          has_many :categories, as: :categoryable
+        end
         before_destroy :destroy_processing
         include ::Inkwell::ActsAsInkwellUser::InstanceMethods
       end
@@ -37,14 +40,12 @@ module Inkwell
         category = options[:category]
 
         if category
-          child_categories = ActiveSupport::JSON.decode category.child_ids
-          category_ids = [category.id] + child_categories
+          category_ids = category.self_and_descendants.map(&:id)
           if last_shown_obj_id
             blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).where("blog_item_created_at < ?", Inkwell::BlogItem.find(last_shown_obj_id).created_at).order("blog_item_created_at DESC").limit(limit)
           else
             blog_items_categories = ::Inkwell::BlogItemCategory.where(:category_id => category_ids).order("blog_item_created_at DESC").limit(limit)
           end
-
           blog_items_ids = []
           blog_items_categories.each do |record|
             blog_items_ids << record.blog_item_id
@@ -422,14 +423,13 @@ module Inkwell
       #wrappers for category methods
 
       def create_category(options = {})
-        options.symbolize_keys!
-        options[:owner_id] = self.id
-        options[:owner_type] = OwnerTypes::USER
-        category_class.create options
+        ActiveSupport::Deprecation.warn('create_category deprecated. Will be removed. Use user.categories.create.')
+        self.categories.create options
       end
 
       def get_categories
-        category_class.get_categories_for :object => self, :type => OwnerTypes::USER
+        ActiveSupport::Deprecation.warn('get_categories deprecated. Will be removed. Use user.categories.')
+        self.categories
       end
 
 
@@ -459,7 +459,7 @@ module Inkwell
         end
 
         if ::Inkwell::Engine::config.respond_to?('category_table')
-          categories = category_class.where :owner_id => self.id, :owner_type => OwnerTypes::USER
+          categories = self.categories
           category_ids = []
           categories.each do |category|
             category_ids << category.id
