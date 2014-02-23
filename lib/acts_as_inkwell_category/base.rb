@@ -42,8 +42,7 @@ module Inkwell
         owner = options[:owner]
         owner_type = get_owner_type owner
         blog_item = Inkwell::BlogItem.where(:owner_id => owner.id, :owner_type => owner_type, :item_id => item.id, :item_type => item_type).first
-        ::Inkwell::BlogItemCategory.create :blog_item_id => blog_item.id, :category_id => self.id,
-                                           :blog_item_created_at => blog_item.created_at, :item_id => blog_item.item_id, :item_type => blog_item.item_type
+        ::Inkwell::BlogItemCategory.create :blog_item_id => blog_item.id, :category_id => self.id, :blog_item_created_at => blog_item.created_at
       end
 
       def remove_item(options = {})

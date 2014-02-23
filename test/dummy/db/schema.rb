@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140222122435) do
+ActiveRecord::Schema.define(version: 20140223111526) do
 
   create_table "categories", force: true do |t|
     t.string   "name"
@@ -48,12 +48,13 @@ ActiveRecord::Schema.define(version: 20140222122435) do
   create_table "inkwell_blog_item_categories", force: true do |t|
     t.integer  "blog_item_id"
     t.integer  "category_id"
-    t.integer  "item_id"
-    t.string   "item_type"
     t.datetime "blog_item_created_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "inkwell_blog_item_categories", ["blog_item_id"], name: "index_inkwell_blog_item_categories_on_blog_item_id"
+  add_index "inkwell_blog_item_categories", ["category_id"], name: "index_inkwell_blog_item_categories_on_category_id"
 
   create_table "inkwell_blog_items", force: true do |t|
     t.integer  "item_id"

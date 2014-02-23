@@ -92,18 +92,19 @@ module Inkwell
       def destroy_post_processing
         ::Inkwell::TimelineItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
         ::Inkwell::FavoriteItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
-        ::Inkwell::BlogItem.delete_all :item_id => self.id, :item_type => ItemTypes::POST
+        self_blog_items_ids = ::Inkwell::BlogItem.where(:item_id => self.id, :item_type => ItemTypes::POST).pluck(:id)
+        ::Inkwell::BlogItem.delete_all :id => self_blog_items_ids
         comment_ids = self.comments.pluck(:id)
 
         ::Inkwell::TimelineItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
         ::Inkwell::FavoriteItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
-        ::Inkwell::BlogItem.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
+        comments_blog_items_ids = ::Inkwell::BlogItem.where(:item_id => comment_ids, :item_type => ItemTypes::COMMENT).pluck(:id)
+        ::Inkwell::BlogItem.delete_all :id => comments_blog_items_ids
         self.comments.delete_all
         Inkwell::Comment.where(id:comment_ids).delete_all
 
         if ::Inkwell::Engine::config.respond_to?('category_table')
-          ::Inkwell::BlogItemCategory.delete_all :item_id => self.id, :item_type => ItemTypes::POST
-          ::Inkwell::BlogItemCategory.delete_all :item_id => comment_ids, :item_type => ItemTypes::COMMENT
+          ::Inkwell::BlogItemCategory.delete_all :id => self_blog_items_ids + comments_blog_items_ids
         end
       end
     end

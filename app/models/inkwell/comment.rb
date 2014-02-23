@@ -71,7 +71,8 @@ module Inkwell
       comments_ids_to_delete = child_comments_ids_to_delete << self.id
       ::Inkwell::TimelineItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
       ::Inkwell::FavoriteItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
-      ::Inkwell::BlogItem.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
+      blog_items_ids = ::Inkwell::BlogItem.where(:item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT).pluck(:id)
+      ::Inkwell::BlogItem.delete_all :id => blog_items_ids
 
       user_id = self.send user_id_attr
       comments_info_to_delete = child_comments << Hash['user_id' => user_id, 'comment_id' => self.id]
@@ -83,7 +84,7 @@ module Inkwell
       parent_obj.save
 
       if ::Inkwell::Engine::config.respond_to?('category_table')
-        ::Inkwell::BlogItemCategory.delete_all :item_id => comments_ids_to_delete, :item_type => ItemTypes::COMMENT
+        ::Inkwell::BlogItemCategory.delete_all :blog_item_id => blog_items_ids
       end
     end
 
