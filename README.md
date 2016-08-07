@@ -13,19 +13,6 @@ Ruby on Rails application.
 Russian translation of README file available
 [here](https://github.com/salkar/inkwell/blob/master/README_RU.rdoc).
 
-### Acknowledgments
-
-[![RubyMine](http://www.jetbrains.com/img/banners/rm6_646x220.png)](http://www.jetbrains.com/ruby/)
-
-
-- - -
-You can extend the functionality of Inkwell by using [inkwell_timelines](https://github.com/salkar/inkwell_timelines). 
-Inkwell_timelines gem contains helpers which provide a way to create timelines with content autoload on scrolling.
-Additionally it allows you to group timelines in timeline blocks.
-![Inkwell Timelines](https://github.com/salkar/inkwell_timelines/blob/master/test/screen/main-mini.png?raw=true)
-
-- - -
-
 ## Requirements
 You should have User and Post (or other identical) classes declared in your application. They
 should have a one-to-many relationship. For example:
