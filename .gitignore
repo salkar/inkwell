@@ -1,27 +1,8 @@
-*.gem
-*.rbc
-.bundle
-.config
-coverage
-InstalledFiles
-lib/bundler/man
-pkg
-rdoc
-spec/reports
-test/tmp
-test/version_tmp
-test/dummy/db/*.sqlite3
-test/dummy/log/*.log
-test/dummy/tmp/
-test/dummy_without_community/db/*.sqlite3
-test/dummy_without_community/log/*.log
-test/dummy_without_community/tmp/
-tmp
-log
+.byebug_history
 .idea
-*.lock
+.env
 
-# YARD artifacts
-.yardoc
-_yardoc
-doc/
+*.gem
+spec/dummy/db/*.sqlite3
+spec/dummy/log/*.log
+spec/dummy/tmp/
