@@ -1,8 +1,8 @@
 FactoryGirl.define do
   factory :inkwell_favorite, class: 'Inkwell::Favorite' do
-    owner_id 1
-    owner_type "User"
-    favorited_id 1
-    favorited_type "Post"
+    favorite_subject_id 1
+    favorite_subject_type 'User'
+    favorite_object_id 1
+    favorite_object_type 'Post'
   end
 end
