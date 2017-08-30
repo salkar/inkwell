@@ -4,6 +4,9 @@ Inkwell provides a simple way to add social networking features
 (e.g., comments, reblogs, favorites, following/followers, communities and timelines) to your
 Ruby on Rails application.
 
+## New version is actively developed and will be released soon
+It will be with breaking changes in api - new modules structure, simpler usage and more flexibility.
+
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NYTZGSJD3H3BC)
 
 ### References that may be useful:
