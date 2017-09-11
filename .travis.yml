@@ -6,16 +6,16 @@ rvm:
   - 2.4.1
 gemfile:
 #    - spec/travis/gemfiles/Gemfile-5
-  - spec/travis/gemfiles/Gemfile-5.1
+  - travis/gemfiles/Gemfile-5_1
 env:
     matrix:
 #        - DB=mysql2
 #        - DB=postgresql
       - DB=sqlite3
 before_script:
-  - cp spec/travis/database.travis.yml spec/dummy/config/database.yml
+  - cp travis/database.travis.yml spec/dummy/config/database.yml
   - mysql -e 'create database travis_ci_test'
   - psql -c 'create database travis_ci_test' -U postgres
   - bundle exec rails db:migrate
 script:
-  - bundle exec rspec spec
+  - bundle exec rspec
