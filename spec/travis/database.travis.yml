@@ -9,5 +9,5 @@ test:
   else
     ''
   end
-  -%>
+  %>
   encoding: utf8

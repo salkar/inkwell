@@ -2,15 +2,15 @@ language: ruby
 cache: bundler
 sudo: false
 rvm:
-    - 2.2.2
+#    - 2.2.2
     - 2.4
 gemfile:
-    - spec/travis/gemfiles/Gemfile-5
+#    - spec/travis/gemfiles/Gemfile-5
     - spec/travis/gemfiles/Gemfile-5.1
 env:
     matrix:
-        - DB=mysql2
-        - DB=postgresql
+#        - DB=mysql2
+#        - DB=postgresql
         - DB=sqlite3
 before_script:
     - cp spec/travis/database.travis.yml spec/dummy/config/database.yml

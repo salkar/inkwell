@@ -6,9 +6,10 @@ module Inkwell
       end
 
       def message
-        <<~MESSAGE
-          #{@object.class} cannot be favorited.
-          include Inkwell::CanBeFavorited to #{@object.class} if this object should be favorited.
+        # move to <<~ when ruby supported version starts 2.3 or upper version
+        <<-MESSAGE
+#{@object.class} cannot be favorited.
+include Inkwell::CanBeFavorited to #{@object.class} if this object should be favorited.
         MESSAGE
       end
     end
