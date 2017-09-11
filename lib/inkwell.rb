@@ -1,5 +1,7 @@
-require "inkwell/engine"
+require 'inkwell/engine'
+require 'inkwell/errors/not_favoritable'
 
 module Inkwell
-  # Your code goes here...
+  mattr_accessor(:default_per_page){25}
+  mattr_accessor(:favorites_per_page)
 end

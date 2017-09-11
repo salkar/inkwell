@@ -12,6 +12,7 @@ gemspec
 
 gem 'rails', '~> 5.1.3'
 gem 'sqlite3'
+gem 'kaminari'
 
 group :development, :test do
   gem 'rspec-rails', '~> 3.6'

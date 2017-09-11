@@ -103,4 +103,10 @@ RSpec.configure do |config|
   config.before(:each) do
     DatabaseCleaner.clean
   end
+
+  config.before(:each) do
+    if ENV['LOGGER']
+      ActiveRecord::Base.logger = Logger.new(STDOUT)
+    end
+  end
 end

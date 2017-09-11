@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170827161350) do
+ActiveRecord::Schema.define(version: 20170831231326) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "post_id"
@@ -35,6 +35,15 @@ ActiveRecord::Schema.define(version: 20170827161350) do
     t.datetime "updated_at", null: false
     t.index ["favorite_object_id", "favorite_object_type"], name: "inkwell_favorites_object_index"
     t.index ["favorite_subject_id", "favorite_subject_type"], name: "inkwell_favorites_subject_index"
+  end
+
+  create_table "inkwell_object_counter_caches", force: :cascade do |t|
+    t.integer "cached_object_id"
+    t.string "cached_object_type"
+    t.integer "favorite_count", default: 0
+    t.integer "reblog_count", default: 0
+    t.integer "comment_count", default: 0
+    t.index ["cached_object_id", "cached_object_type"], name: "inkwell_object_counter_cache_index"
   end
 
   create_table "posts", force: :cascade do |t|

@@ -16,4 +16,5 @@ Gem::Specification.new do |s|
   s.test_files = Dir['spec/**/*']
 
   s.add_dependency('rails', '>= 5', '< 6')
+  s.add_dependency('kaminari')
 end
