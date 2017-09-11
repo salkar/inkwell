@@ -2,8 +2,8 @@ language: ruby
 cache: bundler
 sudo: false
 rvm:
-#    - 2.2.2
-  - 2.4.1
+  - 2.2
+  - 2.4
 gemfile:
 #    - spec/travis/gemfiles/Gemfile-5
   - travis/gemfiles/Gemfile-5_1
