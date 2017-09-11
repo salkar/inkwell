@@ -1,0 +1,17 @@
+source 'https://rubygems.org'
+
+gem 'rails', '~> 5.1'
+gem 'sqlite3'
+gem 'pg'
+gem 'mysql2'
+gem 'kaminari'
+
+group :development, :test do
+  gem 'rspec-rails', '~> 3.6'
+  gem 'byebug'
+  gem 'factory_girl_rails'
+end
+
+group :test do
+  gem 'database_cleaner'
+end

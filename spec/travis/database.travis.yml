@@ -1,0 +1,4 @@
+test:
+  adapter: <%= ENV['DB'] %>
+  database: travis_ci_test
+  timeout: 30000
