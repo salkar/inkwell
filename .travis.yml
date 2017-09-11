@@ -18,4 +18,4 @@ before_script:
   - psql -c 'create database travis_ci_test' -U postgres
   - bundle exec rails db:migrate
 script:
-  - bundle exec rspec
+  - bundle exec rspec spec
