@@ -17,8 +17,5 @@ before_script:
     - mysql -e 'create database travis_ci_test'
     - psql -c 'create database travis_ci_test' -U postgres
 script:
-    - cd spec/dummy
-    - RAILS_ENV=test bundle exec rake inkwell:install:migrations
-    - cd ../..
     - RAILS_ENV=test bundle exec rails db:migrate
     - RAILS_ENV=test bundle exec rspec
