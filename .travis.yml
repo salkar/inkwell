@@ -3,19 +3,19 @@ cache: bundler
 sudo: false
 rvm:
 #    - 2.2.2
-    - 2.4
+  - 2.4
 gemfile:
 #    - spec/travis/gemfiles/Gemfile-5
-    - spec/travis/gemfiles/Gemfile-5.1
+  - spec/travis/gemfiles/Gemfile-5.1
 env:
     matrix:
 #        - DB=mysql2
 #        - DB=postgresql
-        - DB=sqlite3
+      - DB=sqlite3
 before_script:
-    - cp spec/travis/database.travis.yml spec/dummy/config/database.yml
-    - mysql -e 'create database travis_ci_test'
-    - psql -c 'create database travis_ci_test' -U postgres
+  - cp spec/travis/database.travis.yml spec/dummy/config/database.yml
+  - mysql -e 'create database travis_ci_test'
+  - psql -c 'create database travis_ci_test' -U postgres
+  - bundle exec rails db:migrate
 script:
-    - rails db:migrate
-    - rspec
+  - bundle exec rspec
