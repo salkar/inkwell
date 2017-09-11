@@ -19,6 +19,6 @@ before_script:
 script:
     - cd spec/dummy
     - RAILS_ENV=test bundle exec rake inkwell:install:migrations
-    - bundle exec rails db:migrate RAILS_ENV=test
     - cd ../..
-    - bundle exec rspec
+    - RAILS_ENV=test bundle exec rails db:migrate
+    - RAILS_ENV=test bundle exec rspec
