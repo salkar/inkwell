@@ -2,7 +2,7 @@ language: ruby
 cache: bundler
 sudo: false
 rvm:
-    - 2.0
+    - 2.2.2
     - 2.4
 gemfile:
     - spec/travis/gemfiles/Gemfile-5
@@ -19,6 +19,6 @@ before_script:
 script:
     - cd spec/dummy
     - RAILS_ENV=test bundle exec rake inkwell:install:migrations
-    - bundle exec rake db:migrate
+    - bundle exec rails db:migrate RAILS_ENV=test
     - cd ../..
     - bundle exec rspec

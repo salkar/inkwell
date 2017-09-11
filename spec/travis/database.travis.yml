@@ -2,3 +2,12 @@ test:
   adapter: <%= ENV['DB'] %>
   database: travis_ci_test
   timeout: 30000
+  username: <%= if ENV['DB'] == 'mysql2'
+    'travis'
+  elsif ENV['DB'] == 'postgresql'
+    'postgres'
+  else
+    ''
+  end
+  -%>
+  encoding: utf8
