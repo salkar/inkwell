@@ -13,6 +13,7 @@ env:
 #    - DB=postgresql
     - DB=sqlite3
 before_script:
+  - bundle update
   - cp travis/database.travis.yml spec/dummy/config/database.yml
   - mysql -e 'create database travis_ci_test'
   - psql -c 'create database travis_ci_test' -U postgres
