@@ -3,7 +3,7 @@ cache: bundler
 sudo: false
 dist: precise
 rvm:
-  - 2.2
+  - 2.2.7
   - 2.4
 gemfile:
   - spec/travis/gemfiles/Gemfile-5
