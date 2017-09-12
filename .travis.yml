@@ -12,8 +12,6 @@ env:
     - DB=mysql2
     - DB=postgresql
     - DB=sqlite3
-install:
-  - bundle install --jobs=3 --retry=3
 before_script:
   - cp travis/database.travis.yml spec/dummy/config/database.yml
   - mysql -e 'create database travis_ci_test'
