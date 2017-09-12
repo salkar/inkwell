@@ -1,5 +1,5 @@
 language: ruby
-#cache: bundler
+cache: bundler
 sudo: false
 rvm:
   - 2.2
@@ -16,6 +16,6 @@ before_script:
   - cp travis/database.travis.yml spec/dummy/config/database.yml
   - mysql -e 'create database travis_ci_test'
   - psql -c 'create database travis_ci_test' -U postgres
-  - bundle exec rails db:migrate
+  - bundle exec rake db:migrate
 script:
   - bundle exec rspec
