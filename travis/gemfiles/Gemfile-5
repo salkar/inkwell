@@ -4,7 +4,7 @@ gemspec path: "../.."
 gem 'rails', '~> 5.0'
 gem 'sqlite3'
 gem 'pg'
-gem 'mysql2', '0.3.18'
+gem 'mysql2'
 gem 'kaminari'
 
 group :development, :test do
