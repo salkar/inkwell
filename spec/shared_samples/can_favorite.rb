@@ -74,11 +74,13 @@ RSpec.shared_examples_for 'can_favorite' do
 
   context 'favorites' do
     before :each do
-      30.times do
+      base_date = Date.yesterday
+      30.times do |i|
         create(
           :inkwell_favorite,
           favorite_subject: owner,
-          favorite_object: create(%i{post comment}.sample))
+          favorite_object: create(%i{post comment}.sample),
+          created_at: base_date + i.minutes)
       end
     end
 
