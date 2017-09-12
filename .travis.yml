@@ -6,7 +6,7 @@ rvm:
   - 2.2.7
   - 2.4
 gemfile:
-  - spec/travis/gemfiles/Gemfile-5
+  - travis/gemfiles/Gemfile-5
   - travis/gemfiles/Gemfile-5_1
 env:
   matrix:
