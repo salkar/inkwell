@@ -19,6 +19,7 @@ before_script:
 #  - bundle update
   - cp travis/database.travis.yml spec/dummy/config/database.yml
   - mysql -e 'create database travis_ci_test'
+  - mysql -u root -e "GRANT ALL PRIVILEGES ON travis_ci_test.* TO 'travis'@'%';";
   - psql -c 'create database travis_ci_test' -U postgres
   - bundle exec rake db:migrate
 script:
