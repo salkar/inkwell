@@ -118,7 +118,6 @@ RSpec.shared_examples_for 'can_favorite' do
     it 'should work with pagination' do
       result = owner.favorites(page: 2, per: 10, padding: 3)
       expect(result.size).to eq(10)
-      Inkwell::Favorite.all.each{|fav| puts fav.inspect; puts '--'}
       expect(result.first)
         .to eq(Inkwell::Favorite
                  .order('created_at DESC')
