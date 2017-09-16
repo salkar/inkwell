@@ -3,6 +3,9 @@ module Inkwell::CanFavorite
 
   included do
     include Inkwell::TimelineCommon
+    has_one :inkwell_subject_counter_cache,
+            as: :cached_subject,
+            class_name: 'Inkwell::SubjectCounterCache'
     has_many :inkwell_favorites,
              as: :favorite_subject,
              class_name: 'Inkwell::Favorite'
@@ -31,7 +34,7 @@ module Inkwell::CanFavorite
         .includes(favorite_object: :inkwell_object_counter_cache)
         .order(order || 'created_at DESC')
         .page(page)
-      result = result.per(per || favorites_per_page)
+        .per(per || favorites_per_page)
       result = result.padding(padding) unless padding.nil?
       inkwell_timeline_for_viewer(result.map(&:favorite_object), for_viewer)
     end
@@ -41,7 +44,8 @@ module Inkwell::CanFavorite
     end
 
     def favorites_count
-      inkwell_favorites.count
+      inkwell_subject_counter_cache&.favorite_count ||
+        inkwell_favorites.count
     end
 
     private

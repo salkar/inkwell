@@ -1,6 +1,6 @@
 module Inkwell
-  class ObjectCounterCache < ApplicationRecord
-    belongs_to :cached_object, polymorphic: true
+  class SubjectCounterCache < ApplicationRecord
+    belongs_to :cached_subject, polymorphic: true
     before_create :fill_counters
 
     def rebuild_counters!
@@ -12,7 +12,7 @@ module Inkwell
 
     def fill_counters
       self.favorite_count =
-        cached_object.try(:inkwell_favorited).try(:count) || 0
+        cached_subject.try(:inkwell_favorites).try(:count) || 0
     end
   end
 end

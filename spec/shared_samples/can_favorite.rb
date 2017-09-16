@@ -8,10 +8,12 @@ RSpec.shared_examples_for 'can_favorite' do
   context 'favorite' do
     it 'should be done' do
       expect(Inkwell::Favorite.count).to eq(0)
-      expect(post.favorite_count).to eq(0)
+      expect(post.favorited_count).to eq(0)
+      expect(owner.favorites_count).to eq(0)
       expect(owner.favorite(post)).to eq(true)
       expect(Inkwell::Favorite.count).to eq(1)
-      expect(post.favorite_count).to eq(1)
+      expect(post.favorited_count).to eq(1)
+      expect(owner.favorites_count).to eq(1)
       favorite = Inkwell::Favorite.first
       {favorite_subject: owner, favorite_object: post}.each do |k, v|
         expect(favorite.public_send(k)).to eq(v)
@@ -37,11 +39,13 @@ RSpec.shared_examples_for 'can_favorite' do
   context 'unfavorite' do
     it 'should be done' do
       create(:inkwell_favorite, favorite_subject: owner, favorite_object: post)
-      create(:inkwell_object_counter_cache, cached_object: post, favorite_count: 1)
-      expect(post.favorite_count).to eq(1)
+      create(:inkwell_object_counter_cache, cached_object: post)
+      expect(post.favorited_count).to eq(1)
+      expect(owner.favorites_count).to eq(1)
       expect(owner.unfavorite(post)).to eq(true)
       expect(Inkwell::Favorite.count).to eq(0)
-      expect(post.reload.favorite_count).to eq(0)
+      expect(owner.reload.favorites_count).to eq(0)
+      expect(post.reload.favorited_count).to eq(0)
     end
 
     it 'should be done when object is not favorited' do
@@ -87,7 +91,7 @@ RSpec.shared_examples_for 'can_favorite' do
     it 'should work' do
       result = owner.favorites
       expect(result.size).to eq(25)
-      expect(result.map(&:favorite_count).uniq).to eq([1])
+      expect(result.map(&:favorited_count).uniq).to eq([1])
       expect(result.map{|item| item.class.to_s}.uniq.sort)
         .to eq(%w{Comment Post})
     end
@@ -133,7 +137,13 @@ RSpec.shared_examples_for 'can_favorite' do
         :inkwell_favorite,
         favorite_subject: owner,
         favorite_object: create(:post))
-      expect(owner.favorites_count).to eq(2)
+      expect(owner.reload.favorites_count).to eq(2)
+    end
+
+    it 'should work without cache' do
+      create(:inkwell_favorite, favorite_subject: owner, favorite_object: post)
+      Inkwell::SubjectCounterCache.delete_all
+      expect(owner.reload.favorites_count).to eq(1)
     end
   end
 end

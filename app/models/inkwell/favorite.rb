@@ -11,23 +11,37 @@ module Inkwell
 
     private
 
+    # TODO refactor later
+
     def process_counters_on_create
-      counter_cache = favorite_object.inkwell_object_counter_cache
-      if counter_cache.present?
-        Inkwell::ObjectCounterCache.update_counters(
-          counter_cache.id,
-          favorite_count: 1)
-      else
-        favorite_object.create_inkwell_object_counter_cache(favorite_count: 1)
-      end
+      process_object_counters(:favorite_count, 1)
+      process_subject_counters(:favorite_count, 1)
     end
 
     def process_counters_on_destroy
+      process_object_counters(:favorite_count, -1)
+      process_subject_counters(:favorite_count, -1)
+    end
+
+    def process_object_counters(counter, value)
       counter_cache = favorite_object.inkwell_object_counter_cache
       if counter_cache.present?
         Inkwell::ObjectCounterCache.update_counters(
           counter_cache.id,
-          favorite_count: -1)
+          counter => value)
+      else
+        favorite_object.create_inkwell_object_counter_cache
+      end
+    end
+
+    def process_subject_counters(counter, value)
+      counter_cache = favorite_subject.inkwell_subject_counter_cache
+      if counter_cache.present?
+        Inkwell::SubjectCounterCache.update_counters(
+          counter_cache.id,
+          counter => value)
+      else
+        favorite_subject.create_inkwell_subject_counter_cache
       end
     end
   end
