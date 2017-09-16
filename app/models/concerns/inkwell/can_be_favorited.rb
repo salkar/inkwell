@@ -11,7 +11,7 @@ module Inkwell::CanBeFavorited
              class_name: 'Inkwell::Favorite'
 
     def favorited_count
-      inkwell_object_counter_cache&.favorite_count ||
+      inkwell_object_counter_cache.try(:favorite_count) ||
         inkwell_favorited.count
     end
 
