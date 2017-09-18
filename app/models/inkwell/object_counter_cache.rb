@@ -3,11 +3,6 @@ module Inkwell
     belongs_to :cached_object, polymorphic: true
     before_create :fill_counters
 
-    def rebuild_counters!
-      fill_counters
-      save
-    end
-
     private
 
     def fill_counters
