@@ -10,7 +10,7 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-gem 'rails', '~> 5.1.3'
+gem 'rails', '~> 5.1.4'
 gem 'sqlite3'
 gem 'kaminari'
 

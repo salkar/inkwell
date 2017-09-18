@@ -89,11 +89,14 @@ RSpec.shared_examples_for 'can_favorite' do
     end
 
     it 'should work' do
-      result = owner.favorites
+      result = owner.favorites do |relation|
+        relation.page(1).order('created_at DESC')
+      end
       expect(result.size).to eq(25)
       expect(result.map(&:favorited_count).uniq).to eq([1])
       expect(result.map{|item| item.class.to_s}.uniq.sort)
         .to eq(%w{Comment Post})
+      expect(result.first).to eq(Inkwell::Favorite.last.favorite_object)
     end
 
     it 'should work for viewer' do
@@ -101,7 +104,9 @@ RSpec.shared_examples_for 'can_favorite' do
       favorited.each do |obj|
         other_user.favorite(obj)
       end
-      result = owner.favorites(for_viewer: other_user)
+      result = owner.favorites(for_viewer: other_user) do |relation|
+        relation.page(1).order('created_at DESC')
+      end
       expect(result.size).to eq(25)
       expect((result & favorited).size).to eq(2)
       result.each do |item|
@@ -109,24 +114,9 @@ RSpec.shared_examples_for 'can_favorite' do
       end
     end
 
-    it 'should work with custom ordering' do
-      result = owner.favorites(order: 'created_at ASC')
-      expect(result.first).to eq(Inkwell::Favorite.first.favorite_object)
-    end
-
-    it 'should work with default ordering' do
+    it 'should work without block' do
       result = owner.favorites
-      expect(result.first).to eq(Inkwell::Favorite.last.favorite_object)
-    end
-
-    it 'should work with pagination' do
-      result = owner.favorites(page: 2, per: 10, padding: 3)
-      expect(result.size).to eq(10)
-      expect(result.first)
-        .to eq(Inkwell::Favorite
-                 .order('created_at DESC')
-                 .all[13]
-                 .favorite_object)
+      expect(result.size).to eq(30)
     end
   end
 

@@ -24,23 +24,11 @@ module Inkwell::CanFavorite
       inkwell_favorites.where(favorite_object: obj).exists?
     end
 
-    def favorites(
-      for_viewer: nil,
-      page: nil,
-      per: nil,
-      padding: nil,
-      order: nil)
+    def favorites(for_viewer: nil, &block)
       result = inkwell_favorites
         .includes(favorite_object: :inkwell_object_counter_cache)
-        .order(order || 'created_at DESC')
-        .page(page)
-        .per(per || favorites_per_page)
-      result = result.padding(padding) unless padding.nil?
+      result = block.call(result) if block.present?
       inkwell_timeline_for_viewer(result.map(&:favorite_object), for_viewer)
-    end
-
-    def favorites_per_page
-      Inkwell.favorites_per_page || Inkwell.default_per_page
     end
 
     def favorites_count
@@ -51,9 +39,15 @@ module Inkwell::CanFavorite
     private
 
     def check_favoritable(obj)
-      unless obj.class.try(:inkwell_favoritable?)
+      unless obj.class.try(:inkwell_can_be_favorited?)
         raise(Inkwell::Errors::NotFavoritable, obj)
       end
+    end
+  end
+
+  module ClassMethods
+    def inkwell_can_favorite?
+      true
     end
   end
 end

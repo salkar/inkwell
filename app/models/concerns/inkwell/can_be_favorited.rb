@@ -10,31 +10,34 @@ module Inkwell::CanBeFavorited
              as: :favorite_object,
              class_name: 'Inkwell::Favorite'
 
+    def favorited_by(&block)
+      result = inkwell_favorited
+        .includes(favorite_subject: :inkwell_subject_counter_cache)
+      result = block.call(result) if block.present?
+      result.map(&:favorite_subject)
+    end
+
+    def favorited_by?(subject)
+      check_favorited_by(subject)
+      inkwell_favorited.where(favorite_subject: subject).exists?
+    end
+
     def favorited_count
       inkwell_object_counter_cache.try(:favorite_count) ||
         inkwell_favorited.count
     end
 
-    def favorited_by(page: nil, per: nil, padding: nil, order: nil)
-      result = inkwell_favorites
-        .includes(favorite_subject: :inkwell_subject_counter_cache)
-        .order(order || 'created_at DESC')
-        .page(page).per(per || favorited_by_per_page)
-      result = result.padding(padding) unless padding.nil?
-      result.map(&:favorite_subject)
-    end
+    private
 
-    def favorited_by?(subject)
-      inkwell_favorited.where(favorite_subject: subject).exists?
-    end
-
-    def favorited_by_per_page
-      Inkwell.favorited_by_per_page || Inkwell.default_per_page
+    def check_favorited_by(obj)
+      unless obj.class.try(:inkwell_can_favorite?)
+        raise(Inkwell::Errors::CannotFavorite, obj)
+      end
     end
   end
 
   module ClassMethods
-    def inkwell_favoritable?
+    def inkwell_can_be_favorited?
       true
     end
   end
