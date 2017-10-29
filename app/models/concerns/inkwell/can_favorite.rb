@@ -5,10 +5,13 @@ module Inkwell::CanFavorite
     include Inkwell::TimelineCommon
     has_one :inkwell_subject_counter_cache,
             as: :cached_subject,
-            class_name: 'Inkwell::SubjectCounterCache'
+            class_name: 'Inkwell::SubjectCounterCache',
+            dependent: :delete
     has_many :inkwell_favorites,
              as: :favorite_subject,
-             class_name: 'Inkwell::Favorite'
+             class_name: 'Inkwell::Favorite',
+             dependent: :delete_all
+    before_destroy :inkwell_before_destroy, prepend: true
 
     def favorite(obj)
       favorite?(obj) || !!inkwell_favorites.create(favorite_object: obj)
@@ -42,6 +45,15 @@ module Inkwell::CanFavorite
       unless obj.class.try(:inkwell_can_be_favorited?)
         raise(Inkwell::Errors::NotFavoritable, obj)
       end
+    end
+
+    def inkwell_before_destroy
+      ids = favorites.map do |obj|
+        obj.try(:inkwell_object_counter_cache).try(:id)
+      end.compact
+      Inkwell::ObjectCounterCache.update_counters(
+        ids,
+        favorite_count: -1)
     end
   end
 

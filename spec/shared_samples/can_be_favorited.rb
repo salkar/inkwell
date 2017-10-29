@@ -65,4 +65,34 @@ RSpec.shared_examples_for 'can_be_favorited' do
       expect(obj.reload.favorited_count).to eq(1)
     end
   end
+
+  context 'on destroy' do
+    before :each do
+      user.favorite(obj)
+    end
+
+    it 'should remove obj counter cache' do
+      expect(obj.inkwell_object_counter_cache.present?).to eq(true)
+      obj.destroy
+      expect(Inkwell::ObjectCounterCache.count).to eq(0)
+    end
+
+    it 'should remove favorites' do
+      expect(obj.favorited_by.count).to eq(1)
+      obj.destroy
+      expect(Inkwell::Favorite.count).to eq(0)
+    end
+
+    it 'should correctly process favoriting subject counters' do
+      other_user = create(:user)
+      other_user.favorite(obj)
+      subject_counter = user.inkwell_subject_counter_cache
+      subject_counter_1 = other_user.inkwell_subject_counter_cache
+      expect(subject_counter.favorite_count).to eq(1)
+      expect(subject_counter_1.favorite_count).to eq(1)
+      obj.destroy
+      expect(subject_counter.reload.favorite_count).to eq(0)
+      expect(subject_counter_1.reload.favorite_count).to eq(0)
+    end
+  end
 end

@@ -136,4 +136,34 @@ RSpec.shared_examples_for 'can_favorite' do
       expect(owner.reload.favorites_count).to eq(1)
     end
   end
+
+  context 'on destroy' do
+    before :each do
+      owner.favorite(post)
+    end
+
+    it 'should remove subject counter cache' do
+      expect(owner.inkwell_subject_counter_cache.present?).to eq(true)
+      owner.destroy
+      expect(Inkwell::SubjectCounterCache.count).to eq(0)
+    end
+
+    it 'should remove favorites' do
+      expect(owner.favorites.count).to eq(1)
+      owner.destroy
+      expect(Inkwell::Favorite.count).to eq(0)
+    end
+
+    it 'should correctly process favoriting object counters' do
+      comment = create(:comment)
+      owner.favorite(comment)
+      object_counter = post.inkwell_object_counter_cache
+      object_counter_1 = comment.inkwell_object_counter_cache
+      expect(object_counter.favorite_count).to eq(1)
+      expect(object_counter_1.favorite_count).to eq(1)
+      owner.destroy
+      expect(object_counter.reload.favorite_count).to eq(0)
+      expect(object_counter_1.reload.favorite_count).to eq(0)
+    end
+  end
 end
