@@ -8,6 +8,8 @@ module Inkwell
     def fill_counters
       self.favorite_count =
         cached_object.try(:inkwell_favorited).try(:count) || 0
+      self.reblog_count =
+        cached_object.try(:inkwell_reblogged).try(:count) || 0
     end
   end
 end

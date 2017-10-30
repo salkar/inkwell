@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170915222045) do
+ActiveRecord::Schema.define(version: 20171029170446) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "post_id"
@@ -24,6 +24,18 @@ ActiveRecord::Schema.define(version: 20170915222045) do
   create_table "communities", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "inkwell_blog_items", force: :cascade do |t|
+    t.integer "blog_item_subject_id"
+    t.string "blog_item_subject_type"
+    t.integer "blog_item_object_id"
+    t.string "blog_item_object_type"
+    t.boolean "reblog", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blog_item_object_id", "blog_item_object_type"], name: "inkwell_blog_item_object_index"
+    t.index ["blog_item_subject_id", "blog_item_subject_type"], name: "inkwell_blog_item_subject_index"
   end
 
   create_table "inkwell_favorites", force: :cascade do |t|

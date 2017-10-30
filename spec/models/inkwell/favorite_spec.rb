@@ -18,6 +18,14 @@ module Inkwell
           subject_cache = user.reload.inkwell_subject_counter_cache
           expect(subject_cache.favorite_count).to eq(1)
         end
+
+        it 'should update counter' do
+          object_cache = post.create_inkwell_object_counter_cache!
+          subject_cache = user.create_inkwell_subject_counter_cache!
+          favorite
+          expect(object_cache.reload.favorite_count).to eq(1)
+          expect(subject_cache.reload.favorite_count).to eq(1)
+        end
       end
 
       context 'on destroy' do
@@ -33,8 +41,18 @@ module Inkwell
           subject_cache = user.reload.inkwell_subject_counter_cache
           expect(subject_cache.favorite_count).to eq(0)
         end
-      end
 
+        it 'should update counter' do
+          object_cache = post.create_inkwell_object_counter_cache!
+          subject_cache = user.create_inkwell_subject_counter_cache!
+          favorite
+          object_cache.update_attributes(favorite_count: 10)
+          subject_cache.update_attributes(favorite_count: 10)
+          favorite.destroy
+          expect(object_cache.reload.favorite_count).to eq(9)
+          expect(subject_cache.reload.favorite_count).to eq(9)
+        end
+      end
     end
   end
 end
