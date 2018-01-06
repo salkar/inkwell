@@ -2,7 +2,7 @@ module Inkwell::CanReblog
   extend ActiveSupport::Concern
 
   included do
-    # include Inkwell::TimelineCommon
+    include Inkwell::TimelineCommon
     has_one :inkwell_subject_counter_cache,
             as: :cached_subject,
             class_name: 'Inkwell::SubjectCounterCache',
@@ -14,26 +14,26 @@ module Inkwell::CanReblog
              dependent: :delete_all
     before_destroy :inkwell_can_reblog_before_destroy, prepend: true
 
-    # def favorite(obj)
-    #   favorite?(obj) || !!inkwell_favorites.create(favorite_object: obj)
-    # end
-    #
-    # def unfavorite(obj)
-    #   check_favoritable(obj)
-    #   !!inkwell_favorites.where(favorite_object: obj).destroy_all
-    # end
-    #
-    # def favorite?(obj)
-    #   check_favoritable(obj)
-    #   inkwell_favorites.where(favorite_object: obj).exists?
-    # end
-    #
-    # def favorites(for_viewer: nil, &block)
-    #   result = inkwell_favorites
-    #     .includes(favorite_object: :inkwell_object_counter_cache)
-    #   result = block.call(result) if block.present?
-    #   inkwell_timeline_for_viewer(result.map(&:favorite_object), for_viewer)
-    # end
+    def reblog(obj)
+      reblog?(obj) || !!inkwell_reblogs.create(blog_item_object: obj)
+    end
+
+    def unreblog(obj)
+      check_rebloggable(obj)
+      !!inkwell_reblogs.where(blog_item_object: obj).destroy_all
+    end
+
+    def reblog?(obj)
+      check_rebloggable(obj)
+      inkwell_reblogs.where(blog_item_object: obj).exists?
+    end
+
+    def reblogs(for_viewer: nil, &block)
+      result = inkwell_reblogs
+        .includes(blog_item_object: :inkwell_object_counter_cache)
+      result = block.call(result) if block.present?
+      inkwell_timeline_for_viewer(result.map(&:blog_item_object), for_viewer)
+    end
 
     def reblogs_count
       inkwell_subject_counter_cache.try(:reblogs_count) ||
@@ -43,18 +43,18 @@ module Inkwell::CanReblog
     private
 
     def check_rebloggable(obj)
-      # unless obj.class.try(:inkwell_can_be_favorited?)
-      #   raise(Inkwell::Errors::NotFavoritable, obj)
-      # end
+      unless obj.class.try(:inkwell_can_be_reblogged?)
+        raise(Inkwell::Errors::NotRebloggable, obj)
+      end
     end
 
     def inkwell_can_reblog_before_destroy
-      # ids = favorites.map do |obj|
-      #   obj.try(:inkwell_object_counter_cache).try(:id)
-      # end.compact
-      # Inkwell::ObjectCounterCache.update_counters(
-      #   ids,
-      #   favorite_count: -1)
+      ids = reblogs.map do |obj|
+        obj.try(:inkwell_object_counter_cache).try(:id)
+      end.compact
+      Inkwell::ObjectCounterCache.update_counters(
+        ids,
+        reblog_count: -1)
     end
   end
 
