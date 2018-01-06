@@ -2,6 +2,7 @@ module Inkwell::CanBeReblogged
   extend ActiveSupport::Concern
 
   included do
+    attr_accessor :reblogged_in_timeline
     has_one :inkwell_object_counter_cache,
              as: :cached_object,
              class_name: 'Inkwell::ObjectCounterCache',
