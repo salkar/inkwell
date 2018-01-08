@@ -155,7 +155,7 @@ RSpec.shared_examples_for 'can_reblog' do
       expect(Inkwell::BlogItem.count).to eq(0)
     end
 
-    it 'should correctly process reblogged object counters' do
+    it 'should correctly process reblogging object counters' do
       comment = create(:comment)
       owner.reblog(comment)
       object_counter = post.inkwell_object_counter_cache
