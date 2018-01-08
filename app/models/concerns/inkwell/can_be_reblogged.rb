@@ -23,7 +23,7 @@ module Inkwell::CanBeReblogged
 
     def reblogged_by?(subject)
       check_reblogged_by(subject)
-      inkwell_reblogged.where(blog_item_subject: subject).exists?
+      subject.reblog?(self)
     end
 
     def reblogged_count

@@ -14,7 +14,7 @@ module Inkwell::CanBeBlogged
 
     def blogged_by?(subject)
       check_blogged_by(subject)
-      blogged_by == subject
+      subject.added_to_blog?(self)
     end
 
     private

@@ -22,7 +22,7 @@ module Inkwell::CanBeFavorited
 
     def favorited_by?(subject)
       check_favorited_by(subject)
-      inkwell_favorited.where(favorite_subject: subject).exists?
+      subject.favorite?(self)
     end
 
     def favorited_count
