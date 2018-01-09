@@ -34,7 +34,9 @@ module Inkwell::CanBlogging
     end
 
     def blog_items_count
-      inkwell_subject_counter_cache.try(:blog_items_count) ||
+      # move to &. when ruby supported version starts 2.3 or upper version
+      (inkwell_subject_counter_cache &&
+        inkwell_subject_counter_cache.blog_item_count) ||
         inkwell_blog_items.count
     end
 

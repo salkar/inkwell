@@ -35,7 +35,9 @@ module Inkwell::CanFavorite
     end
 
     def favorites_count
-      inkwell_subject_counter_cache.try(:favorite_count) ||
+      # move to &. when ruby supported version starts 2.3 or upper version
+      (inkwell_subject_counter_cache &&
+        inkwell_subject_counter_cache.favorite_count) ||
         inkwell_favorites.count
     end
 

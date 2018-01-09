@@ -36,7 +36,9 @@ module Inkwell::CanReblog
     end
 
     def reblogs_count
-      inkwell_subject_counter_cache.try(:reblogs_count) ||
+      # move to &. when ruby supported version starts 2.3 or upper version
+      (inkwell_subject_counter_cache &&
+        inkwell_subject_counter_cache.reblog_count) ||
         inkwell_reblogs.count
     end
 

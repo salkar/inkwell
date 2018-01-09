@@ -27,7 +27,9 @@ module Inkwell::CanBeReblogged
     end
 
     def reblogged_count
-      inkwell_object_counter_cache.try(:reblog_count) ||
+      # move to &. when ruby supported version starts 2.3 or upper version
+      (inkwell_object_counter_cache &&
+        inkwell_object_counter_cache.reblog_count) ||
         inkwell_reblogged.count
     end
 

@@ -225,3 +225,138 @@ end
 *Notice: for more details see
 [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
 . It works the same way.*
+
+### Blogging features
+
+#### Setup
+
+Include relevant modules to models:
+* add `include Inkwell::CanBlogging` to models which instances should
+be able to add objects to their blog.
+* add `include Inkwell::CanBeBlogged` to models which instances should
+be able to be added to blogs.
+
+For sample:
+
+```ruby
+# app/models/user.rb
+
+class User < ApplicationRecord
+  include Inkwell::CanBlogging
+  #...
+end
+
+# app/models/post.rb
+
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  #...
+end
+```
+
+To automatically add `posts` to `user` blog, you can do the following:
+
+```
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  #...
+  belongs_to :user
+  #...
+  validates :user, presence: true
+  #...
+  after_create :blog_filling
+  #...
+  private
+
+  def blog_filling
+    user.add_to_blog(self)
+  end
+end
+```
+
+#### Inkwell::CanBlogging usage
+
+##### Inkwell::CanBlogging#add_to_blog(obj)
+
+```ruby
+user.add_to_blog(post)
+```
+
+After that `post` will appear in the `user.blog`.
+
+##### Inkwell::CanBlogging#remove_from_blog(obj)
+
+```ruby
+user.remove_from_blog(post)
+```
+
+Rolls back `add_to_blog` effects.
+
+##### Inkwell::CanBlogging#added_to_blog?(obj)
+
+```ruby
+user.added_to_blog?(post)
+#=> false
+user.add_to_blog(post)
+#=> true
+user.added_to_blog?(post)
+#=> true
+```
+
+Check that `post` is added to `user's` blog.
+
+*Notice: if `obj` passed to `add_to_blog`, `remove_from_blog` or
+`added_to_blog?` does not include `Inkwell::CanBeBlogged`
+`Inkwell::Errors::NotBloggable` will be raised*
+
+##### Inkwell::CanFavorite#blog(for_viewer: nil, &block)
+
+Return array of instances blogged and reblogged by object.
+
+```ruby
+user.blogs
+#=> [#<Post>, #<Comment>, ...] # array NOT relation
+```
+
+```ruby
+# Gemfile
+gem 'kaminari'
+
+# code
+
+user.blogs do |relation|
+  # relation - Inkwell::BlogItem relation
+  relation.page(1).order('created_at DESC')
+end
+#=> [#<Post>, #<Comment>, ...]
+```
+
+If there is necessary to get each result's object with flags for another
+`user` (`reblogged_in_timeline`, `favorited_in_timeline`, etc.),
+`for_viewer` should be passed:
+
+```ruby
+user.add_to_blog(post)
+user.add_to_blog(other_post)
+other_user.reblog(other_post)
+result = user.blog(for_viewer: other_user)
+result.detect{|item| item == post}.reblogged_in_timeline
+#=> false
+result.detect{|item| item == other_post}.reblogged_in_timeline
+#=> true
+```
+
+*Notice: for more details see
+[Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+. It works the same way.*
+
+##### Inkwell::CanBlogging#blog_items_count
+
+Return added to blog objects count (including reblogs).
+
+```ruby
+user.blog_items_count
+```
+
+Use `blog_items_count` instead of `obj.blog_items.count` or
+`obj.inkwell_blog_items.count` for sample for prevent `n+1`.
