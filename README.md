@@ -75,7 +75,7 @@ end
 ##### Inkwell::CanFavorite#favorite(obj)
 
 ```ruby
-  user.favorite(post)
+user.favorite(post)
 ```
 
 After that `post` will appear in the `user.favorites`. Also if `user`
@@ -85,7 +85,7 @@ sees `post` in someone else's timelines (or blog, favorites, etc.),
 ##### Inkwell::CanFavorite#unfavorite(obj)
 
 ```ruby
-  user.unfavorite(post)
+user.unfavorite(post)
 ```
 
 Rolls back `favorite` effects.
@@ -93,15 +93,15 @@ Rolls back `favorite` effects.
 ##### Inkwell::CanFavorite#favorite?(obj)
 
 ```ruby
-  user.favorite?(post)
-  #=> false
-  user.favorite(post)
-  #=> true
-  user.favorite?(post)
-  #=> true
+user.favorite?(post)
+#=> false
+user.favorite(post)
+#=> true
+user.favorite?(post)
+#=> true
 ```
 
-Check that `post` is added to favorites or not.
+Check that `post` is added to favorites by `user`.
 
 *Notice: if `obj` passed to `favorite`, `unfavorite` or `favorite?` does not
 include `Inkwell::CanBeFavorited` `Inkwell::Errors::NotFavoritable` will
@@ -109,9 +109,11 @@ be raised*
 
 ##### Inkwell::CanFavorite#favorites(for_viewer: nil, &block)
 
+Return array of instances favorited by object.
+
 ```ruby
-  user.favorites
-  #=> [#<Post>, #<Comment>, ...]
+user.favorites
+#=> [#<Post>, #<Comment>, ...]
 ```
 
 If `favorites` used without block, all favorited objects will be
@@ -153,3 +155,73 @@ result.detect{|item| item == post}.favorited_in_timeline
 result.detect{|item| item == other_post}.favorited_in_timeline
 #=> true
 ```
+
+##### Inkwell::CanFavorite#favorites_count
+
+```ruby
+post.favorited_by.each do |obj|
+  obj.favorites_count
+end
+```
+
+Use `favorites_count` (instead of `obj.favorites.count` or
+`obj.inkwell_favorited.count` for sample) for prevent `n+1` because
+`favorites_count` get counter from inkwell cache included in `favorited_by`
+by default.
+
+#### Inkwell::CanBeFavorited usage
+
+##### Inkwell::CanBeFavorited#favorited_by?(subject)
+
+```ruby
+post.favorited_by?(user)
+#=> false
+user.favorite(post)
+#=> true
+post.favorited_by?(user)
+#=> true
+```
+
+Check that `post` is added to favorites by `user`.
+
+*Notice: if `subject` does not include `Inkwell::CanFavorite`
+`Inkwell::Errors::CannotFavorite` will be raised*
+
+##### Inkwell::CanBeFavorited#favorited_count
+
+```ruby
+user.favorites.each do |obj|
+  obj.favorited_count
+end
+```
+
+Use `favorited_count` (instead of `obj.favorited_by.count` or
+`obj.inkwell_favorited.count` for sample) for prevent `n+1` because
+`favorites_count` get counter from inkwell cache included in `favorites`
+by default.
+
+##### Inkwell::CanBeFavorited#favorited_by(&block)
+
+Return array of instances who favorite this object.
+
+```ruby
+post.favorited_by
+#=> [#<User>, #<Community>, ...] # Array, NOT Relation
+```
+
+```ruby
+# Gemfile
+gem 'kaminari'
+
+# code
+
+user.favorited_by do |relation|
+  # relation - Inkwell::Favorite relation
+  relation.page(1).order('created_at DESC')
+end
+#=> [#<User>, #<Community>, ...] # Array, NOT Relation
+```
+
+*Notice: for more details see
+[Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+. It works the same way.*
