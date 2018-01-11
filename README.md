@@ -71,16 +71,18 @@ end
 ```
 
 #### Inkwell::CanFavorite usage
+<details>
+  <summary>Inkwell::CanFavorite#favorite(obj)</summary>
+  <p></p>
 
-##### Inkwell::CanFavorite#favorite(obj)
+  ```ruby
+  user.favorite(post)
+  ```
 
-```ruby
-user.favorite(post)
-```
-
-After that `post` will appear in the `user.favorites`. Also if `user`
-sees `post` in someone else's timelines (or blog, favorites, etc.),
-`post` will have `favorited_in_timeline` attribute with `true` value.
+  After that `post` will appear in the `user.favorites`. Also if `user`
+  sees `post` in someone else's timelines (or blog, favorites, etc.),
+  `post` will have `favorited_in_timeline` attribute with `true` value.
+</details>
 
 ##### Inkwell::CanFavorite#unfavorite(obj)
 
@@ -107,7 +109,10 @@ Check that `post` is added to favorites by `user`.
 include `Inkwell::CanBeFavorited` `Inkwell::Errors::NotFavoritable` will
 be raised*
 
-##### Inkwell::CanFavorite#favorites(for_viewer: nil, &block)
+<details>
+  <summary>
+    Inkwell::CanFavorite#favorites(for_viewer: nil, &block)
+  </summary>  
 
 Return array of instances favorited by object.
 
@@ -155,6 +160,7 @@ result.detect{|item| item == post}.favorited_in_timeline
 result.detect{|item| item == other_post}.favorited_in_timeline
 #=> true
 ```
+</details>
 
 ##### Inkwell::CanFavorite#favorites_count
 
