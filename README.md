@@ -116,7 +116,7 @@ be raised*
 </details>
 
 <details>
-  <summary>Inkwell::CanFavorite#favorites(for_viewer: nil, &block)</summary>
+  <summary id="inkwellcanfavoritefavoritesfor_viewer-nil-block">Inkwell::CanFavorite#favorites(for_viewer: nil, &block)</summary>
   <p></p>
 
   Return array of instances favorited by object.
