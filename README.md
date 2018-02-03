@@ -342,7 +342,7 @@ end
 </details>
 
 <details>
-  <summary>Inkwell::CanFavorite#blog(for_viewer: nil, &block)</summary>
+  <summary>Inkwell::CanBlogging#blog(for_viewer: nil, &block)</summary>
   <p></p>
 
   Return array of instances blogged and reblogged by object.
