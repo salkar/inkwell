@@ -71,26 +71,33 @@ end
 ```
 
 #### Inkwell::CanFavorite usage
+<details>
+  <summary>Inkwell::CanFavorite#favorite(obj)</summary>
+  <p></p>
 
-##### Inkwell::CanFavorite#favorite(obj)
+  ```ruby
+  user.favorite(post)
+  ```
 
-```ruby
-user.favorite(post)
-```
+  After that `post` will appear in the `user.favorites`. Also if `user`
+  sees `post` in someone else's timelines (or blog, favorites, etc.),
+  `post` will have `favorited_in_timeline` attribute with `true` value.
+</details>
 
-After that `post` will appear in the `user.favorites`. Also if `user`
-sees `post` in someone else's timelines (or blog, favorites, etc.),
-`post` will have `favorited_in_timeline` attribute with `true` value.
+<details>
+  <summary>Inkwell::CanFavorite#unfavorite(obj)</summary>
+  <p></p>
 
-##### Inkwell::CanFavorite#unfavorite(obj)
+  ```ruby
+  user.unfavorite(post)
+  ```
 
-```ruby
-user.unfavorite(post)
-```
+  Rolls back `favorite` effects.
+</details>
 
-Rolls back `favorite` effects.
-
-##### Inkwell::CanFavorite#favorite?(obj)
+<details>
+  <summary>Inkwell::CanFavorite#favorite?(obj)</summary>
+  <p></p>
 
 ```ruby
 user.favorite?(post)
@@ -106,88 +113,100 @@ Check that `post` is added to favorites by `user`.
 *Notice: if `obj` passed to `favorite`, `unfavorite` or `favorite?` does not
 include `Inkwell::CanBeFavorited` `Inkwell::Errors::NotFavoritable` will
 be raised*
+</details>
 
-##### Inkwell::CanFavorite#favorites(for_viewer: nil, &block)
+<details>
+  <summary id="inkwellcanfavoritefavoritesfor_viewer-nil-block">Inkwell::CanFavorite#favorites(for_viewer: nil, &block)</summary>
+  <p></p>
 
-Return array of instances favorited by object.
+  Return array of instances favorited by object.
 
-```ruby
-user.favorites
-#=> [#<Post>, #<Comment>, ...]
-```
+  ```ruby
+  user.favorites
+  #=> [#<Post>, #<Comment>, ...]
+  ```
 
-If `favorites` used without block, all favorited objects will be
-returned (without pagination, ordering, etc). In this case `Array` is
-returned not `Relation`!
+  If `favorites` used without block, all favorited objects will be
+  returned (without pagination, ordering, etc). In this case `Array` is
+  returned not `Relation`!
 
-For perform operations on relation block should be used:
+  For perform operations on relation block should be used:
 
-```ruby
-# Gemfile
-gem 'kaminari'
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-# code
+  # code
 
-user.favorites do |relation|
-  relation.page(1).order('created_at DESC')
-end
-#=> [#<Post>, #<Comment>, ...]
-```
+  user.favorites do |relation|
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<Post>, #<Comment>, ...]
+  ```
 
-*Notice: `relation` is relation of Inkwell::Favorite instances (internal
-Inkwell model)*
+  *Notice: `relation` is relation of Inkwell::Favorite instances (internal
+  Inkwell model)*
 
-*Notice: realization with block looks complicated, but it helps with
-solve troubles with many-to-many relations through other polymorphic
-relations on both sides.*
+  *Notice: realization with block looks complicated, but it helps with
+  solve troubles with many-to-many relations through other polymorphic
+  relations on both sides.*
 
-If there is necessary to get each result's object with flags for another
-`user` (`favorited_in_timeline`, `reblogged_in_timeline`, etc.),
-`for_viewer` should be passed:
+  If there is necessary to get each result's object with flags for another
+  `user` (`favorited_in_timeline`, `reblogged_in_timeline`, etc.),
+  `for_viewer` should be passed:
 
-```ruby
-user.favorite(post)
-user.favorite(other_post)
-other_user.favorite(other_post)
-result = user.favorites(for_viewer: other_user)
-result.detect{|item| item == post}.favorited_in_timeline
-#=> false
-result.detect{|item| item == other_post}.favorited_in_timeline
-#=> true
-```
+  ```ruby
+  user.favorite(post)
+  user.favorite(other_post)
+  other_user.favorite(other_post)
+  result = user.favorites(for_viewer: other_user)
+  result.detect{|item| item == post}.favorited_in_timeline
+  #=> false
+  result.detect{|item| item == other_post}.favorited_in_timeline
+  #=> true
+  ```
+</details>
 
-##### Inkwell::CanFavorite#favorites_count
+<details>
+  <summary>Inkwell::CanFavorite#favorites_count</summary>
+  <p></p>
 
-```ruby
-post.favorited_by.each do |obj|
-  obj.favorites_count
-end
-```
+  ```ruby
+  post.favorited_by.each do |obj|
+    obj.favorites_count
+  end
+  ```
 
-Use `favorites_count` (instead of `obj.favorites.count` or
-`obj.inkwell_favorited.count` for sample) for prevent `n+1` because
-`favorites_count` get counter from inkwell cache included in `favorited_by`
-by default.
+  Use `favorites_count` (instead of `obj.favorites.count` or
+  `obj.inkwell_favorited.count` for sample) for prevent `n+1` because
+  `favorites_count` get counter from inkwell cache included in `favorited_by`
+  by default.
+</details>
 
 #### Inkwell::CanBeFavorited usage
 
-##### Inkwell::CanBeFavorited#favorited_by?(subject)
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_by?(subject)</summary>
+  <p></p>
 
-```ruby
-post.favorited_by?(user)
-#=> false
-user.favorite(post)
-#=> true
-post.favorited_by?(user)
-#=> true
-```
+  ```ruby
+  post.favorited_by?(user)
+  #=> false
+  user.favorite(post)
+  #=> true
+  post.favorited_by?(user)
+  #=> true
+  ```
 
-Check that `post` is added to favorites by `user`.
+  Check that `post` is added to favorites by `user`.
 
-*Notice: if `subject` does not include `Inkwell::CanFavorite`
-`Inkwell::Errors::CannotFavorite` will be raised*
+  *Notice: if `subject` does not include `Inkwell::CanFavorite`
+  `Inkwell::Errors::CannotFavorite` will be raised*
+</details>
 
-##### Inkwell::CanBeFavorited#favorited_count
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_count</summary>
+  <p></p>
 
 ```ruby
 user.favorites.each do |obj|
@@ -199,32 +218,36 @@ Use `favorited_count` (instead of `obj.favorited_by.count` or
 `obj.inkwell_favorited.count` for sample) for prevent `n+1` because
 `favorites_count` get counter from inkwell cache included in `favorites`
 by default.
+</details>
 
-##### Inkwell::CanBeFavorited#favorited_by(&block)
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_by(&block)</summary>
+  <p></p>
 
-Return array of instances who favorite this object.
+  Return array of instances who favorite this object.
 
-```ruby
-post.favorited_by
-#=> [#<User>, #<Community>, ...] # Array, NOT Relation
-```
+  ```ruby
+  post.favorited_by
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
-```ruby
-# Gemfile
-gem 'kaminari'
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-# code
+  # code
 
-user.favorited_by do |relation|
-  # relation - Inkwell::Favorite relation
-  relation.page(1).order('created_at DESC')
-end
-#=> [#<User>, #<Community>, ...] # Array, NOT Relation
-```
+  user.favorited_by do |relation|
+    # relation - Inkwell::Favorite relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
-*Notice: for more details see
-[Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
-. It works the same way.*
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
+</details>
 
 ### Blogging features
 
@@ -276,87 +299,102 @@ end
 
 #### Inkwell::CanBlogging usage
 
-##### Inkwell::CanBlogging#add_to_blog(obj)
+<details>
+  <summary>Inkwell::CanBlogging#add_to_blog(obj)</summary>
+  <p></p>
 
-```ruby
-user.add_to_blog(post)
-```
+  ```ruby
+  user.add_to_blog(post)
+  ```
 
-After that `post` will appear in the `user.blog`.
+  After that `post` will appear in the `user.blog`.
+</details>
 
-##### Inkwell::CanBlogging#remove_from_blog(obj)
+<details>
+  <summary>Inkwell::CanBlogging#remove_from_blog(obj)</summary>
+  <p></p>
 
-```ruby
-user.remove_from_blog(post)
-```
+  ```ruby
+  user.remove_from_blog(post)
+  ```
 
-Rolls back `add_to_blog` effects.
+  Rolls back `add_to_blog` effects.
+</details>
 
-##### Inkwell::CanBlogging#added_to_blog?(obj)
+<details>
+  <summary>Inkwell::CanBlogging#added_to_blog?(obj)</summary>
+  <p></p>
 
-```ruby
-user.added_to_blog?(post)
-#=> false
-user.add_to_blog(post)
-#=> true
-user.added_to_blog?(post)
-#=> true
-```
+  ```ruby
+  user.added_to_blog?(post)
+  #=> false
+  user.add_to_blog(post)
+  #=> true
+  user.added_to_blog?(post)
+  #=> true
+  ```
 
-Check that `post` is added to `user's` blog.
+  Check that `post` is added to `user's` blog.
 
-*Notice: if `obj` passed to `add_to_blog`, `remove_from_blog` or
-`added_to_blog?` does not include `Inkwell::CanBeBlogged`
-`Inkwell::Errors::NotBloggable` will be raised*
+  *Notice: if `obj` passed to `add_to_blog`, `remove_from_blog` or
+  `added_to_blog?` does not include `Inkwell::CanBeBlogged`
+  `Inkwell::Errors::NotBloggable` will be raised*
+</details>
 
-##### Inkwell::CanFavorite#blog(for_viewer: nil, &block)
+<details>
+  <summary>Inkwell::CanFavorite#blog(for_viewer: nil, &block)</summary>
+  <p></p>
 
-Return array of instances blogged and reblogged by object.
+  Return array of instances blogged and reblogged by object.
 
-```ruby
-user.blogs
-#=> [#<Post>, #<Comment>, ...] # array NOT relation
-```
+  ```ruby
+  user.blogs
+  #=> [#<Post>, #<Comment>, ...] # array NOT relation
+  ```
 
-```ruby
-# Gemfile
-gem 'kaminari'
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-# code
+  # code
 
-user.blogs do |relation|
-  # relation - Inkwell::BlogItem relation
-  relation.page(1).order('created_at DESC')
-end
-#=> [#<Post>, #<Comment>, ...]
-```
+  user.blogs do |relation|
+    # relation - Inkwell::BlogItem relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<Post>, #<Comment>, ...]
+  ```
 
-If there is necessary to get each result's object with flags for another
-`user` (`reblogged_in_timeline`, `favorited_in_timeline`, etc.),
-`for_viewer` should be passed:
+  If there is necessary to get each result's object with flags for another
+  `user` (`reblogged_in_timeline`, `favorited_in_timeline`, etc.),
+  `for_viewer` should be passed:
 
-```ruby
-user.add_to_blog(post)
-user.add_to_blog(other_post)
-other_user.reblog(other_post)
-result = user.blog(for_viewer: other_user)
-result.detect{|item| item == post}.reblogged_in_timeline
-#=> false
-result.detect{|item| item == other_post}.reblogged_in_timeline
-#=> true
-```
+  ```ruby
+  user.add_to_blog(post)
+  user.add_to_blog(other_post)
+  other_user.reblog(other_post)
+  result = user.blog(for_viewer: other_user)
+  result.detect{|item| item == post}.reblogged_in_timeline
+  #=> false
+  result.detect{|item| item == other_post}.reblogged_in_timeline
+  #=> true
+  ```
 
-*Notice: for more details see
-[Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
-. It works the same way.*
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
+</details>
 
-##### Inkwell::CanBlogging#blog_items_count
+<details>
+  <summary>Inkwell::CanBlogging#blog_items_count</summary>
+  <p></p>
 
-Return added to blog objects count (including reblogs).
+  Return added to blog objects count (including reblogs).
 
-```ruby
-user.blog_items_count
-```
+  ```ruby
+  user.blog_items_count
+  ```
 
-Use `blog_items_count` instead of `obj.blog_items.count` or
-`obj.inkwell_blog_items.count` for sample for prevent `n+1`.
+  Use `blog_items_count` instead of `obj.blog_items.count` or
+  `obj.inkwell_blog_items.count` for sample for prevent `n+1`.
+</details>
