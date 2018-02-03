@@ -11,7 +11,7 @@ module Inkwell::CanBeFavorited
              as: :favorite_object,
              class_name: 'Inkwell::Favorite',
              dependent: :delete_all
-    before_destroy :inkwell_before_destroy, prepend: true
+    before_destroy :inkwell_can_be_favorited_before_destroy, prepend: true
 
     def favorited_by(&block)
       result = inkwell_favorited
@@ -40,7 +40,7 @@ module Inkwell::CanBeFavorited
       end
     end
 
-    def inkwell_before_destroy
+    def inkwell_can_be_favorited_before_destroy
       ids = favorited_by.map do |subj|
         subj.try(:inkwell_subject_counter_cache).try(:id)
       end.compact
