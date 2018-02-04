@@ -30,7 +30,12 @@ module Inkwell::CanBlogging
       result = inkwell_blog_items
         .includes(blog_item_object: :inkwell_object_counter_cache)
       result = block.call(result) if block.present?
-      inkwell_timeline_for_viewer(result.map(&:blog_item_object), for_viewer)
+      result = result.map do |item|
+        obj = item.blog_item_object
+        obj.try(:reblog_in_timeline=, item.reblog)
+        obj
+      end
+      inkwell_timeline_for_viewer(result, for_viewer)
     end
 
     def blog_items_count

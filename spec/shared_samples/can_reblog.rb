@@ -75,7 +75,7 @@ RSpec.shared_examples_for 'can_reblog' do
     end
   end
 
-  context 'reblogs' do
+  context 'blog with reblog feature' do
     before :each do
       base_date = Date.yesterday
       30.times do |i|
@@ -84,39 +84,44 @@ RSpec.shared_examples_for 'can_reblog' do
           blog_item_subject: owner,
           blog_item_object: create(%i{post comment}.sample),
           created_at: base_date + i.minutes,
-          reblog: true)
+          reblog: i.in?([28, 29]))
       end
     end
 
     it 'should work' do
-      result = owner.reblogs do |relation|
+      result = owner.blog do |relation|
         relation.page(1).order('created_at DESC')
       end
       expect(result.size).to eq(25)
-      expect(result.map(&:reblogged_count).uniq).to eq([1])
       expect(result.map{|item| item.class.to_s}.uniq.sort)
         .to eq(%w{Comment Post})
       expect(result.first).to eq(Inkwell::BlogItem.last.blog_item_object)
+      result.first(2).each do |reblog|
+        expect(reblog.reblogged_count).to eq(1)
+        expect(reblog.reblog_in_timeline).to eq(true)
+      end
+      result.last(23).each do |reblog|
+        expect(reblog.reblogged_count).to eq(0)
+        expect(reblog.reblog_in_timeline).to eq(false)
+      end
     end
 
     it 'should work for viewer' do
-      reblogged = [Post.last(2).first, Comment.last(2).first]
-      reblogged.each do |obj|
-        other_user.reblog(obj)
-      end
+      reblogged_by_viewer = Inkwell::BlogItem.where(reblog: true).last.blog_item_object
+      other_user.reblog(reblogged_by_viewer)
       result = owner.reblogs(for_viewer: other_user) do |relation|
         relation.page(1).order('created_at DESC')
       end
-      expect(result.size).to eq(25)
-      expect((result & reblogged).size).to eq(2)
+      expect(result.size).to eq(2)
+      expect(result.include?(reblogged_by_viewer)).to eq(true)
       result.each do |item|
-        expect(item.reblogged_in_timeline).to eq(item.in?(reblogged))
+        expect(item.reblogged_in_timeline).to eq(item == reblogged_by_viewer)
       end
     end
 
     it 'should work without block' do
       result = owner.reblogs
-      expect(result.size).to eq(30)
+      expect(result.size).to eq(2)
     end
   end
 
@@ -150,7 +155,7 @@ RSpec.shared_examples_for 'can_reblog' do
     end
 
     it 'should remove favorites' do
-      expect(owner.reblogs.count).to eq(1)
+      expect(owner.inkwell_reblogs.count).to eq(1)
       owner.destroy
       expect(Inkwell::BlogItem.count).to eq(0)
     end

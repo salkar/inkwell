@@ -365,6 +365,18 @@ end
   #=> [#<Post>, #<Comment>, ...]
   ```
 
+  Reblogged items has `reblog_in_timeline` flag
+
+  ```ruby
+    user.add_to_blog(post)
+    user.reblog(other_post)
+    result = user.blogs
+    result.detect{|item| item == post}.reblog_in_timeline
+    #=> false
+    result.detect{|item| item == other_post}.reblog_in_timeline
+    #=> true
+  ```
+
   If there is necessary to get each result's object with flags for another
   `user` (`reblogged_in_timeline`, `favorited_in_timeline`, etc.),
   `for_viewer` should be passed:
@@ -395,6 +407,191 @@ end
   user.blog_items_count
   ```
 
-  Use `blog_items_count` instead of `obj.blog_items.count` or
-  `obj.inkwell_blog_items.count` for sample for prevent `n+1`.
+  Use `blog_items_count` for prevent `n+1`.
+</details>
+
+#### Inkwell::CanBeBlogged usage
+
+<details>
+  <summary>Inkwell::CanBeBlogged#blogged_by?(subject)</summary>
+  <p></p>
+
+  ```ruby
+  post.blogged_by?(user)
+  #=> false
+  user.add_to_blog(post)
+  #=> true
+  post.blogged_by?(user)
+  #=> true
+  ```
+
+  Check that `post` is added to `user's` blog.
+
+  *Notice: if `subject` does not include `Inkwell::CanBlogging`
+  `Inkwell::Errors::CannotBlogging` will be raised*
+</details>
+
+<details>
+  <summary>Inkwell::CanBeFavorited#blogged_by</summary>
+  <p></p>
+
+  Return instance who add to blog this object (owner of this object).
+
+  ```ruby
+  user.add_to_blog(post)
+  post.blogged_by
+  #=> #<User> # user
+  ```
+</details>
+
+### Reblog features
+
+#### Setup
+
+Include relevant modules to models:
+* add `include Inkwell::CanReblog` to models which instances should
+be able to reblog objects. If object is reblogged, it is added to
+subject's blog.
+* add `include Inkwell::CanBeReblogged` to models which instances should
+be able to be reblogged.
+
+For sample:
+
+```ruby
+# app/models/user.rb
+
+class User < ApplicationRecord
+  include Inkwell::CanBlogging
+  include Inkwell::CanReblog
+  #...
+end
+
+# app/models/post.rb
+
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  include Inkwell::CanBeReblogged
+  #...
+end
+```
+
+#### Inkwell::CanReblog usage
+
+<details>
+  <summary>Inkwell::CanReblog#reblog(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.reblog(post)
+  ```
+
+  After that `post` will appear in the `user.blog` as reblog (`reblog_in_timeline` flag).
+</details>
+
+<details>
+  <summary>Inkwell::CanReblog#unreblog(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.unreblog(post)
+  ```
+
+  Rolls back `reblog` effects.
+</details>
+
+<details>
+  <summary>Inkwell::CanReblog#reblog?(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.reblog?(post)
+  #=> false
+  user.reblog(post)
+  #=> true
+  user.reblog?(post)
+  #=> true
+  ```
+
+  Check that `post` is reblogged by `user` and added to `user's` blog.
+
+  *Notice: if `obj` passed to `reblog`, `unreblog` or
+  `reblog?` does not include `Inkwell::CanBeReblogged`
+  `Inkwell::Errors::NotRebloggable` will be raised*
+</details>
+
+<details>
+  <summary>Inkwell::CanReblog#reblogs_count</summary>
+  <p></p>
+
+  Return reblogged objects count.
+
+  ```ruby
+  user.reblogs_count
+  ```
+
+  Use `reblogs_count` instead of `obj.reblogs.count` or
+  `obj.inkwell_reblogs.count` for sample for prevent `n+1`.
+</details>
+
+#### Inkwell::CanBeReblogged usage
+
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_by?(subject)</summary>
+  <p></p>
+
+  ```ruby
+  post.reblogged_by?(user)
+  #=> false
+  user.reblog(post)
+  #=> true
+  post.reblogged_by?(user)
+  #=> true
+  ```
+
+  Check that `post` is added to `users's` blog as reblog.
+
+  *Notice: if `subject` does not include `Inkwell::CanReblog`
+  `Inkwell::Errors::CannotReblog` will be raised*
+</details>
+
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_count</summary>
+  <p></p>
+
+```ruby
+user.blog.each do |obj|
+  obj.try(:reblogged_count) # try is not needed if all objects in blog are rebloggable
+end
+```
+
+Use `reblogged_count` for prevent `n+1`.
+</details>
+
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_by(&block)</summary>
+  <p></p>
+
+  Return array of instances who reblog this object.
+
+  ```ruby
+  post.reblogged_by
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
+
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
+
+  # code
+
+  user.reblogged_by do |relation|
+    # relation - Inkwell::BlogItem relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
+
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
 </details>
