@@ -3,7 +3,7 @@ gemspec path: "../.."
 
 gem 'rails', '~> 5.1'
 gem 'sqlite3'
-gem 'pg'
+gem 'pg', '~> 0.18'
 gem 'mysql2'
 gem 'kaminari'
 
