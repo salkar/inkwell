@@ -1,4 +1,4 @@
-FactoryGirl.define do
+FactoryBot.define do
   factory :inkwell_blog_item, class: 'Inkwell::BlogItem' do
     blog_item_subject_id 1
     blog_item_subject_type "User"

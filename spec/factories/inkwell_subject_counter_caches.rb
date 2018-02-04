@@ -1,4 +1,4 @@
-FactoryGirl.define do
+FactoryBot.define do
   factory :inkwell_subject_counter_cach, class: 'Inkwell::SubjectCounterCache' do
     cached_subject_id 1
     cached_subject_type 'User'

@@ -1,4 +1,4 @@
-FactoryGirl.define do
+FactoryBot.define do
   factory :inkwell_favorite, class: 'Inkwell::Favorite' do
     favorite_subject_id 1
     favorite_subject_type 'User'
