@@ -11,7 +11,6 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.6'
   gem 'byebug'
   gem 'factory_bot_rails'
-  gem 'rubocop'
 end
 
 group :test do
