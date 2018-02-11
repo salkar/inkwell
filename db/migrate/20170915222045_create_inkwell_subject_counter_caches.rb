@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateInkwellSubjectCounterCaches < ActiveRecord::Migration[5.1]
   def change
     create_table :inkwell_subject_counter_caches do |t|
@@ -15,6 +17,6 @@ class CreateInkwellSubjectCounterCaches < ActiveRecord::Migration[5.1]
 
     add_index :inkwell_subject_counter_caches,
               [:cached_subject_id, :cached_subject_type],
-              name: 'inkwell_subject_counter_cache_index'
+              name: "inkwell_subject_counter_cache_index"
   end
 end

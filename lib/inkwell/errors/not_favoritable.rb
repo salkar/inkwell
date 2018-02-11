@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Inkwell
   module Errors
     class NotFavoritable < StandardError

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Inkwell
   class Favorite < ApplicationRecord
     include Inkwell::CacheCountersCommon
@@ -13,14 +15,14 @@ module Inkwell
 
     private
 
-    def inkwell_after_create
-      process_object_counters(favorite_object, favorite_count: 1)
-      process_subject_counters(favorite_subject, favorite_count: 1)
-    end
+      def inkwell_after_create
+        process_object_counters(favorite_object, favorite_count: 1)
+        process_subject_counters(favorite_subject, favorite_count: 1)
+      end
 
-    def inkwell_after_destroy
-      process_object_counters(favorite_object, favorite_count: -1)
-      process_subject_counters(favorite_subject, favorite_count: -1)
-    end
+      def inkwell_after_destroy
+        process_object_counters(favorite_object, favorite_count: -1)
+        process_subject_counters(favorite_subject, favorite_count: -1)
+      end
   end
 end

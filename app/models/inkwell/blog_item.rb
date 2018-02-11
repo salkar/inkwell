@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Inkwell
   class BlogItem < ApplicationRecord
     include Inkwell::CacheCountersCommon
@@ -13,18 +15,18 @@ module Inkwell
 
     private
 
-    def inkwell_after_create
-      subject_counters = {blog_item_count: 1}
-      subject_counters[:reblog_count] = 1 if reblog
-      process_subject_counters(blog_item_subject, subject_counters)
-      process_object_counters(blog_item_object, reblog_count: 1) if reblog
-    end
+      def inkwell_after_create
+        subject_counters = { blog_item_count: 1 }
+        subject_counters[:reblog_count] = 1 if reblog
+        process_subject_counters(blog_item_subject, subject_counters)
+        process_object_counters(blog_item_object, reblog_count: 1) if reblog
+      end
 
-    def inkwell_after_destroy
-      subject_counters = {blog_item_count: -1}
-      subject_counters[:reblog_count] = -1 if reblog
-      process_subject_counters(blog_item_subject, subject_counters)
-      process_object_counters(blog_item_object, reblog_count: -1) if reblog
-    end
+      def inkwell_after_destroy
+        subject_counters = { blog_item_count: -1 }
+        subject_counters[:reblog_count] = -1 if reblog
+        process_subject_counters(blog_item_subject, subject_counters)
+        process_object_counters(blog_item_object, reblog_count: -1) if reblog
+      end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Inkwell::CanBeReblogged
   extend ActiveSupport::Concern
 
@@ -6,12 +8,12 @@ module Inkwell::CanBeReblogged
     attr_accessor :reblog_in_timeline
     has_one :inkwell_object_counter_cache,
              as: :cached_object,
-             class_name: 'Inkwell::ObjectCounterCache',
+             class_name: "Inkwell::ObjectCounterCache",
              dependent: :delete
     has_many :inkwell_reblogged,
-             ->{ where(reblog: true) },
+             -> { where(reblog: true) },
              as: :blog_item_object,
-             class_name: 'Inkwell::BlogItem',
+             class_name: "Inkwell::BlogItem",
              dependent: :delete_all
     before_destroy :inkwell_can_be_reblogged_before_destroy, prepend: true
 
@@ -36,20 +38,20 @@ module Inkwell::CanBeReblogged
 
     private
 
-    def check_reblogged_by(obj)
-      unless obj.class.try(:inkwell_can_reblog?)
-        raise(Inkwell::Errors::CannotReblog, obj)
+      def check_reblogged_by(obj)
+        unless obj.class.try(:inkwell_can_reblog?)
+          raise(Inkwell::Errors::CannotReblog, obj)
+        end
       end
-    end
 
-    def inkwell_can_be_reblogged_before_destroy
-      ids = reblogged_by.map do |subj|
-        subj.try(:inkwell_subject_counter_cache).try(:id)
-      end.compact
-      Inkwell::SubjectCounterCache.update_counters(
-        ids,
-        reblog_count: -1)
-    end
+      def inkwell_can_be_reblogged_before_destroy
+        ids = reblogged_by.map do |subj|
+          subj.try(:inkwell_subject_counter_cache).try(:id)
+        end.compact
+        Inkwell::SubjectCounterCache.update_counters(
+          ids,
+          reblog_count: -1)
+      end
   end
 
   module ClassMethods

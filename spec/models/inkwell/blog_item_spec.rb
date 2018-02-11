@@ -1,16 +1,18 @@
-require 'rails_helper'
+# frozen_string_literal: true
+
+require "rails_helper"
 
 module Inkwell
   RSpec.describe BlogItem, type: :model do
-    let(:post){create(:post)}
-    let(:user){create(:user)}
+    let(:post) { create(:post) }
+    let(:user) { create(:user) }
 
-    context 'cached objects' do
-      context 'for reblog' do
-        let(:blog_item){create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: true)}
+    context "cached objects" do
+      context "for reblog" do
+        let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: true) }
 
-        context 'on create' do
-          it 'should be created' do
+        context "on create" do
+          it "should be created" do
             expect(post.inkwell_object_counter_cache).to eq(nil)
             expect(user.inkwell_subject_counter_cache).to eq(nil)
             blog_item
@@ -21,7 +23,7 @@ module Inkwell
             expect(subject_cache.blog_item_count).to eq(1)
           end
 
-          it 'should update counter' do
+          it "should update counter" do
             object_cache = post.create_inkwell_object_counter_cache!
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item
@@ -31,8 +33,8 @@ module Inkwell
           end
         end
 
-        context 'on destroy' do
-          it 'should be created' do
+        context "on destroy" do
+          it "should be created" do
             blog_item
             Inkwell::SubjectCounterCache.delete_all
             Inkwell::ObjectCounterCache.delete_all
@@ -46,7 +48,7 @@ module Inkwell
             expect(subject_cache.blog_item_count).to eq(0)
           end
 
-          it 'should update counter' do
+          it "should update counter" do
             object_cache = post.create_inkwell_object_counter_cache!
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item
@@ -61,11 +63,11 @@ module Inkwell
       end
 
 
-      context 'for default blog item' do
-        let(:blog_item){create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: false)}
+      context "for default blog item" do
+        let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: false) }
 
-        context 'on create' do
-          it 'should be created' do
+        context "on create" do
+          it "should be created" do
             expect(post.inkwell_object_counter_cache).to eq(nil)
             expect(user.inkwell_subject_counter_cache).to eq(nil)
             blog_item
@@ -76,7 +78,7 @@ module Inkwell
             expect(subject_cache.blog_item_count).to eq(1)
           end
 
-          it 'should update counter' do
+          it "should update counter" do
             object_cache = post.create_inkwell_object_counter_cache!
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item
@@ -86,8 +88,8 @@ module Inkwell
           end
         end
 
-        context 'on destroy' do
-          it 'should be created' do
+        context "on destroy" do
+          it "should be created" do
             blog_item
             Inkwell::SubjectCounterCache.delete_all
             Inkwell::ObjectCounterCache.delete_all
@@ -101,7 +103,7 @@ module Inkwell
             expect(subject_cache.blog_item_count).to eq(0)
           end
 
-          it 'should update counter' do
+          it "should update counter" do
             object_cache = post.create_inkwell_object_counter_cache!
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item

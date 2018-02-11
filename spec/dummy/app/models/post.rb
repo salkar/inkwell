@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Post < ApplicationRecord
   include Inkwell::CanBeFavorited
   include Inkwell::CanBeBlogged

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Inkwell::CanBlogging
   extend ActiveSupport::Concern
 
@@ -5,11 +7,11 @@ module Inkwell::CanBlogging
     include Inkwell::TimelineCommon
     has_one :inkwell_subject_counter_cache,
             as: :cached_subject,
-            class_name: 'Inkwell::SubjectCounterCache',
+            class_name: "Inkwell::SubjectCounterCache",
             dependent: :delete
     has_many :inkwell_blog_items,
              as: :blog_item_subject,
-             class_name: 'Inkwell::BlogItem',
+             class_name: "Inkwell::BlogItem",
              dependent: :delete_all
 
     def add_to_blog(obj)
@@ -47,11 +49,11 @@ module Inkwell::CanBlogging
 
     private
 
-    def check_bloggable(obj)
-      unless obj.class.try(:inkwell_can_be_blogged?)
-        raise(Inkwell::Errors::NotBloggable, obj)
+      def check_bloggable(obj)
+        unless obj.class.try(:inkwell_can_be_blogged?)
+          raise(Inkwell::Errors::NotBloggable, obj)
+        end
       end
-    end
   end
 
   module ClassMethods

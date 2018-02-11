@@ -1,11 +1,13 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.shared_examples_for 'can_be_reblogged' do
-  let(:user){create(:user)}
-  let(:obj){create(described_class.to_s.underscore.to_sym)}
-  let(:reblog){create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: obj, reblog: true)}
+require "rails_helper"
 
-  context 'reblogged_by' do
+RSpec.shared_examples_for "can_be_reblogged" do
+  let(:user) { create(:user) }
+  let(:obj) { create(described_class.to_s.underscore.to_sym) }
+  let(:reblog) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: obj, reblog: true) }
+
+  context "reblogged_by" do
     before :each do
       base_date = Date.yesterday
       30.times do |i|
@@ -18,41 +20,41 @@ RSpec.shared_examples_for 'can_be_reblogged' do
       end
     end
 
-    it 'should work' do
+    it "should work" do
       result = obj.reblogged_by do |relation|
-        relation.page(1).order('created_at DESC')
+        relation.page(1).order("created_at DESC")
       end
       expect(result.size).to eq(25)
       expect(result.map(&:reblogs_count).uniq).to eq([1])
-      expect(result.map{|item| item.class.to_s}.uniq.sort)
+      expect(result.map { |item| item.class.to_s }.uniq.sort)
         .to eq(%w{Community User})
       expect(result.first).to eq(Inkwell::BlogItem.last.blog_item_subject)
     end
 
-    it 'should work without block' do
+    it "should work without block" do
       result = obj.reblogged_by
       expect(result.size).to eq(30)
     end
   end
 
-  context 'reblogged_by?' do
-    it 'should be true' do
+  context "reblogged_by?" do
+    it "should be true" do
       reblog
       expect(obj.reblogged_by?(user)).to eq(true)
     end
 
-    it 'should be false' do
+    it "should be false" do
       expect(obj.reblogged_by?(user)).to eq(false)
     end
 
-    it 'should not be done when object is not rebloggable' do
-      expect{obj.reblogged_by?(nil)}
+    it "should not be done when object is not rebloggable" do
+      expect { obj.reblogged_by?(nil) }
         .to raise_error(Inkwell::Errors::CannotReblog)
     end
   end
 
-  context 'reblogged_count' do
-    it 'should work' do
+  context "reblogged_count" do
+    it "should work" do
       reblog
       create(
         :inkwell_blog_item,
@@ -62,31 +64,31 @@ RSpec.shared_examples_for 'can_be_reblogged' do
       expect(obj.reload.reblogged_count).to eq(2)
     end
 
-    it 'should work without cache' do
+    it "should work without cache" do
       reblog
       Inkwell::ObjectCounterCache.delete_all
       expect(obj.reload.reblogged_count).to eq(1)
     end
   end
 
-  context 'on destroy' do
+  context "on destroy" do
     before :each do
       user.reblog(obj)
     end
 
-    it 'should remove obj counter cache' do
+    it "should remove obj counter cache" do
       expect(obj.inkwell_object_counter_cache.present?).to eq(true)
       obj.destroy
       expect(Inkwell::ObjectCounterCache.count).to eq(0)
     end
 
-    it 'should remove reblogs' do
+    it "should remove reblogs" do
       expect(obj.reblogged_by.count).to eq(1)
       obj.destroy
       expect(Inkwell::BlogItem.count).to eq(0)
     end
 
-    it 'should correctly process reblogging subject counters' do
+    it "should correctly process reblogging subject counters" do
       other_user = create(:user)
       other_user.reblog(obj)
       subject_counter = user.inkwell_subject_counter_cache

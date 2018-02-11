@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Inkwell::CanBeBlogged
   extend ActiveSupport::Concern
 
   included do
     has_one :inkwell_blogged,
              as: :blog_item_object,
-             class_name: 'Inkwell::BlogItem',
+             class_name: "Inkwell::BlogItem",
              dependent: :delete
     before_destroy :inkwell_can_be_blogged_before_destroy, prepend: true
 
@@ -19,19 +21,19 @@ module Inkwell::CanBeBlogged
 
     private
 
-    def check_blogged_by(obj)
-      unless obj.class.try(:inkwell_can_blogging?)
-        raise(Inkwell::Errors::CannotBlogging, obj)
+      def check_blogged_by(obj)
+        unless obj.class.try(:inkwell_can_blogging?)
+          raise(Inkwell::Errors::CannotBlogging, obj)
+        end
       end
-    end
 
-    def inkwell_can_be_blogged_before_destroy
-      if blogged_by.present?
-        Inkwell::SubjectCounterCache.update_counters(
-          blogged_by.id,
-          blog_item_count: -1)
+      def inkwell_can_be_blogged_before_destroy
+        if blogged_by.present?
+          Inkwell::SubjectCounterCache.update_counters(
+            blogged_by.id,
+            blog_item_count: -1)
+        end
       end
-    end
   end
 
   module ClassMethods

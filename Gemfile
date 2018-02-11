@@ -1,4 +1,6 @@
-source 'https://rubygems.org'
+# frozen_string_literal: true
+
+source "https://rubygems.org"
 
 # Declare your gem's dependencies in inkwell.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
@@ -10,17 +12,18 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-gem 'rails', '~> 5.1.4'
-gem 'sqlite3'
-gem 'kaminari'
+gem "rails", "~> 5.1.4"
+gem "sqlite3"
+gem "kaminari"
 
 group :development, :test do
-  gem 'rspec-rails', '~> 3.6'
-  gem 'byebug'
-  gem 'factory_bot_rails'
+  gem "rspec-rails", "~> 3.6"
+  gem "byebug"
+  gem "factory_bot_rails"
+  gem "rubocop"
 end
 
 group :test do
-  gem 'coveralls', require: false
-  gem 'database_cleaner'
+  gem "coveralls", require: false
+  gem "database_cleaner"
 end

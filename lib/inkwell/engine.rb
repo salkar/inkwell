@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Inkwell
   class Engine < ::Rails::Engine
     isolate_namespace Inkwell
 
     config.generators do |g|
       g.test_framework :rspec, fixture: false
-      g.fixture_replacement :factory_bot, dir: 'spec/factories'
+      g.fixture_replacement :factory_bot, dir: "spec/factories"
       g.assets false
       g.helper false
     end
