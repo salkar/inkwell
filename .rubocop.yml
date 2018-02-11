@@ -1,3 +1,4 @@
+# config from Ruby on Rails repo
 AllCops:
   TargetRubyVersion: 2.5
   # RuboCop has a bunch of cops enabled by default. This setting tells RuboCop
@@ -146,3 +147,10 @@ Style/RedundantReturn:
 Style/Semicolon:
   Enabled: true
   AllowAsExpressionSeparator: true
+
+# Custom
+
+Metrics/LineLength:
+  Max: 80
+  Exclude:
+    - 'spec/dummy/db/schema.rb'

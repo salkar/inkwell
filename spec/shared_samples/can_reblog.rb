@@ -6,7 +6,12 @@ RSpec.shared_examples_for "can_reblog" do
   let(:owner) { create(described_class.to_s.underscore.to_sym) }
   let(:post) { create(:post) }
   let(:other_user) { create(:user) }
-  let(:reblog) { create(:inkwell_blog_item, blog_item_subject: owner, blog_item_object: post, reblog: true) }
+  let(:reblog) do
+    create(:inkwell_blog_item,
+           blog_item_subject: owner,
+           blog_item_object: post,
+           reblog: true)
+  end
 
   context "reblog" do
     it "should be done" do
@@ -109,7 +114,8 @@ RSpec.shared_examples_for "can_reblog" do
     end
 
     it "should work for viewer" do
-      reblogged_by_viewer = Inkwell::BlogItem.where(reblog: true).last.blog_item_object
+      reblogged_by_viewer =
+        Inkwell::BlogItem.where(reblog: true).last.blog_item_object
       other_user.reblog(reblogged_by_viewer)
       result = owner.reblogs(for_viewer: other_user) do |relation|
         relation.page(1).order("created_at DESC")

@@ -14,8 +14,12 @@ RSpec.describe "readme" do
       user.favorite(other_post)
       other_user.favorite(other_post)
       result = user.favorites(for_viewer: other_user)
-      expect(result.detect { |item| item == post }.favorited_in_timeline).to eq(false)
-      expect(result.detect { |item| item == other_post }.favorited_in_timeline).to eq(true)
+      expect(
+        result.detect { |item| item == post }.favorited_in_timeline
+      ).to eq(false)
+      expect(
+        result.detect { |item| item == other_post }.favorited_in_timeline
+      ).to eq(true)
     end
   end
 end

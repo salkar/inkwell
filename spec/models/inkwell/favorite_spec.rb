@@ -8,7 +8,11 @@ module Inkwell
     let(:user) { create(:user) }
 
     context "cached objects" do
-      let(:favorite) { create(:inkwell_favorite, favorite_subject: user, favorite_object: post) }
+      let(:favorite) do
+        create(:inkwell_favorite,
+               favorite_subject: user,
+               favorite_object: post)
+      end
 
       context "on create" do
         it "should be created" do

@@ -9,7 +9,12 @@ module Inkwell
 
     context "cached objects" do
       context "for reblog" do
-        let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: true) }
+        let(:blog_item) do
+          create(:inkwell_blog_item,
+                 blog_item_subject: user,
+                 blog_item_object: post,
+                 reblog: true)
+        end
 
         context "on create" do
           it "should be created" do
@@ -53,7 +58,9 @@ module Inkwell
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item
             object_cache.update_attributes(reblog_count: 15)
-            subject_cache.update_attributes(blog_item_count: 10, reblog_count: 15)
+            subject_cache.update_attributes(
+              blog_item_count: 10,
+              reblog_count: 15)
             blog_item.destroy
             expect(object_cache.reload.reblog_count).to eq(14)
             expect(subject_cache.reload.blog_item_count).to eq(9)
@@ -64,7 +71,12 @@ module Inkwell
 
 
       context "for default blog item" do
-        let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: post, reblog: false) }
+        let(:blog_item) do
+          create(:inkwell_blog_item,
+                 blog_item_subject: user,
+                 blog_item_object: post,
+                 reblog: false)
+        end
 
         context "on create" do
           it "should be created" do
@@ -108,7 +120,9 @@ module Inkwell
             subject_cache = user.create_inkwell_subject_counter_cache!
             blog_item
             object_cache.update_attributes(reblog_count: 15)
-            subject_cache.update_attributes(blog_item_count: 10, reblog_count: 15)
+            subject_cache.update_attributes(
+              blog_item_count: 10,
+              reblog_count: 15)
             blog_item.destroy
             expect(object_cache.reload.reblog_count).to eq(15)
             expect(subject_cache.reload.blog_item_count).to eq(9)

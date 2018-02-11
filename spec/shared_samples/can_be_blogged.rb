@@ -5,7 +5,11 @@ require "rails_helper"
 RSpec.shared_examples_for "can_be_blogged" do
   let(:user) { create(:user) }
   let(:obj) { create(described_class.to_s.underscore.to_sym) }
-  let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: obj) }
+  let(:blog_item) do
+    create(:inkwell_blog_item,
+           blog_item_subject: user,
+           blog_item_object: obj)
+  end
 
   context "blogged_by" do
     it "should return object" do

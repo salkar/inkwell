@@ -5,7 +5,12 @@ require "rails_helper"
 RSpec.shared_examples_for "can_be_reblogged" do
   let(:user) { create(:user) }
   let(:obj) { create(described_class.to_s.underscore.to_sym) }
-  let(:reblog) { create(:inkwell_blog_item, blog_item_subject: user, blog_item_object: obj, reblog: true) }
+  let(:reblog) do
+    create(:inkwell_blog_item,
+           blog_item_subject: user,
+           blog_item_object: obj,
+           reblog: true)
+  end
 
   context "reblogged_by" do
     before :each do

@@ -6,7 +6,11 @@ RSpec.shared_examples_for "can_blogging" do
   let(:owner) { create(described_class.to_s.underscore.to_sym) }
   let(:post) { create(:post) }
   let(:other_user) { create(:user) }
-  let(:blog_item) { create(:inkwell_blog_item, blog_item_subject: owner, blog_item_object: post) }
+  let(:blog_item) do
+    create(:inkwell_blog_item,
+           blog_item_subject: owner,
+           blog_item_object: post)
+  end
 
   context "add_to_blog" do
     it "should be done" do

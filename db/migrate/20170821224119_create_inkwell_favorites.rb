@@ -10,7 +10,11 @@ class CreateInkwellFavorites < ActiveRecord::Migration[5.0]
 
       t.timestamps
     end
-    add_index :inkwell_favorites, [:favorite_subject_id, :favorite_subject_type], name: "inkwell_favorites_subject_index"
-    add_index :inkwell_favorites, [:favorite_object_id, :favorite_object_type], name: "inkwell_favorites_object_index"
+    add_index :inkwell_favorites,
+              [:favorite_subject_id, :favorite_subject_type],
+              name: "inkwell_favorites_subject_index"
+    add_index :inkwell_favorites,
+              [:favorite_object_id, :favorite_object_type],
+              name: "inkwell_favorites_object_index"
   end
 end
