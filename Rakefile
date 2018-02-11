@@ -6,13 +6,6 @@ rescue LoadError
   puts "You must `gem install bundler` and `bundle install` to run rake tasks"
 end
 
-begin
-  require "rubocop/rake_task"
-  RuboCop::RakeTask.new(:rubocop)
-rescue LoadError
-  # We are in the production environment, where Rubocop is not required.
-end
-
 require "rdoc/task"
 
 RDoc::Task.new(:rdoc) do |rdoc|
@@ -35,4 +28,4 @@ require "rspec/core/rake_task"
 desc "Run all specs in spec directory (excluding plugin specs)"
 RSpec::Core::RakeTask.new
 
-task default: [:spec, :rubocop]
+task default: :spec
