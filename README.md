@@ -1,57 +1,11 @@
 # Inkwell
+[![Build Status](https://api.travis-ci.org/salkar/inkwell.svg?branch=master)](https://travis-ci.org/salkar/inkwell)
+[![Code Climate](https://codeclimate.com/github/salkar/inkwell/badges/gpa.svg)](https://codeclimate.com/github/salkar/inkwell)
+[![Coverage Status](https://coveralls.io/repos/github/salkar/inkwell/badge.svg?branch=master)](https://coveralls.io/github/salkar/inkwell?branch=master)
 
-Inkwell provides a simple way to add social networking features 
-(e.g., comments, reblogs, favorites, following/followers, communities and timelines) to your
-Ruby on Rails application.
-
-## New version is actively developed and will be released soon
-It will be with breaking changes in api - new modules structure, simpler usage and more flexibility.
-
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NYTZGSJD3H3BC)
-
-### References that may be useful:
-
-[Building Social Apps with Rails: inkwell](http://www.matthewpbyrne.com/blog/2014/01/09/building-social-apps-with-rails-inkwell/)
-
-Russian translation of README file available
-[here](https://github.com/salkar/inkwell/blob/master/README_RU.rdoc).
-
-## Requirements
-You should have User and Post (or other identical) classes declared in your application. They
-should have a one-to-many relationship. For example:
-
-```ruby
-class User < ActiveRecord::Base
-  has_many :posts
-end
-
-class Post < ActiveRecord::Base
-  belongs_to :user
-end
-```
-
-If you want to use
-[communities](https://github.com/salkar/inkwell#community-feature), you
-need to have `Community` class:
-
-```ruby
-class Community < ActiveRecord::Base
-end
-```
-
-If you want to use
-[categories](https://github.com/salkar/inkwell#category-feature), you
-need to have `Category` class too:
-
-```ruby
-class Category < ActiveRecord::Base
-end
-```
-
-Default branch is the master branch, which only supports the Rails 4.0. For Rails 3 support get rails3 branch.
-
-*MySQL* can't set default value for BLOB/TEXT fields so currently only *sqlite3* and *PostgreSQL* are supported.
-
+Inkwell provides a simple way to add social networking features
+(e.g., comments, reblogs, favorites, following/followers, communities
+and timelines) to your Ruby on Rails application.
 
 ## Installation
 
@@ -68,51 +22,6 @@ gem 'inkwell', :git => 'git://github.com/salkar/inkwell.git'
 ```
 
 After that, run `bundle install`
-
-Add the line `acts_as_inkwell_user` to your `User` model and the line `acts_as_inkwell_post` to your `Post` model.
-
-```ruby
-class User < ActiveRecord::Base
-  has_many :posts
-  acts_as_inkwell_user
-end
-
-class Post < ActiveRecord::Base
-  belongs_to :user
-  acts_as_inkwell_post
-end
-```
-
-If you want to use communities, add the line `acts_as_inkwell_community` to your `Community` model.
-
-```ruby
-class Community < ActiveRecord::Base
-  acts_as_inkwell_community
-end
-```
-
-If you want to use categories, add the line `acts_as_inkwell_category` to your `Category` model.
-
-```ruby
-class Category < ActiveRecord::Base
-  acts_as_inkwell_category
-end
-```
-
-Create a file (named `inkwell.rb`) in `config/initializers` and add names of
-`User` and `Post` tables (or other identical) in this file.  If you want to use `Community`/`Category`, add names of 
-their table to `inkwell.rb`.
-
-```ruby
-module Inkwell
-  class Engine < Rails::Engine
-    config.post_table = :posts
-    config.user_table = :users
-    config.community_table = :communities #if you want to use communities
-    config.category_table = :categories #if you want to use categories
-  end
-end
-```
 
 Next, get gem migrations:
 
@@ -135,592 +44,554 @@ $ rake db:migrate
 
 ### Favoriting features
 
-User is able to favorite posts/comments:
+#### Setup
 
-```ruby
-@user.favorite @post
-@user.favorite @comment
-```
-
-To delete post/comment from favorites:
-
-```ruby
-@user.unfavorite @post
-```
-
-To check if post/comment is in favorites:
-
-```ruby
-@user.favorite? @post
-```
-
-To get favorite line, consisting of favorited posts and comments:
-
-```ruby
-@user.favoriteline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
-```
-
-where
-*   `last_shown_obj_id` - id of the last item in favorite line shown to the
-    user. Get the id from the `item_id_in_line` property of the last item from
-    previous `favoriteline` call. This parameter is used for pagination and
-    separation of the timeline.
-
-    ```ruby
-    fline = @user.favoriteline    #get first 10 items from @user favorite line
-    last_shown_obj_id = fline.last.item_id_in_line
-    fline_next_page = @user.favoriteline :last_shown_obj_id => last_shown_obj_id    #get next 10 items from @user favorite line
-    ```
-
-*   `limit` - the count of favorited items to return.
-
-    ```ruby
-    fline = @user.favoriteline :limit => 20    #return first 20 items from @user favorite line
-    ```
-
-*   `for_user` - `User`, who gets this favorite line. For him `is_reblogged`
-    and `is_favorited` properties will been formed.
-
-    ```ruby
-    @user.favorite @another_user_post
-    @user.reblog @another_user_post
-
-    fline_for_unknown_user = @another_user.favoriteline
-    # For example, fline_for_unknown_user.first == @another_user_post
-    fline_for_unknown_user.first.is_reblogged    # => false
-    fline_for_unknown_user.first.is_favorited    # => false
-
-    fline_for_user_who_reblog_and_favorite_another_user_post = @another_user.favoriteline :for_user => @user
-    # For example, fline_for_user_who_reblog_and_favorite_another_user_post.first == @another_user_post
-    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_reblogged    # => true
-    fline_for_user_who_reblog_and_favorite_another_user_post.first.is_favorited    # => true
-    ```
-
-For more examples refer to
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/favorite_spec.rb).
-
-### Reblogging features
-
-If the post is reblogged, it will be added to user's blogline and to
-timelines of his followers. Thus, the behavior of reblogged object is similar
-to the post of the user who made this reblog. User is able to reblog
-posts/comments:
-
-```ruby
-@user.reblog @post
-@user.reblog @comment
-```
-
-To delete post/comment from reblogs:
-
-```ruby
-@user.unreblog @post
-```
-
-To check if post/comment is in reblogs:
-
-```ruby
-@user.reblog? @post
-```
-
-Reblogs don't have their own line and reside in user's blogline.
-
-For more examples refer to
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/reblog_spec.rb).
-
-### Commenting features
-
-User is able to create comments for post or other comment. If you want to
-comment the post:
-
-```ruby
-@user.create_comment :for_object => @post, :body => "comment_body"
-```
-
-If you want to comment other comment you should add `parent_comment_id` of parent
-comment:
-
-```ruby
-@user.create_comment :for_object => @parent_post, :body => "comment_body", :parent_comment_id => @parent_comment.id
-```
-
-To delete comment you should use `destroy` method:
-
-```ruby
-@comment.destroy
-```
-
-You are able to get comment line for post or comment. It consists of comments
-for this object in reverse chronological order.
-
-*Notice: returned array will have back order to simplify the use. Last comment
-is at the bottom usually.*
-
-To get comment line:
-
-```ruby
-commentline(:last_shown_comment_id => nil, :limit => 10, :for_user => nil)
-```
-
-where `last_shown_comment_id` is id of last shown comment from previous
-commentline results. For example:
-
-```ruby
-cline = @post.commentline    #get last 10 comments for @post
-last_shown_comment_id = cline.first.id    # First element is taken due to reverse order. In fact, it is the oldest of these comments.
-cline_next_page = @post.commentline :last_shown_comment_id => last_shown_comment_id
-```
-
-`Limit` and `for_user` mean the same thing as in the
-[favoriteline](https://github.com/salkar/inkwell#favorite-features).
-
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/comments_spec.rb).
-
-### Following features
-
-User is able to follow another users. It allows him to get followed user's
-blogline in his timeline.
-
-To follow user:
-
-```ruby
-@user.follow @another_user
-```
-
-After it last 10 `@another_user` blogline's items will be transferred to
-`@user` timeline. And each new `@another_user` blogline item will be added to
-`@user` timeline.
-
-To unfollow user:
-
-```ruby
-@user.unfollow @another_user
-```
-
-To check that user is follower of another user:
-
-```ruby
-@user.follow? @another_user
-```
-
-To get followers ids for user and ids of users, which he follow:
-
-```ruby
-@user.followers_row
-@user.followings_row
-```
-
-Or if you need User objects:
-
-```ruby
-@user.followers
-@user.followings
-```
-
-Both methods return arrays of ids.
-
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/following_spec.rb).
-
-### Blogline feature
-
-User blogline is consists of his posts and his reblogs. To get it:
-
-```ruby
-@user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
-```
-
-where parameters are similar with described
-[above](https://github.com/salkar/inkwell#favorite-features) favoriteline
-parameters.
-
-If you want to get `blogline` items located in the category, pass `category` param:
-
-```ruby
-@user.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil, :category => category) 
-```
-
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/blogline_spec.rb).
-
-### Timeline feature
-
-User timeline is consists of items from bloglines of users he follows. To get
-it:
-
-```ruby
-@user.timeline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
-```
-
-where parameters are similar with described
-[above](https://github.com/salkar/inkwell#favorite-features) favoriteline
-parameters.
-
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/timeline_spec.rb).
+Include relevant modules to models:
+* add `include Inkwell::CanFavorite` to models which instances should
+be able to favorite other objects
+* add `include Inkwell::CanBeFavorited` to models which instances should
+be able to be added to favorites
 
-### Community feature
+For sample:
 
-Community is association of users. It has own blogline, consisting of posts of
-its members. Community member can send his post to the community blogline.
-Then this post is added to the timelines of other community users.
-
-There are two types of community: private and public. Users can join public community when they want - no one controls this process (They should not be banned in it).
-The user should leave the invitation request to join the private community. Then the admin will review it and add the user to the community or reject the request.
-
-When you create community you need to pass `owner_id`. To create public community:
-
-```ruby
-@community = Community.create :name => "Community", :owner_id => @user.id
-```
-
-To create private community you need to pass `:public => false` in addition to the rest:
-
-```ruby
-@private_community = Community.create :name => "Private Community", :owner_id => @user.id, :public => false
-```
-
-User with the passed id (`owner_id`) will be the first administrator of created community
-and will be added to it.
-
-To add a user to the public community:
-
-```ruby
-@user.join @community
-```
-
-After it last 10 `@community` blogline's items will be transferred to `@user`
-timeline. And each new `@community` blogline item will be added to `@user`
-timeline. Moreover `@user` will be able to add their posts in community
-blogline.
-
-To send invitation request to the private community:
-
-```ruby
-@user.request_invitation @private_community
-```
-
-To accept invitation request:
-
-```ruby
-@admin.approve_invitation_request :user => @user, :community => @private_community
-```
-
-To reject invitation request:
-
 ```ruby
-@admin.reject_invitation_request :user => @user, :community => @private_community
-```
+# app/models/user.rb
 
-To prevent invitation requests spam you are able to ban spamming users.
+class User < ApplicationRecord
+  include Inkwell::CanFavorite
+  #...
+end
 
-To get asked invitation users:
+# app/models/post.rb
 
-```ruby
-@community.asked_invitation_users
-```
-
-To get ids of asked invitation users:
-
-```ruby
-@community.invitations_row
+class Post < ApplicationRecord
+  include Inkwell::CanBeFavorited
+  #...
+end
 ```
 
-To remove a user from community:
+#### Inkwell::CanFavorite usage
+<details>
+  <summary>Inkwell::CanFavorite#favorite(obj)</summary>
+  <p></p>
 
-```ruby
-@admin.kick :user => @user, :from_community => @community
-```
+  ```ruby
+  user.favorite(post)
+  ```
 
-where `admin` is community administrator and `@user` is deleted user.
+  After that `post` will appear in the `user.favorites`. Also if `user`
+  sees `post` in someone else's timelines (or blog, favorites, etc.),
+  `post` will have `favorited_in_timeline` attribute with `true` value.
+</details>
 
-If user leave community:
+<details>
+  <summary>Inkwell::CanFavorite#unfavorite(obj)</summary>
+  <p></p>
 
-```ruby
-@user.leave @community
-```
+  ```ruby
+  user.unfavorite(post)
+  ```
 
-After leaving the community (both methods) its blogline items will be removed
-from the user timeline.
+  Rolls back `favorite` effects.
+</details>
 
-To send post to the community blogline:
+<details>
+  <summary>Inkwell::CanFavorite#favorite?(obj)</summary>
+  <p></p>
 
 ```ruby
-@user.send_post_to_community :post => @user_post, :to_community => @community
+user.favorite?(post)
+#=> false
+user.favorite(post)
+#=> true
+user.favorite?(post)
+#=> true
 ```
 
-Preferably check the possibility of sending a post by `@user` before using `send_post_to_community`. To check user permissions for post sending:
+Check that `post` is added to favorites by `user`.
 
-```ruby
-@user.send_post_to_community :post => @user_post, :to_community => @community
-    if @user.can_send_post_to_community? @community
-```
+*Notice: if `obj` passed to `favorite`, `unfavorite` or `favorite?` does not
+include `Inkwell::CanBeFavorited` `Inkwell::Errors::NotFavoritable` will
+be raised*
+</details>
 
-Sent post will be added to timelines of community members. A post can be sent
-to the community only by its owner.
+<details>
+  <summary id="inkwellcanfavoritefavoritesfor_viewer-nil-block">Inkwell::CanFavorite#favorites(for_viewer: nil, &block)</summary>
+  <p></p>
 
-To remove post from community blogline:
+  Return array of instances favorited by object.
 
-```ruby
-@user.remove_post_from_community :post => @user_post, :from_community => @community
-```
+  ```ruby
+  user.favorites
+  #=> [#<Post>, #<Comment>, ...]
+  ```
 
-or
+  If `favorites` used without block, all favorited objects will be
+  returned (without pagination, ordering, etc). In this case `Array` is
+  returned not `Relation`!
 
-```ruby
-@admin.remove_post_from_community :post => @user_post, :from_community => @community
-```
+  For perform operations on relation block should be used:
 
-Only post owner or administrator of community can remove the post from the
-community blogline.
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-To check that the user is a member of the community:
+  # code
 
-```ruby
-@community.include_user? @user
-```
+  user.favorites do |relation|
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<Post>, #<Comment>, ...]
+  ```
 
-To check that the user is an admin of the community:
+  *Notice: `relation` is relation of Inkwell::Favorite instances (internal
+  Inkwell model)*
+
+  *Notice: realization with block looks complicated, but it helps with
+  solve troubles with many-to-many relations through other polymorphic
+  relations on both sides.*
+
+  If there is necessary to get each result's object with flags for another
+  `user` (`favorited_in_timeline`, `reblogged_in_timeline`, etc.),
+  `for_viewer` should be passed:
+
+  ```ruby
+  user.favorite(post)
+  user.favorite(other_post)
+  other_user.favorite(other_post)
+  result = user.favorites(for_viewer: other_user)
+  result.detect{|item| item == post}.favorited_in_timeline
+  #=> false
+  result.detect{|item| item == other_post}.favorited_in_timeline
+  #=> true
+  ```
+</details>
+
+<details>
+  <summary>Inkwell::CanFavorite#favorites_count</summary>
+  <p></p>
+
+  ```ruby
+  post.favorited_by.each do |obj|
+    obj.favorites_count
+  end
+  ```
 
-```ruby
-@community.include_admin? @user
-```
+  Use `favorites_count` (instead of `obj.favorites.count` or
+  `obj.inkwell_favorited.count` for sample) for prevent `n+1` because
+  `favorites_count` get counter from inkwell cache included in `favorited_by`
+  by default.
+</details>
 
-Each administrator has the access level. Community owner has access level 0.
-Administrators, to whom he granted admin permissions, have access level 1 and
-so on. Thus the lower the access level, the more permissions. For example,
-admin with access level 0 can delete admin with access level 1 but not vice
-versa.
+#### Inkwell::CanBeFavorited usage
 
-To grant admin permissions:
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_by?(subject)</summary>
+  <p></p>
 
-```ruby
-@admin.grant_admin_permissions :to_user => @new_admin, :in_community => @community
-```
+  ```ruby
+  post.favorited_by?(user)
+  #=> false
+  user.favorite(post)
+  #=> true
+  post.favorited_by?(user)
+  #=> true
+  ```
 
-To revoke admin permissions:
+  Check that `post` is added to favorites by `user`.
 
-```ruby
-@admin.revoke_admin_permissions :user => @admin_who_is_removed, :in_community => @community
-```
+  *Notice: if `subject` does not include `Inkwell::CanFavorite`
+  `Inkwell::Errors::CannotFavorite` will be raised*
+</details>
 
-To get admin's access level:
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_count</summary>
+  <p></p>
 
 ```ruby
-@community.admin_level_of @admin
+user.favorites.each do |obj|
+  obj.favorited_count
+end
 ```
 
-To get communities ids in which there is this post:
+Use `favorited_count` (instead of `obj.favorited_by.count` or
+`obj.inkwell_favorited.count` for sample) for prevent `n+1` because
+`favorites_count` get counter from inkwell cache included in `favorites`
+by default.
+</details>
 
-```ruby
-@post.communities_row
-```
+<details>
+  <summary>Inkwell::CanBeFavorited#favorited_by(&block)</summary>
+  <p></p>
 
-To get ids of community members:
-
-```ruby
-@community.users_row
-```
+  Return array of instances who favorite this object.
 
-To get community members:
+  ```ruby
+  post.favorited_by
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
-```ruby
-@community.users
-```
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-To get ids of community administrators:
+  # code
 
-```ruby
-@community.admins_row
-```
+  user.favorited_by do |relation|
+    # relation - Inkwell::Favorite relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
-To get community administrators:
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
+</details>
 
-```ruby
-@community.admins
-```
+### Blogging features
 
-To get ids of communities to which the user has joined:
+#### Setup
 
-```ruby
-@user.communities_row
-```
+Include relevant modules to models:
+* add `include Inkwell::CanBlogging` to models which instances should
+be able to add objects to their blog.
+* add `include Inkwell::CanBeBlogged` to models which instances should
+be able to be added to blogs.
 
-To get communities to which the user has joined:
+For sample:
 
 ```ruby
-@user.communities
-```
-
-Admin of community is able to mute or ban user. Muted users is not able to send posts to community, but they are still in it.
-Banned users are not in community and are not able to join it or send invite in it.
+# app/models/user.rb
 
-To mute user:
-
-```ruby
-@admin.mute :user => @user, :in_community => @community
-```
+class User < ApplicationRecord
+  include Inkwell::CanBlogging
+  #...
+end
 
-To unmute user:
+# app/models/post.rb
 
-```ruby
-@admin.unmute :user => @user, :in_community => @community
-```
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  #...
+end
+```
+
+To automatically add `posts` to `user` blog, you can do the following:
+
+```
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  #...
+  belongs_to :user
+  #...
+  validates :user, presence: true
+  #...
+  after_create :blog_filling
+  #...
+  private
+
+  def blog_filling
+    user.add_to_blog(self)
+  end
+end
+```
+
+#### Inkwell::CanBlogging usage
+
+<details>
+  <summary>Inkwell::CanBlogging#add_to_blog(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.add_to_blog(post)
+  ```
+
+  After that `post` will appear in the `user.blog`.
+</details>
+
+<details>
+  <summary>Inkwell::CanBlogging#remove_from_blog(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.remove_from_blog(post)
+  ```
+
+  Rolls back `add_to_blog` effects.
+</details>
+
+<details>
+  <summary>Inkwell::CanBlogging#added_to_blog?(obj)</summary>
+  <p></p>
+
+  ```ruby
+  user.added_to_blog?(post)
+  #=> false
+  user.add_to_blog(post)
+  #=> true
+  user.added_to_blog?(post)
+  #=> true
+  ```
+
+  Check that `post` is added to `user's` blog.
+
+  *Notice: if `obj` passed to `add_to_blog`, `remove_from_blog` or
+  `added_to_blog?` does not include `Inkwell::CanBeBlogged`
+  `Inkwell::Errors::NotBloggable` will be raised*
+</details>
+
+<details>
+  <summary>Inkwell::CanBlogging#blog(for_viewer: nil, &block)</summary>
+  <p></p>
+
+  Return array of instances blogged and reblogged by object.
+
+  ```ruby
+  user.blogs
+  #=> [#<Post>, #<Comment>, ...] # array NOT relation
+  ```
+
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
+
+  # code
+
+  user.blogs do |relation|
+    # relation - Inkwell::BlogItem relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<Post>, #<Comment>, ...]
+  ```
+
+  Reblogged items has `reblog_in_timeline` flag
+
+  ```ruby
+    user.add_to_blog(post)
+    user.reblog(other_post)
+    result = user.blogs
+    result.detect{|item| item == post}.reblog_in_timeline
+    #=> false
+    result.detect{|item| item == other_post}.reblog_in_timeline
+    #=> true
+  ```
 
-To check that user is muted:
+  If there is necessary to get each result's object with flags for another
+  `user` (`reblogged_in_timeline`, `favorited_in_timeline`, etc.),
+  `for_viewer` should be passed:
 
-```ruby
-@community.include_muted_user? @user
-```
+  ```ruby
+  user.add_to_blog(post)
+  user.add_to_blog(other_post)
+  other_user.reblog(other_post)
+  result = user.blog(for_viewer: other_user)
+  result.detect{|item| item == post}.reblogged_in_timeline
+  #=> false
+  result.detect{|item| item == other_post}.reblogged_in_timeline
+  #=> true
+  ```
 
-To get muted users:
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
+</details>
 
-```ruby
-@community.muted_users
-```
+<details>
+  <summary>Inkwell::CanBlogging#blog_items_count</summary>
+  <p></p>
 
-To ban user:
+  Return added to blog objects count (including reblogs).
 
-```ruby
-@admin.ban :user => @user, :in_community => @community
-```
+  ```ruby
+  user.blog_items_count
+  ```
 
-To unban user:
+  Use `blog_items_count` for prevent `n+1`.
+</details>
+
+#### Inkwell::CanBeBlogged usage
+
+<details>
+  <summary>Inkwell::CanBeBlogged#blogged_by?(subject)</summary>
+  <p></p>
 
-```ruby
-@admin.unban :user => @user, :in_community => @community
-```
+  ```ruby
+  post.blogged_by?(user)
+  #=> false
+  user.add_to_blog(post)
+  #=> true
+  post.blogged_by?(user)
+  #=> true
+  ```
 
-To check that user is banned:
+  Check that `post` is added to `user's` blog.
 
-```ruby
-@community.include_banned_user? @user
-```
+  *Notice: if `subject` does not include `Inkwell::CanBlogging`
+  `Inkwell::Errors::CannotBlogging` will be raised*
+</details>
 
-To get banned users:
+<details>
+  <summary>Inkwell::CanBeFavorited#blogged_by</summary>
+  <p></p>
 
-```ruby
-@community.banned_users
-```
+  Return instance who add to blog this object (owner of this object).
 
-Community's users can have different types of access to community - some of them can send post to it, other can not.
-This applies to both types of community - private and public. By default all new users can send posts to the community (except for the muted users).
-*Notice: do not forget to check the admin rights for operations with Read/Write community access*
+  ```ruby
+  user.add_to_blog(post)
+  post.blogged_by
+  #=> #<User> # user
+  ```
+</details>
 
-To set default access for new users to read (does not affect users who are already in the community):
+### Reblog features
+
+#### Setup
+
+Include relevant modules to models:
+* add `include Inkwell::CanReblog` to models which instances should
+be able to reblog objects. If object is reblogged, it is added to
+subject's blog.
+* add `include Inkwell::CanBeReblogged` to models which instances should
+be able to be reblogged.
 
-```ruby
-@community.change_default_access_to_read
-```
+For sample:
 
-To set default access for new users to write (does not affect users who are already in the community):
+```ruby
+# app/models/user.rb
 
-```ruby
-@community.change_default_access_to_write
-```
+class User < ApplicationRecord
+  include Inkwell::CanBlogging
+  include Inkwell::CanReblog
+  #...
+end
 
-To set write access for users who are already in the community:
+# app/models/post.rb
 
-```ruby
-@community.set_write_access [@user.id, @another_user.id]
+class Post < ApplicationRecord
+  include Inkwell::CanBeBlogged
+  include Inkwell::CanBeReblogged
+  #...
+end
 ```
 
-To set read access for users who are already in the community:
+#### Inkwell::CanReblog usage
 
-```ruby
-@community.set_read_access [@user.id, @another_user.id]
-```
-
-To get ids of users with write access (result could include muted users ids):
+<details>
+  <summary>Inkwell::CanReblog#reblog(obj)</summary>
+  <p></p>
 
-```ruby
-@community.writers_row
-```
+  ```ruby
+  user.reblog(post)
+  ```
 
-To get users with write access (result could include muted users ids):
+  After that `post` will appear in the `user.blog` as reblog (`reblog_in_timeline` flag).
+</details>
 
-```ruby
-@community.writers
-```
+<details>
+  <summary>Inkwell::CanReblog#unreblog(obj)</summary>
+  <p></p>
 
-Community blogline is consists of the posts of members that have added to it.
+  ```ruby
+  user.unreblog(post)
+  ```
 
-To get it:
+  Rolls back `reblog` effects.
+</details>
 
-```ruby
-@community.blogline(:last_shown_obj_id => nil, :limit => 10, :for_user => nil)
-```
+<details>
+  <summary>Inkwell::CanReblog#reblog?(obj)</summary>
+  <p></p>
 
-where parameters are similar with described
-[above](https://github.com/salkar/inkwell#favorite-features) favoriteline
-parameters.
+  ```ruby
+  user.reblog?(post)
+  #=> false
+  user.reblog(post)
+  #=> true
+  user.reblog?(post)
+  #=> true
+  ```
 
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/lib/acts_as_inkwell_community/base.rb)
+  Check that `post` is reblogged by `user` and added to `user's` blog.
 
-### Category feature
-Blog items (posts, reblogged comments, etc) can be combined in the category (for example - coding, travel, games).
-Each blog item may be contained in several categories, and category can have many items.
-Category should be used when the user writes on different themes, and need to add sort in his blog.
-Categories can also be used in the community blog.
-Category can contain subcategories.
+  *Notice: if `obj` passed to `reblog`, `unreblog` or
+  `reblog?` does not include `Inkwell::CanBeReblogged`
+  `Inkwell::Errors::NotRebloggable` will be raised*
+</details>
 
-To create category:
+<details>
+  <summary>Inkwell::CanReblog#reblogs_count</summary>
+  <p></p>
 
-```ruby
-user.create_category :name => "test category" #     name - test params, insert your parameters instead of it
-community.create_category :name => "test category" #     name - test params, insert your parameters instead of it
-```
+  Return reblogged objects count.
 
-To create subcategory:
+  ```ruby
+  user.reblogs_count
+  ```
 
-```ruby
-category = @user.create_category :name => "test category"
-user.create_category :name => "test subcategory", :parent_category_id => category.id
-```
+  Use `reblogs_count` instead of `obj.reblogs.count` or
+  `obj.inkwell_reblogs.count` for sample for prevent `n+1`.
+</details>
 
-To destroy category:
+#### Inkwell::CanBeReblogged usage
 
-```ruby
-category.destroy
-```
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_by?(subject)</summary>
+  <p></p>
 
-To get the list of categories:
+  ```ruby
+  post.reblogged_by?(user)
+  #=> false
+  user.reblog(post)
+  #=> true
+  post.reblogged_by?(user)
+  #=> true
+  ```
 
-```ruby
-list = user.get_categories
-list = community.get_categories
-```
+  Check that `post` is added to `users's` blog as reblog.
 
-`list` will contain all categories of user / community.
-All items in it will contain a parameter `parent_category_id`. Using it you can restore category tree.
+  *Notice: if `subject` does not include `Inkwell::CanReblog`
+  `Inkwell::Errors::CannotReblog` will be raised*
+</details>
 
-To add blog item to the category:
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_count</summary>
+  <p></p>
 
 ```ruby
-category.add_item :item => post, :owner => category_owner
+user.blog.each do |obj|
+  obj.try(:reblogged_count) # try is not needed if all objects in blog are rebloggable
+end
 ```
 
-To remove blog item from the category:
+Use `reblogged_count` for prevent `n+1`.
+</details>
 
-```ruby
-category.remove_item :item => post, :owner => category_owner
-```
+<details>
+  <summary>Inkwell::CanBeReblogged#reblogged_by(&block)</summary>
+  <p></p>
 
-To get category blogline pass `category` param:
+  Return array of instances who reblog this object.
 
-```ruby
-user.blogline :category => category
-community.blogline :category => category
-```
+  ```ruby
+  post.reblogged_by
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
-More examples you can find in this
-[spec](https://github.com/salkar/inkwell/blob/master/test/dummy/spec/functional/category_spec.rb)
+  ```ruby
+  # Gemfile
+  gem 'kaminari'
 
-## License
-Inkwell is Copyright © 2013 Sergey Sokolov. It is free software, and may be
-redistributed under the terms specified in the MIT-LICENSE file.
+  # code
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ca9e83bea0d6c79d5909780eb805e944 "githalytics.com")](http://githalytics.com/salkar/inkwell)
+  user.reblogged_by do |relation|
+    # relation - Inkwell::BlogItem relation
+    relation.page(1).order('created_at DESC')
+  end
+  #=> [#<User>, #<Community>, ...] # Array, NOT Relation
+  ```
 
+  *Notice: for more details see
+  [Inkwell::CanFavorite#favorites](#inkwellcanfavoritefavoritesfor_viewer-nil-block)
+  . It works the same way.*
+</details>

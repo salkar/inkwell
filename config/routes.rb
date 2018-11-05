@@ -1,3 +1,4 @@
-Inkwell::Engine.routes.draw do
+# frozen_string_literal: true
 
+Inkwell::Engine.routes.draw do
 end

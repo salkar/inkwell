@@ -1,0 +1,27 @@
+language: ruby
+cache: bundler
+sudo: false
+rvm:
+  - 2.2.7
+  - 2.5.0
+gemfile:
+  - travis/gemfiles/Gemfile-5
+  - travis/gemfiles/Gemfile-5_1
+env:
+  matrix:
+    - DB=mysql2
+    - DB=postgresql
+    - DB=sqlite3
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+  - cp travis/database.travis.yml spec/dummy/config/database.yml
+  - mysql -e 'create database travis_ci_test'
+  - mysql -u root -e "GRANT ALL PRIVILEGES ON travis_ci_test.* TO 'travis'@'%';";
+  - psql -c 'create database travis_ci_test' -U postgres
+  - bundle exec rake db:migrate
+script:
+  - bundle exec rspec
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi

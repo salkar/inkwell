@@ -1,9 +1,12 @@
+# frozen_string_literal: true
+
 require "inkwell/engine"
-require "acts_as_inkwell_user/base"
-require "acts_as_inkwell_post/base"
-require "acts_as_inkwell_community/base"
-require "acts_as_inkwell_category/base"
-require "common/base"
+require "inkwell/errors/not_favoritable"
+require "inkwell/errors/not_bloggable"
+require "inkwell/errors/not_rebloggable"
+require "inkwell/errors/cannot_favorite"
+require "inkwell/errors/cannot_blogging"
+require "inkwell/errors/cannot_reblog"
 
 module Inkwell
 end
