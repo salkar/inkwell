@@ -12,12 +12,12 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-gem "rails", "~> 5.1.4"
+gem "rails", "~> 5.2.1"
 gem "sqlite3"
 gem "kaminari"
 
 group :development, :test do
-  gem "rspec-rails", "~> 3.6"
+  gem "rspec-rails", "~> 3.8"
   gem "byebug"
   gem "factory_bot_rails"
   gem "rubocop"
