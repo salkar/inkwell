@@ -3,10 +3,10 @@ cache: bundler
 sudo: false
 rvm:
   - 2.2.7
-  - 2.5.0
+  - 2.5.3
 gemfile:
   - travis/gemfiles/Gemfile-5
-  - travis/gemfiles/Gemfile-5_1
+  - travis/gemfiles/Gemfile-latest
 env:
   matrix:
     - DB=mysql2
